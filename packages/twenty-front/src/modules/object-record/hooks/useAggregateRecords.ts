@@ -7,6 +7,7 @@ import { type RecordGqlOperationFindManyResult } from '@/object-record/graphql/t
 import { useAggregateRecordsQuery } from '@/object-record/hooks/useAggregateRecordsQuery';
 import { useObjectPermissionsForObject } from '@/object-record/hooks/useObjectPermissionsForObject';
 import { type ExtendedAggregateOperations } from '@/object-record/record-table/types/ExtendedAggregateOperations';
+import { getAggregateQueryAlias } from '@/object-record/utils/generateAggregateQuery';
 import isEmpty from 'lodash.isempty';
 import { type RecordGqlOperationFilter } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
@@ -57,9 +58,10 @@ export const useAggregateRecords = <T extends AggregateRecordsData>({
   );
 
   const formattedData: AggregateRecordsData = {};
+  const aggregateAlias = getAggregateQueryAlias(objectMetadataItem.namePlural);
 
   if (!isEmpty(data)) {
-    Object.entries(data?.[objectMetadataItem.namePlural] ?? {})?.forEach(
+    Object.entries(data?.[aggregateAlias] ?? {})?.forEach(
       ([gqlField, result]) => {
         if (isDefined(gqlFieldToFieldMap[gqlField])) {
           const [fieldName, aggregateOperation] = gqlFieldToFieldMap[gqlField];
