@@ -36,23 +36,11 @@ export const parseMicrosoftMessagesImportError = (
   }
 
   if (error.statusCode === 404) {
-    if (
-      error.message?.includes(
-        'The mailbox is either inactive, soft-deleted, or is hosted on-premise.',
-      )
-    ) {
-      return new MessageImportDriverException(
-        `Disabled, deleted, inactive or no licence Microsoft account - code:${error.code}`,
-        MessageImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
-        { cause: options?.cause },
-      );
-    } else {
-      return new MessageImportDriverException(
-        `Not found - code:${error.code}`,
-        MessageImportDriverExceptionCode.NOT_FOUND,
-        { cause: options?.cause },
-      );
-    }
+    return new MessageImportDriverException(
+      `Microsoft Graph API resource not found - code:${error.code} message:${error.message}`,
+      MessageImportDriverExceptionCode.INSUFFICIENT_PERMISSIONS,
+      { cause: options?.cause },
+    );
   }
 
   if (error.statusCode === 410) {

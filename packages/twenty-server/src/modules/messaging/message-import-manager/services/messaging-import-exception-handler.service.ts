@@ -57,7 +57,6 @@ export class MessageImportExceptionHandlerService {
       switch (exception.code) {
         case MessageImportDriverExceptionCode.NOT_FOUND:
           await this.handleNotFoundException(
-            syncStep,
             messageChannel,
             workspaceId,
           );
@@ -245,35 +244,9 @@ export class MessageImportExceptionHandlerService {
   }
 
   private async handleNotFoundException(
-    syncStep: MessageImportSyncStep,
     messageChannel: Pick<MessageChannelWorkspaceEntity, 'id'>,
     workspaceId: string,
   ): Promise<void> {
-    if (syncStep === MessageImportSyncStep.MESSAGE_LIST_FETCH) {
-      await this.messageChannelSyncStatusService.markAsFailed(
-        [messageChannel.id],
-        workspaceId,
-        MessageChannelSyncStatus.FAILED_UNKNOWN,
-      );
-
-      this.exceptionHandlerService.captureExceptions(
-        [
-          new Error(
-            'Not Found exception occurred while fetching message list, which should never happen',
-          ),
-        ],
-        {
-          additionalData: {
-            messageChannelId: messageChannel.id,
-            syncStep,
-          },
-          workspace: { id: workspaceId },
-        },
-      );
-
-      return;
-    }
-
     await this.messageChannelSyncStatusService.resetAndMarkAsMessagesListFetchPending(
       [messageChannel.id],
       workspaceId,

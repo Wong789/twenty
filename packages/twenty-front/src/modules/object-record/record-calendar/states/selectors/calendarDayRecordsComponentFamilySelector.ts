@@ -9,11 +9,7 @@ import { createAtomComponentFamilySelector } from '@/ui/utilities/state/jotai/ut
 import { isNonEmptyString } from '@sniptt/guards';
 
 import { Temporal } from 'temporal-polyfill';
-import {
-  isDefined,
-  isSamePlainDate,
-  parseToPlainDateOrThrow,
-} from 'twenty-shared/utils';
+import { isDefined, isSamePlainDate } from 'twenty-shared/utils';
 import { FieldMetadataType } from '~/generated-metadata/graphql';
 
 export const calendarDayRecordIdsComponentFamilySelector =
@@ -67,7 +63,7 @@ export const calendarDayRecordIdsComponentFamilySelector =
 
           const recordDateAsPlainDateInTimeZone =
             fieldMetadataItem.type === FieldMetadataType.DATE
-              ? parseToPlainDateOrThrow(recordDate)
+              ? Temporal.PlainDate.from(recordDate)
               : Temporal.Instant.from(recordDate)
                   .toZonedDateTimeISO(timeZone)
                   .toPlainDate();

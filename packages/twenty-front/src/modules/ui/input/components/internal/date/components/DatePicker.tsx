@@ -21,7 +21,6 @@ import { Temporal } from 'temporal-polyfill';
 import { type Nullable } from 'twenty-shared/types';
 import {
   isDefined,
-  parseToPlainDateOrThrow,
   turnJSDateToPlainDate,
   type RelativeDateFilter,
 } from 'twenty-shared/utils';
@@ -357,7 +356,7 @@ export const DatePicker = ({
 }: DatePickerProps) => {
   const { theme } = useContext(ThemeContext);
   const plainDate = isDefined(plainDateString)
-    ? parseToPlainDateOrThrow(plainDateString)
+    ? Temporal.PlainDate.from(plainDateString)
     : Temporal.Now.plainDateISO();
 
   const { userTimezone } = useUserTimezone();

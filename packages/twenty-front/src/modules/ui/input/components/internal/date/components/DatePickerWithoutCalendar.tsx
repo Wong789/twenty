@@ -15,11 +15,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { Temporal } from 'temporal-polyfill';
 import { type Nullable } from 'twenty-shared/types';
-import {
-  isDefined,
-  parseToPlainDateOrThrow,
-  turnJSDateToPlainDate,
-} from 'twenty-shared/utils';
+import { isDefined, turnJSDateToPlainDate } from 'twenty-shared/utils';
 import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
 
 export const MONTH_AND_YEAR_DROPDOWN_MONTH_SELECT_ID =
@@ -327,7 +323,7 @@ export const DatePickerWithoutCalendar = ({
   onClose,
 }: DatePickerWithoutCalendarProps) => {
   const { theme } = useContext(ThemeContext);
-  const plainDate = isDefined(date) ? parseToPlainDateOrThrow(date) : null;
+  const plainDate = isDefined(date) ? Temporal.PlainDate.from(date) : null;
 
   const { closeDropdown: closeDropdownMonthSelect } = useCloseDropdown();
   const { closeDropdown: closeDropdownYearSelect } = useCloseDropdown();
