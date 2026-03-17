@@ -100,6 +100,7 @@ describe('WorkspaceEntityManager', () => {
       labelPlural: 'Test Entities',
       workspaceId: 'test-workspace-id',
       icon: 'test-icon',
+      color: null,
       isCustom: false,
       isRemote: false,
       isAuditLogged: false,
@@ -246,6 +247,7 @@ describe('WorkspaceEntityManager', () => {
         IS_DATE_TIME_WHOLE_DAY_FILTER_ENABLED: false,
         IS_DRAFT_EMAIL_ENABLED: false,
         IS_USAGE_ANALYTICS_ENABLED: false,
+        IS_RICH_TEXT_V1_MIGRATED: false,
       },
       userWorkspaceRoleMap: {},
       eventEmitterService: {
