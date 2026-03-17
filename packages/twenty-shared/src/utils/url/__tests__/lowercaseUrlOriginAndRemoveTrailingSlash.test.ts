@@ -39,19 +39,19 @@ describe('lowercaseUrlOriginAndRemoveTrailingSlash', () => {
       expected: 'https://www.example.com/TEST#Hash',
     },
     {
-      title: 'should preserve special characters in path',
+      title: 'should encode special characters in path via URL normalization',
       input: 'https://test.test/edouard-ménard-22219837',
-      expected: 'https://test.test/edouard-ménard-22219837',
+      expected: 'https://test.test/edouard-m%C3%A9nard-22219837',
     },
     {
-      title: 'should decode already encoded special characters in path',
+      title: 'should preserve already encoded special characters in path',
       input: 'https://test.test/edouard-m%C3%A9nard-22219837',
-      expected: 'https://test.test/edouard-ménard-22219837',
+      expected: 'https://test.test/edouard-m%C3%A9nard-22219837',
     },
     {
-      title: 'should preserve special characters in query params',
+      title: 'should encode special characters in query params',
       input: 'https://example.com/path?name=José',
-      expected: 'https://example.com/path?name=José',
+      expected: 'https://example.com/path?name=Jos%C3%A9',
     },
     {
       title:
@@ -60,13 +60,12 @@ describe('lowercaseUrlOriginAndRemoveTrailingSlash', () => {
       expected: 'https://example.com/test%E0%A4%A',
     },
     {
-      title:
-        'should preserve double-encoded URLs (encoded percent signs stay encoded once)',
+      title: 'should preserve double-encoded URLs without decoding them',
       input: 'https://example.com/test%2520name',
-      expected: 'https://example.com/test%20name',
+      expected: 'https://example.com/test%2520name',
     },
     {
-      title: 'should preserve special characters in hash fragments',
+      title: 'should encode special characters in hash fragments',
       input: 'https://example.com/path#frédéric',
       expected: 'https://example.com/path#fr%C3%A9d%C3%A9ric',
     },
@@ -76,9 +75,19 @@ describe('lowercaseUrlOriginAndRemoveTrailingSlash', () => {
       expected: 'https://example.com/path#fr%C3%A9d%C3%A9ric',
     },
     {
-      title: 'should handle mixed encoded and non-encoded in same URL',
+      title:
+        'should preserve percent-encoded slashes and query params without decoding',
       input: 'https://example.com/path%2Fwith%2Fslashes?query=hello%20world',
-      expected: 'https://example.com/path/with/slashes?query=hello world',
+      expected:
+        'https://example.com/path%2Fwith%2Fslashes?query=hello%20world',
+    },
+    {
+      title:
+        'should preserve percent-encoded characters in Google Maps URLs',
+      input:
+        'https://www.google.com/maps/place/Test/data=!16s%2Fg%2F1ptwh8096',
+      expected:
+        'https://www.google.com/maps/place/Test/data=!16s%2Fg%2F1ptwh8096',
     },
   ])('$title', ({ input, expected }) => {
     expect(lowercaseUrlOriginAndRemoveTrailingSlash(input)).toBe(expected);
