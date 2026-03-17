@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { NonNullableRequired } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
 import { IsNull, Not, Repository } from 'typeorm';
 
 import { WorkspaceCacheProvider } from 'src/engine/workspace-cache/interfaces/workspace-cache-provider.service';
@@ -17,6 +18,10 @@ import { createIdToUniversalIdentifierMap } from 'src/engine/workspace-cache/uti
 @Injectable()
 @WorkspaceCache('flatRoleTargetByAgentIdMaps')
 export class WorkspaceFlatRoleTargetByAgentIdService extends WorkspaceCacheProvider<FlatRoleTargetByAgentIdMaps> {
+  private readonly logger = new Logger(
+    WorkspaceFlatRoleTargetByAgentIdService.name,
+  );
+
   constructor(
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
@@ -62,6 +67,24 @@ export class WorkspaceFlatRoleTargetByAgentIdService extends WorkspaceCacheProvi
       Omit<RoleTargetEntity, 'agentId'> &
         NonNullableRequired<Pick<RoleTargetEntity, 'agentId'>>
     >) {
+      const roleUniversalIdentifier = roleIdToUniversalIdentifierMap.get(
+        roleTargetEntity.roleId,
+      );
+      const applicationUniversalIdentifier =
+        applicationIdToUniversalIdentifierMap.get(
+          roleTargetEntity.applicationId,
+        );
+
+      if (
+        !isDefined(roleUniversalIdentifier) ||
+        !isDefined(applicationUniversalIdentifier)
+      ) {
+        this.logger.warn(
+          `Skipping orphaned roleTarget ${roleTargetEntity.id}: role or application not found or has null universalIdentifier (workspace ${workspaceId})`,
+        );
+        continue;
+      }
+
       const flatRoleTarget = fromRoleTargetEntityToFlatRoleTarget({
         entity: roleTargetEntity,
         applicationIdToUniversalIdentifierMap,

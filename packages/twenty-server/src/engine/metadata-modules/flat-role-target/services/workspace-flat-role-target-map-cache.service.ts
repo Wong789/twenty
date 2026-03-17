@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
 
 import { WorkspaceCacheProvider } from 'src/engine/workspace-cache/interfaces/workspace-cache-provider.service';
@@ -18,6 +19,10 @@ import { addFlatEntityToFlatEntityMapsThroughMutationOrThrow } from 'src/engine/
 @Injectable()
 @WorkspaceCache('flatRoleTargetMaps')
 export class WorkspaceFlatRoleTargetMapCacheService extends WorkspaceCacheProvider<FlatRoleTargetMaps> {
+  private readonly logger = new Logger(
+    WorkspaceFlatRoleTargetMapCacheService.name,
+  );
+
   constructor(
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
@@ -52,9 +57,42 @@ export class WorkspaceFlatRoleTargetMapCacheService extends WorkspaceCacheProvid
     const roleIdToUniversalIdentifierMap =
       createIdToUniversalIdentifierMap(roles);
 
+    // Filter out orphaned roleTargets that reference non-existent roles or
+    // applications, or roles/applications with null universalIdentifier.
+    // This can happen on instances upgraded incrementally from older versions
+    // where data migrations did not fully populate universalIdentifier.
+    const validRoleTargets = roleTargets.filter((roleTargetEntity) => {
+      const roleUniversalIdentifier = roleIdToUniversalIdentifierMap.get(
+        roleTargetEntity.roleId,
+      );
+
+      if (!isDefined(roleUniversalIdentifier)) {
+        this.logger.warn(
+          `Skipping orphaned roleTarget ${roleTargetEntity.id}: role ${roleTargetEntity.roleId} not found or has null universalIdentifier (workspace ${workspaceId})`,
+        );
+
+        return false;
+      }
+
+      const applicationUniversalIdentifier =
+        applicationIdToUniversalIdentifierMap.get(
+          roleTargetEntity.applicationId,
+        );
+
+      if (!isDefined(applicationUniversalIdentifier)) {
+        this.logger.warn(
+          `Skipping orphaned roleTarget ${roleTargetEntity.id}: application ${roleTargetEntity.applicationId} not found or has null universalIdentifier (workspace ${workspaceId})`,
+        );
+
+        return false;
+      }
+
+      return true;
+    });
+
     const flatRoleTargetMaps = createEmptyFlatEntityMaps();
 
-    for (const roleTargetEntity of roleTargets) {
+    for (const roleTargetEntity of validRoleTargets) {
       const flatRoleTarget = fromRoleTargetEntityToFlatRoleTarget({
         entity: roleTargetEntity,
         applicationIdToUniversalIdentifierMap,
