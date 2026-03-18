@@ -21,6 +21,7 @@ import {
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import { Logger } from '@nestjs/common';
 import { isDefined } from 'twenty-shared/utils';
 
 import {
@@ -113,6 +114,7 @@ export interface LambdaDriverOptions extends LambdaClientConfig {
 }
 
 export class LambdaDriver implements LogicFunctionDriver {
+  private readonly logger = new Logger(LambdaDriver.name);
   private lambdaClient: Lambda | undefined;
   private credentialsExpiry: Date | null = null;
   private readonly options: LambdaDriverOptions;
@@ -125,12 +127,17 @@ export class LambdaDriver implements LogicFunctionDriver {
   }
 
   private async getLambdaClient() {
-    if (
+    const needsRefresh =
       !isDefined(this.lambdaClient) ||
       (isDefined(this.options.subhostingRole) &&
         isDefined(this.credentialsExpiry) &&
-        new Date() >= this.credentialsExpiry)
-    ) {
+        new Date() >= this.credentialsExpiry);
+
+    if (needsRefresh) {
+      this.logger.log(
+        `Refreshing Lambda client credentials (previous expiry: ${this.credentialsExpiry?.toISOString() ?? 'none'})`,
+      );
+
       this.lambdaClient = new Lambda({
         ...this.options,
         ...(isDefined(this.options.subhostingRole) && {
@@ -144,10 +151,6 @@ export class LambdaDriver implements LogicFunctionDriver {
 
   private async getAssumeRoleCredentials() {
     const stsClient = new STSClient({ region: this.options.region });
-
-    this.credentialsExpiry = new Date(
-      Date.now() + (CREDENTIALS_DURATION_IN_SECONDS - 60 * 5) * 1000,
-    );
 
     const assumeRoleCommand = new AssumeRoleCommand({
       RoleArn: this.options.subhostingRole,
@@ -165,6 +168,12 @@ export class LambdaDriver implements LogicFunctionDriver {
     ) {
       throw new Error('Failed to assume role');
     }
+
+    // Set expiry only after successful credential acquisition to avoid
+    // poisoning the refresh timer when the STS call fails
+    this.credentialsExpiry = new Date(
+      Date.now() + (CREDENTIALS_DURATION_IN_SECONDS - 60 * 5) * 1000,
+    );
 
     return {
       accessKeyId: Credentials.AccessKeyId,
