@@ -17,7 +17,6 @@ import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.ent
 import { getWorkspaceSchemaName } from 'src/engine/workspace-datasource/utils/get-workspace-schema-name.util';
 import { computeTableName } from 'src/engine/utils/compute-table-name.util';
 import { escapeIdentifier } from 'src/engine/workspace-manager/workspace-migration/utils/remove-sql-injection.util';
-import { getCoreEntityMetadatasWithWorkspaceId } from 'src/database/commands/workspace-export/utils/get-core-entity-metadatas-with-workspace-id.util';
 import { generateWorkspaceSchemaDdl } from 'src/database/commands/workspace-export/utils/generate-workspace-schema-ddl.util';
 import { buildInsertPrefix } from 'src/database/commands/workspace-export/utils/build-insert-prefix.util';
 import { buildWorkspaceTableColumnSets } from 'src/database/commands/workspace-export/utils/build-workspace-table-column-sets.util';
@@ -32,20 +31,21 @@ type WorkspaceExportParams = {
   tableFilter?: string[];
 };
 
-type RowFilter = {
-  filterColumn: string;
-  filterValue: string;
-};
-
 type WriteRowsOptions = {
   schemaName: string;
   tableName: string;
   displayName: string;
   queryRunner: QueryRunner;
   stream: WriteStream;
-  rowFilter?: RowFilter;
+  whereClause: string;
+  queryParameters: unknown[];
   jsonColumns?: Set<string>;
   excludedColumns?: Set<string>;
+};
+
+type WorkspaceScopedEntity = {
+  entityMetadata: EntityMetadata;
+  whereClause: string;
 };
 
 @Injectable()
@@ -113,7 +113,7 @@ export class WorkspaceExportService {
         `\nCREATE SCHEMA IF NOT EXISTS ${escapeIdentifier(schemaName)};\n\n`,
       );
 
-      this.writeWorkspaceSchemaDdl(
+      this.writeWorkspaceSchemaDDL(
         workspaceId,
         schemaName,
         objectMetadatas,
@@ -153,20 +153,20 @@ export class WorkspaceExportService {
     if (workspaceEntityMetadata) {
       await this.writeRows({
         schemaName: workspaceEntityMetadata.schema || 'core',
-        tableName: workspaceEntityMetadata.tableName,
-        displayName: workspaceEntityMetadata.tableName,
+        tableName: 'workspace',
+        displayName: 'workspace',
         queryRunner,
         stream,
-        rowFilter: { filterColumn: 'id', filterValue: workspaceId },
+        whereClause: '"id" = $1',
+        queryParameters: [workspaceId],
         jsonColumns: this.buildJsonColumnSet(workspaceEntityMetadata),
       });
     }
 
-    const coreEntityMetadatas = getCoreEntityMetadatasWithWorkspaceId(
-      this.dataSource,
-    );
-
-    for (const entityMetadata of coreEntityMetadatas) {
+    for (const {
+      entityMetadata,
+      whereClause,
+    } of this.discoverWorkspaceScopedEntities()) {
       try {
         await this.writeRows({
           schemaName: entityMetadata.schema || 'core',
@@ -174,16 +174,121 @@ export class WorkspaceExportService {
           displayName: entityMetadata.tableName,
           queryRunner,
           stream,
-          rowFilter: {
-            filterColumn: 'workspaceId',
-            filterValue: workspaceId,
-          },
+          whereClause,
+          queryParameters: [workspaceId],
           jsonColumns: this.buildJsonColumnSet(entityMetadata),
         });
       } catch (error) {
         this.logger.warn(`${entityMetadata.tableName}: skipped`, error);
       }
     }
+  }
+
+  private discoverWorkspaceScopedEntities(): WorkspaceScopedEntity[] {
+    const allEntities = this.dataSource.entityMetadatas;
+    const scopedEntities: WorkspaceScopedEntity[] = [];
+    const scopedWhere = new Map<string, string>([['workspace', '"id" = $1']]);
+
+    for (const entityMetadata of allEntities) {
+      if (
+        entityMetadata.columns.some(
+          (column) => column.databaseName === 'workspaceId',
+        )
+      ) {
+        scopedEntities.push({
+          entityMetadata,
+          whereClause: '"workspaceId" = $1',
+        });
+        scopedWhere.set(entityMetadata.tableName, '"workspaceId" = $1');
+      }
+    }
+
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+
+      for (const entityMetadata of allEntities) {
+        if (scopedWhere.has(entityMetadata.tableName)) continue;
+
+        const whereClause = this.resolveWhereClause(
+          entityMetadata,
+          scopedWhere,
+          scopedEntities,
+        );
+
+        if (!whereClause) continue;
+
+        scopedWhere.set(entityMetadata.tableName, whereClause);
+        scopedEntities.push({ entityMetadata, whereClause });
+        changed = true;
+      }
+    }
+
+    return scopedEntities;
+  }
+
+  private resolveWhereClause(
+    entityMetadata: EntityMetadata,
+    scopedWhere: Map<string, string>,
+    scopedEntities: WorkspaceScopedEntity[],
+  ): string | null {
+    for (const relation of entityMetadata.manyToOneRelations) {
+      const parent = relation.inverseEntityMetadata;
+      const parentWhere = scopedWhere.get(parent.tableName);
+
+      if (!parentWhere) continue;
+
+      const joinColumn = relation.joinColumns[0];
+
+      if (!joinColumn?.databaseName) continue;
+
+      return this.buildInSubqueryWhereClause(
+        joinColumn.databaseName,
+        parent.schema || 'core',
+        parent.tableName,
+        joinColumn.referencedColumn?.databaseName ?? 'id',
+        parentWhere,
+      );
+    }
+
+    for (const {
+      entityMetadata: scopedEntity,
+      whereClause,
+    } of scopedEntities) {
+      for (const relation of scopedEntity.manyToOneRelations) {
+        if (relation.inverseEntityMetadata !== entityMetadata) continue;
+        if (!relation.inverseRelation) continue;
+        if (relation.joinColumns.some((joinColumn) => joinColumn.isNullable))
+          continue;
+
+        const joinColumn = relation.joinColumns[0];
+
+        if (!joinColumn?.databaseName) continue;
+
+        return this.buildInSubqueryWhereClause(
+          joinColumn.referencedColumn?.databaseName ?? 'id',
+          scopedEntity.schema || 'core',
+          scopedEntity.tableName,
+          joinColumn.databaseName,
+          whereClause,
+        );
+      }
+    }
+
+    return null;
+  }
+
+  private buildInSubqueryWhereClause(
+    column: string,
+    parentSchema: string,
+    parentTable: string,
+    parentColumn: string,
+    parentWhere: string,
+  ): string {
+    const qualifiedTable = `${escapeIdentifier(parentSchema)}.${escapeIdentifier(parentTable)}`;
+
+    return `${escapeIdentifier(column)} IN (SELECT ${escapeIdentifier(parentColumn)} FROM ${qualifiedTable} WHERE ${parentWhere})`;
   }
 
   private buildJsonColumnSet(entityMetadata: EntityMetadata): Set<string> {
@@ -200,31 +305,25 @@ export class WorkspaceExportService {
     displayName,
     queryRunner,
     stream,
-    rowFilter,
+    whereClause,
+    queryParameters,
     jsonColumns,
     excludedColumns,
   }: WriteRowsOptions): Promise<void> {
-    const whereClause = rowFilter
-      ? ` WHERE "${rowFilter.filterColumn}" = $1`
-      : '';
-    const queryParameters = rowFilter ? [rowFilter.filterValue] : [];
-
-    const [{ count: totalCount }] = await queryRunner.query(
-      `SELECT COUNT(*)::int as count FROM "${schemaName}"."${tableName}"${whereClause}`,
-      queryParameters,
-    );
-
-    if (totalCount === 0) return;
-
-    this.logger.log(`  ${displayName}: ${totalCount} rows`);
+    const qualifiedTable = `${escapeIdentifier(schemaName)}.${escapeIdentifier(tableName)}`;
 
     let insertPrefix: string | undefined;
+    let totalCount = 0;
 
-    for (let offset = 0; offset < totalCount; offset += BATCH_SIZE) {
+    for (let offset = 0; ; offset += BATCH_SIZE) {
       const rows: Record<string, unknown>[] = await queryRunner.query(
-        `SELECT * FROM "${schemaName}"."${tableName}"${whereClause} ORDER BY "id" LIMIT ${BATCH_SIZE} OFFSET ${offset}`,
+        `SELECT * FROM ${qualifiedTable} WHERE ${whereClause} ORDER BY "id" LIMIT ${BATCH_SIZE} OFFSET ${offset}`,
         queryParameters,
       );
+
+      if (rows.length === 0) break;
+
+      totalCount += rows.length;
 
       const batchStatements: string[] = [];
 
@@ -249,10 +348,16 @@ export class WorkspaceExportService {
       if (!stream.write(batchStatements.join(''))) {
         await once(stream, 'drain');
       }
+
+      if (rows.length < BATCH_SIZE) break;
+    }
+
+    if (totalCount > 0) {
+      this.logger.log(`  ${displayName}: ${totalCount} rows`);
     }
   }
 
-  private writeWorkspaceSchemaDdl(
+  private writeWorkspaceSchemaDDL(
     workspaceId: string,
     schemaName: string,
     objectMetadatas: ObjectMetadataEntity[],
@@ -314,6 +419,8 @@ export class WorkspaceExportService {
           displayName: objectMetadata.nameSingular,
           queryRunner,
           stream,
+          whereClause: 'TRUE',
+          queryParameters: [],
           jsonColumns,
           excludedColumns: generatedColumns,
         });
