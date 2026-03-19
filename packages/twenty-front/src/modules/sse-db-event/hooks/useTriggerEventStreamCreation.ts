@@ -66,6 +66,63 @@ export const useTriggerEventStreamCreation = () => {
 
     let hasReceivedFirstEvent = false;
 
+    const handleNextEvent = (
+      result: ExecutionResult<{
+        onEventSubscription: EventSubscription;
+      }>,
+    ) => {
+      if (isDefined(result?.errors) && Array.isArray(result.errors)) {
+        const subCode = result.errors[0]?.extensions?.subCode;
+
+        switch (subCode) {
+          case 'EVENT_STREAM_ALREADY_EXISTS':
+          case 'EVENT_STREAM_DOES_NOT_EXIST': {
+            store.set(shouldDestroyEventStreamState.atom, true);
+            console.log(
+              'EVENT_STREAM_ALREADY_EXISTS or EVENT_STREAM_DOES_NOT_EXIST',
+            );
+            break;
+          }
+          default: {
+            console.log('default', result.errors);
+            for (const error of result.errors) {
+              captureException(error);
+            }
+          }
+        }
+
+        return;
+      }
+
+      console.log('no errors', result.data);
+
+      if (!hasReceivedFirstEvent) {
+        hasReceivedFirstEvent = true;
+        store.set(sseEventStreamReadyState.atom, true);
+      }
+
+      const eventSubscription = result?.data?.onEventSubscription;
+
+      const objectRecordEventsWithQueryIds =
+        eventSubscription?.objectRecordEventsWithQueryIds ?? [];
+
+      const metadataEvents = eventSubscription?.metadataEvents ?? [];
+
+      const objectRecordEvents = objectRecordEventsWithQueryIds.map(
+        (item) => item.objectRecordEvent,
+      );
+
+      triggerOptimisticEffectFromSseEvents({
+        objectRecordEvents,
+      });
+
+      dispatchObjectRecordEventsFromSseToBrowserEvents(
+        objectRecordEventsWithQueryIds,
+      );
+
+      dispatchMetadataEventsFromSseToBrowserEvents(metadataEvents);
+    };
+
     const dispose = sseClient.subscribe(
       {
         query: print(ON_EVENT_SUBSCRIPTION),
@@ -74,46 +131,7 @@ export const useTriggerEventStreamCreation = () => {
         },
       },
       {
-        next: (
-          value: ExecutionResult<{
-            onEventSubscription: EventSubscription;
-          }>,
-        ) => {
-          if (isDefined(value?.errors) && Array.isArray(value.errors)) {
-            captureException(
-              new Error(`SSE subscription error: ${value.errors[0]?.message}`),
-            );
-            store.set(shouldDestroyEventStreamState.atom, true);
-
-            return;
-          }
-
-          if (!hasReceivedFirstEvent) {
-            hasReceivedFirstEvent = true;
-            store.set(sseEventStreamReadyState.atom, true);
-          }
-
-          const eventSubscription = value?.data?.onEventSubscription;
-
-          const objectRecordEventsWithQueryIds =
-            eventSubscription?.objectRecordEventsWithQueryIds ?? [];
-
-          const metadataEvents = eventSubscription?.metadataEvents ?? [];
-
-          const objectRecordEvents = objectRecordEventsWithQueryIds.map(
-            (item) => item.objectRecordEvent,
-          );
-
-          triggerOptimisticEffectFromSseEvents({
-            objectRecordEvents,
-          });
-
-          dispatchObjectRecordEventsFromSseToBrowserEvents(
-            objectRecordEventsWithQueryIds,
-          );
-
-          dispatchMetadataEventsFromSseToBrowserEvents(metadataEvents);
-        },
+        next: handleNextEvent,
         error: (error) => {
           captureException(error);
         },
@@ -121,58 +139,16 @@ export const useTriggerEventStreamCreation = () => {
       },
       {
         message: ({ data, event }) => {
-          const result = data as ExecutionResult<{
-            onEventSubscription: EventSubscription;
-          }>;
+          if (event !== 'next') {
+            return;
+          }
 
           try {
-            if (event === 'next') {
-              if (isDefined(result?.errors)) {
-                const subCode = result.errors[0]?.extensions?.subCode;
-
-                switch (subCode) {
-                  case 'EVENT_STREAM_ALREADY_EXISTS': {
-                    store.set(shouldDestroyEventStreamState.atom, true);
-                    break;
-                  }
-                  default: {
-                    for (const error of result.errors) {
-                      captureException(error);
-                    }
-                  }
-                }
-
-                store.set(shouldDestroyEventStreamState.atom, true);
-              } else {
-                if (!hasReceivedFirstEvent) {
-                  hasReceivedFirstEvent = true;
-                  store.set(sseEventStreamReadyState.atom, true);
-                }
-
-                const objectRecordEventsWithQueryIds =
-                  result?.data?.onEventSubscription
-                    ?.objectRecordEventsWithQueryIds ?? [];
-
-                const objectRecordEvents = objectRecordEventsWithQueryIds.map(
-                  (objectRecordEventWithQueryIds) => {
-                    return objectRecordEventWithQueryIds.objectRecordEvent;
-                  },
-                );
-
-                triggerOptimisticEffectFromSseEvents({
-                  objectRecordEvents,
-                });
-
-                dispatchObjectRecordEventsFromSseToBrowserEvents(
-                  objectRecordEventsWithQueryIds,
-                );
-
-                const metadataEvents =
-                  result?.data?.onEventSubscription?.metadataEvents ?? [];
-
-                dispatchMetadataEventsFromSseToBrowserEvents(metadataEvents);
-              }
-            }
+            handleNextEvent(
+              data as ExecutionResult<{
+                onEventSubscription: EventSubscription;
+              }>,
+            );
           } catch (error) {
             const errorProcessingSSEMessage = new Error(
               'Error while processing SSE message',
