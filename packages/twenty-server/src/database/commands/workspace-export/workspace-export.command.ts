@@ -6,7 +6,7 @@ import { WorkspaceExportService } from 'src/database/commands/workspace-export/w
 
 type WorkspaceExportCommandOptions = {
   workspaceId: string;
-  outputPath: string;
+  output: string;
   tables?: string;
 };
 
@@ -31,11 +31,11 @@ export class WorkspaceExportCommand extends CommandRunner {
   }
 
   @Option({
-    flags: '--output-path <outputPath>',
-    description: 'Directory to write the .sql file',
-    defaultValue: '/tmp/exports',
+    flags: '-o, --output <output>',
+    description: 'Output file path for the .sql export',
+    required: true,
   })
-  parseOutputPath(value: string): string {
+  parseOutput(value: string): string {
     return value;
   }
 
@@ -57,7 +57,7 @@ export class WorkspaceExportCommand extends CommandRunner {
     try {
       const filePath = await this.workspaceExportService.exportWorkspace({
         workspaceId: options.workspaceId,
-        outputPath: options.outputPath,
+        output: options.output,
         tableFilter,
       });
 

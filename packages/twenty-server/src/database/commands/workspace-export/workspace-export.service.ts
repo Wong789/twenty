@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { once } from 'events';
+import { dirname } from 'path';
 import { type WriteStream, createWriteStream, mkdirSync } from 'fs';
 import { finished } from 'stream/promises';
 
@@ -28,7 +29,7 @@ const BATCH_SIZE = 5000;
 
 type WorkspaceExportParams = {
   workspaceId: string;
-  outputPath: string;
+  output: string;
   tableFilter?: string[];
 };
 
@@ -63,7 +64,7 @@ export class WorkspaceExportService {
 
   async exportWorkspace({
     workspaceId,
-    outputPath,
+    output,
     tableFilter,
   }: WorkspaceExportParams): Promise<string> {
     const workspace = await this.dataSource
@@ -96,10 +97,9 @@ export class WorkspaceExportService {
       fieldsByObjectId.set(fieldMetadata.objectMetadataId, objectFields);
     }
 
-    mkdirSync(outputPath, { recursive: true });
+    const filePath = output;
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filePath = `${outputPath}/${workspaceId}-${timestamp}.sql`;
+    mkdirSync(dirname(filePath), { recursive: true });
     const stream = createWriteStream(filePath);
 
     const queryRunner = this.dataSource.createQueryRunner();
