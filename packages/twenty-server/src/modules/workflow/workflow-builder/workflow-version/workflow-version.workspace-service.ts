@@ -65,6 +65,7 @@ export class WorkflowVersionWorkspaceService {
             id: workflowVersionIdToCopy,
             workflowId,
           },
+          withDeleted: true,
         });
 
         if (!isDefined(workflowVersionToCopy)) {
@@ -196,6 +197,7 @@ export class WorkflowVersionWorkspaceService {
             id: workflowVersionIdToCopy,
             workflowId: workflowIdToDuplicate,
           },
+          withDeleted: true,
         });
 
         if (!isDefined(sourceVersion)) {
