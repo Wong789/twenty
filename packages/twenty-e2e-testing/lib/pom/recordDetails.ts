@@ -20,6 +20,31 @@ export class RecordDetails {
 
   constructor(public readonly page: Page) {
     this.page = page;
+    this.closeRecordButton = page.getByTestId('top-bar-title').locator('..').locator('button').first();
+    this.previousRecordButton = page
+      .getByTestId('tooltip')
+      .filter({ hasText: /^Navigate to previous record$/ });
+    this.nextRecordButton = page
+      .getByTestId('tooltip')
+      .filter({ hasText: /^Navigate to next record$/ });
+    this.favoriteRecordButton = page
+      .getByTestId('tooltip')
+      .filter({ hasText: /^Add to favorites$/ });
+    this.addShowPageButton = page.getByTestId('add-button');
+    this.moreOptionsButton = page
+      .getByTestId('tooltip')
+      .filter({ hasText: /^More options$/ });
+    this.deleteButton = page.getByText('Delete');
+    this.uploadProfileImageButton = page.getByRole('button', {
+      name: 'Upload',
+    });
+    this.timelineTab = page.getByRole('link', { name: 'Timeline' });
+    this.tasksTab = page.getByRole('link', { name: 'Tasks' });
+    this.notesTab = page.getByRole('link', { name: 'Notes' });
+    this.filesTab = page.getByRole('link', { name: 'Files' });
+    this.emailsTab = page.getByRole('link', { name: 'Emails' });
+    this.calendarTab = page.getByRole('link', { name: 'Calendar' });
+    this.detachRelationButton = page.getByText('Detach');
   }
 
   async clickCloseRecordButton() {
@@ -91,7 +116,7 @@ export class RecordDetails {
   async clickField(name: string) {
     await this.page
       .locator(
-        `//div[@data-testid='tooltip' and contains(., '${name}']/../../../div[last()]/div/div`,
+        `//div[@data-testid='tooltip' and contains(., '${name}')]/../../../div[last()]/div/div`,
       )
       .click();
   }
@@ -99,12 +124,12 @@ export class RecordDetails {
   async clickFieldWithButton(name: string) {
     await this.page
       .locator(
-        `//div[@data-testid='tooltip' and contains(., '${name}']/../../../div[last()]/div/div`,
+        `//div[@data-testid='tooltip' and contains(., '${name}')]/../../../div[last()]/div/div`,
       )
       .hover();
     await this.page
       .locator(
-        `//div[@data-testid='tooltip' and contains(., '${name}']/../../../div[last()]/div/div[last()]/div/button`,
+        `//div[@data-testid='tooltip' and contains(., '${name}')]/../../../div[last()]/div/div[last()]/div/button`,
       )
       .click();
   }
@@ -119,7 +144,7 @@ export class RecordDetails {
   async detachRelation(name: string) {
     await this.page.locator(`//a[contains(., "${name}")]`).hover();
     await this.page
-      .locator(`, //a[contains(., "${name}")]/../div[last()]/div/div/button`)
+      .locator(`//a[contains(., "${name}")]/../div[last()]/div/div/button`)
       .hover();
     await this.detachRelationButton.click();
   }
@@ -127,7 +152,7 @@ export class RecordDetails {
   async deleteRelationRecord(name: string) {
     await this.page.locator(`//a[contains(., "${name}")]`).hover();
     await this.page
-      .locator(`, //a[contains(., "${name}")]/../div[last()]/div/div/button`)
+      .locator(`//a[contains(., "${name}")]/../div[last()]/div/div/button`)
       .hover();
     await this.deleteButton.click();
   }
