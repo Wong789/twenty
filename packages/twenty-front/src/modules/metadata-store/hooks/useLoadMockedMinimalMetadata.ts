@@ -9,21 +9,14 @@ export const useLoadMockedMinimalMetadata = () => {
   const { replaceDraft, applyChanges, resetMetadataStore } = useMetadataStore();
 
   const loadMockedMinimalMetadata = useCallback(async () => {
-    const [
-      { mockedStandardObjectMetadataQueryResult },
-      { mockedViews },
-      { mockedNavigationMenuItems },
-    ] = await Promise.all([
-      import(
-        '~/testing/mock-data/generated/metadata/objects/mock-objects-metadata'
-      ),
-      import('~/testing/mock-data/generated/metadata/views/mock-views-data'),
-      import(
-        '~/testing/mock-data/generated/metadata/navigation-menu-items/mock-navigation-menu-items-data'
-      ),
-    ]);
+    // Load object metadata first — it's the only data needed for the
+    // sign-in background mock table to render. Views and navigation
+    // menu items are cosmetic and can be loaded after the first paint.
+    const { mockedStandardObjectMetadataQueryResult } = await import(
+      '~/testing/mock-data/generated/metadata/objects/mock-objects-metadata'
+    );
 
-    // Reset after async imports so reset + replaceDraft + applyChanges
+    // Reset after async import so reset + replaceDraft + applyChanges
     // run in the same synchronous block (React 18 batches them into one render),
     // avoiding a window where the store appears empty to subscribers.
     resetMetadataStore();
@@ -34,6 +27,17 @@ export const useLoadMockedMinimalMetadata = () => {
     replaceDraft('objectMetadataItems', flatObjects, MOCKED_COLLECTION_HASH);
     replaceDraft('fieldMetadataItems', flatFields, MOCKED_COLLECTION_HASH);
     replaceDraft('indexMetadataItems', flatIndexes, MOCKED_COLLECTION_HASH);
+
+    applyChanges();
+
+    // Defer non-critical mock data (views, navigation) so they don't
+    // compete for bandwidth with the main bundle during pageload.
+    const [{ mockedViews }, { mockedNavigationMenuItems }] = await Promise.all([
+      import('~/testing/mock-data/generated/metadata/views/mock-views-data'),
+      import(
+        '~/testing/mock-data/generated/metadata/navigation-menu-items/mock-navigation-menu-items-data'
+      ),
+    ]);
 
     const {
       flatViews,
