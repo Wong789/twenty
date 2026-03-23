@@ -1,6 +1,6 @@
-import { useChangePageLayoutDragSelection } from '@/page-layout/hooks/useChangePageLayoutDragSelection';
-import { useEndPageLayoutDragSelection } from '@/page-layout/hooks/useEndPageLayoutDragSelection';
-import { useStartPageLayoutDragSelection } from '@/page-layout/hooks/useStartPageLayoutDragSelection';
+import { useChangePageLayoutDragSelection } from '@/page-layout/hooks/edit/useChangePageLayoutDragSelection';
+import { useEndPageLayoutDragSelection } from '@/page-layout/hooks/edit/useEndPageLayoutDragSelection';
+import { useStartPageLayoutDragSelection } from '@/page-layout/hooks/edit/useStartPageLayoutDragSelection';
 import { DragSelect } from '@/ui/utilities/drag-select/components/DragSelect';
 import { type RefObject } from 'react';
 

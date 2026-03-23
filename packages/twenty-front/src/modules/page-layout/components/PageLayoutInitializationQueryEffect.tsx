@@ -1,6 +1,6 @@
-import { useBasePageLayout } from '@/page-layout/hooks/useBasePageLayout';
-import { usePageLayoutWithRelationWidgets } from '@/page-layout/hooks/usePageLayoutWithRelationWidgets';
-import { useSetIsPageLayoutInEditMode } from '@/page-layout/hooks/useSetIsPageLayoutInEditMode';
+import { useBasePageLayout } from '@/page-layout/hooks/common/useBasePageLayout';
+import { usePageLayoutWithRelationWidgets } from '@/page-layout/hooks/display/usePageLayoutWithRelationWidgets';
+import { useSetIsPageLayoutInEditMode } from '@/page-layout/hooks/edit/useSetIsPageLayoutInEditMode';
 import { pageLayoutCurrentLayoutsComponentState } from '@/page-layout/states/pageLayoutCurrentLayoutsComponentState';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutIsInitializedComponentState } from '@/page-layout/states/pageLayoutIsInitializedComponentState';

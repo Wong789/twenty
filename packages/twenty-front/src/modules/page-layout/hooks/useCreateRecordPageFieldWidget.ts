@@ -4,7 +4,7 @@ import { usePageLayoutContentContext } from '@/page-layout/contexts/PageLayoutCo
 import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/useCurrentPageLayoutOrThrow';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { addWidgetToTab } from '@/page-layout/utils/addWidgetToTab';
-import { createDefaultFieldWidget } from '@/page-layout/utils/createDefaultFieldWidget';
+import { computeDefaultFieldWidget } from '@/page-layout/utils/computeDefaultFieldWidget';
 import { useTargetRecord } from '@/ui/layout/contexts/useTargetRecord';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { useStore } from 'jotai';
@@ -61,7 +61,7 @@ export const useCreateRecordPageFieldWidget = () => {
     const positionIndex = existingWidgets.length;
     const widgetId = uuidv4();
 
-    const newWidget = createDefaultFieldWidget({
+    const newWidget = computeDefaultFieldWidget({
       id: widgetId,
       pageLayoutTabId: tabId,
       fieldMetadataId,

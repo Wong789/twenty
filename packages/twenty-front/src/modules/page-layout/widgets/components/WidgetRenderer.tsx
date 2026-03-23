@@ -1,8 +1,8 @@
 import { usePageLayoutContentContext } from '@/page-layout/contexts/PageLayoutContentContext';
-import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/useCurrentPageLayoutOrThrow';
-import { useDeletePageLayoutWidget } from '@/page-layout/hooks/useDeletePageLayoutWidget';
-import { useEditPageLayoutWidget } from '@/page-layout/hooks/useEditPageLayoutWidget';
-import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/useIsPageLayoutInEditMode';
+import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/common/useCurrentPageLayoutOrThrow';
+import { useDeletePageLayoutWidget } from '@/page-layout/hooks/edit/useDeletePageLayoutWidget';
+import { useEditPageLayoutWidget } from '@/page-layout/hooks/edit/useEditPageLayoutWidget';
+import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/common/useIsPageLayoutInEditMode';
 import { pageLayoutDraggingWidgetIdComponentState } from '@/page-layout/states/pageLayoutDraggingWidgetIdComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
 import { pageLayoutResizingWidgetIdComponentState } from '@/page-layout/states/pageLayoutResizingWidgetIdComponentState';

@@ -1,4 +1,4 @@
-import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/useCurrentPageLayoutOrThrow';
+import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/common/useCurrentPageLayoutOrThrow';
 import { DashboardWidgetPlaceholder } from '@/page-layout/widgets/components/DashboardWidgetPlaceholder';
 import { PageLayoutType } from '~/generated-metadata/graphql';
 

@@ -1,4 +1,4 @@
-import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/useIsPageLayoutInEditMode';
+import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/common/useIsPageLayoutInEditMode';
 import { WidgetSkeletonLoader } from '@/page-layout/widgets/components/WidgetSkeletonLoader';
 import { GraphWidgetChartHasTooManyGroupsEffect } from '@/page-layout/widgets/graph/components/GraphWidgetChartHasTooManyGroupsEffect';
 import { useGraphPieChartWidgetData } from '@/page-layout/widgets/graph/graph-widget-pie-chart/hooks/useGraphPieChartWidgetData';

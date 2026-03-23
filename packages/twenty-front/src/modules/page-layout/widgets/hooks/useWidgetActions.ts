@@ -5,7 +5,7 @@ import { useObjectPermissions } from '@/object-record/hooks/useObjectPermissions
 import { useIsRecordReadOnly } from '@/object-record/read-only/hooks/useIsRecordReadOnly';
 import { isRecordFieldReadOnly } from '@/object-record/read-only/utils/isRecordFieldReadOnly';
 import { isFieldRelation } from '@/object-record/record-field/ui/types/guards/isFieldRelation';
-import { useResolveFieldMetadataIdFromNameOrId } from '@/page-layout/hooks/useResolveFieldMetadataIdFromNameOrId';
+import { useResolveFieldMetadataIdFromNameOrId } from '@/page-layout/hooks/common/useResolveFieldMetadataIdFromNameOrId';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { isFieldWidget } from '@/page-layout/widgets/field/utils/isFieldWidget';
 import { type WidgetAction } from '@/page-layout/widgets/types/WidgetAction';

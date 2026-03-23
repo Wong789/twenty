@@ -1,4 +1,4 @@
-import { useCurrentPageLayout } from '@/page-layout/hooks/useCurrentPageLayout';
+import { useCurrentPageLayout } from '@/page-layout/hooks/common/useCurrentPageLayout';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { useComponentInstanceStateContext } from '@/ui/utilities/state/component-state/hooks/useComponentInstanceStateContext';
 import { assertIsDefinedOrThrow } from 'twenty-shared/utils';

@@ -3,8 +3,8 @@ import { useUpdateSidePanelPageInfo } from '@/side-panel/hooks/useUpdateSidePane
 import { sidePanelPageInfoState } from '@/side-panel/states/sidePanelPageInfoState';
 import { sidePanelPageState } from '@/side-panel/states/sidePanelPageState';
 import { sidePanelShouldFocusTitleInputComponentState } from '@/side-panel/states/sidePanelShouldFocusTitleInputComponentState';
-import { useUpdatePageLayoutTab } from '@/page-layout/hooks/useUpdatePageLayoutTab';
-import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/useUpdatePageLayoutWidget';
+import { useUpdatePageLayoutTab } from '@/page-layout/hooks/edit/useUpdatePageLayoutTab';
+import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/edit/useUpdatePageLayoutWidget';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
 import { pageLayoutTabSettingsOpenTabIdComponentState } from '@/page-layout/states/pageLayoutTabSettingsOpenTabIdComponentState';

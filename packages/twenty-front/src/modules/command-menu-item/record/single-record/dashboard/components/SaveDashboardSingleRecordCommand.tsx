@@ -2,8 +2,8 @@ import { Command } from '@/command-menu-item/display/components/Command';
 import { useSelectedRecordIdOrThrow } from '@/command-menu-item/record/single-record/hooks/useSelectedRecordIdOrThrow';
 import { useSidePanelMenu } from '@/side-panel/hooks/useSidePanelMenu';
 import { recordStoreFamilyState } from '@/object-record/record-store/states/recordStoreFamilyState';
-import { useSavePageLayout } from '@/page-layout/hooks/useSavePageLayout';
-import { useSetIsPageLayoutInEditMode } from '@/page-layout/hooks/useSetIsPageLayoutInEditMode';
+import { useSavePageLayout } from '@/page-layout/hooks/edit/useSavePageLayout';
+import { useSetIsPageLayoutInEditMode } from '@/page-layout/hooks/edit/useSetIsPageLayoutInEditMode';
 import { useAtomFamilyStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomFamilyStateValue';
 
 export const SaveDashboardSingleRecordCommand = () => {

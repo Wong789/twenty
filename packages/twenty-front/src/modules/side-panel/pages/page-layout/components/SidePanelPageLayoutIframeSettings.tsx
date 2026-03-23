@@ -2,7 +2,7 @@ import { WidgetSettingsFooter } from '@/side-panel/pages/page-layout/components/
 import { usePageLayoutIdFromContextStore } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdFromContextStore';
 import { useWidgetInEditMode } from '@/side-panel/pages/page-layout/hooks/useWidgetInEditMode';
 import { FormTextFieldInput } from '@/object-record/record-field/ui/form-types/components/FormTextFieldInput';
-import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/useUpdatePageLayoutWidget';
+import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/edit/useUpdatePageLayoutWidget';
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
 import { isNonEmptyString, isString } from '@sniptt/guards';

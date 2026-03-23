@@ -3,10 +3,10 @@ import { PageLayoutGridLayout } from '@/page-layout/components/PageLayoutGridLay
 import { PageLayoutVerticalListEditor } from '@/page-layout/components/PageLayoutVerticalListEditor';
 import { PageLayoutVerticalListViewer } from '@/page-layout/components/PageLayoutVerticalListViewer';
 import { usePageLayoutContentContext } from '@/page-layout/contexts/PageLayoutContentContext';
-import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/useCurrentPageLayoutOrThrow';
-import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/useIsPageLayoutInEditMode';
-import { usePageLayoutTabWithVisibleWidgetsOrThrow } from '@/page-layout/hooks/usePageLayoutTabWithVisibleWidgetsOrThrow';
-import { useReorderPageLayoutWidgets } from '@/page-layout/hooks/useReorderPageLayoutWidgets';
+import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/common/useCurrentPageLayoutOrThrow';
+import { useIsPageLayoutInEditMode } from '@/page-layout/hooks/common/useIsPageLayoutInEditMode';
+import { usePageLayoutTabWithVisibleWidgetsOrThrow } from '@/page-layout/hooks/display/usePageLayoutTabWithVisibleWidgetsOrThrow';
+import { useReorderPageLayoutWidgets } from '@/page-layout/hooks/edit/useReorderPageLayoutWidgets';
 import { RecordPageAddWidgetSection } from '@/page-layout/widgets/components/RecordPageAddWidgetSection';
 import { useIsFeatureEnabled } from '@/workspace/hooks/useIsFeatureEnabled';
 import {

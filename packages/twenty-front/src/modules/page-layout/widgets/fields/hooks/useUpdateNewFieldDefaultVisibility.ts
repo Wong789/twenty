@@ -1,4 +1,4 @@
-import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/useUpdatePageLayoutWidget';
+import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/edit/useUpdatePageLayoutWidget';
 import { useGetNewFieldDefaultVisibility } from '@/page-layout/widgets/fields/hooks/useGetNewFieldDefaultVisibility';
 import { useCallback } from 'react';
 import { isDefined } from 'twenty-shared/utils';

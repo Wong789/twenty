@@ -23,7 +23,7 @@ import { generateGroupByAggregateQuery } from '@/object-record/record-aggregate/
 import {
   PAGE_LAYOUT_TEST_INSTANCE_ID,
   PageLayoutTestWrapper,
-} from '@/page-layout/hooks/__tests__/PageLayoutTestWrapper';
+} from '@/page-layout/hooks/common/__tests__/PageLayoutTestWrapper';
 import { isDashboardInEditModeComponentState } from '@/page-layout/states/isDashboardInEditModeComponentState';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutDraggingWidgetIdComponentState } from '@/page-layout/states/pageLayoutDraggingWidgetIdComponentState';

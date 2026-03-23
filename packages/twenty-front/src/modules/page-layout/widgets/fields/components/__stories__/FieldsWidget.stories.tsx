@@ -12,7 +12,7 @@ import { PageLayoutContentProvider } from '@/page-layout/contexts/PageLayoutCont
 import {
   PAGE_LAYOUT_TEST_INSTANCE_ID,
   PageLayoutTestWrapper,
-} from '@/page-layout/hooks/__tests__/PageLayoutTestWrapper';
+} from '@/page-layout/hooks/common/__tests__/PageLayoutTestWrapper';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutPersistedComponentState } from '@/page-layout/states/pageLayoutPersistedComponentState';
 import { type PageLayout } from '@/page-layout/types/PageLayout';

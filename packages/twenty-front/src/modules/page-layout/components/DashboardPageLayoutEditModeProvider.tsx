@@ -1,5 +1,5 @@
 import { PageLayoutEditModeProviderContext } from '@/page-layout/contexts/PageLayoutEditModeContext';
-import { useIsDashboardPageLayoutInEditMode } from '@/page-layout/hooks/useIsDashboardPageLayoutInEditMode';
+import { useIsDashboardPageLayoutInEditMode } from '@/page-layout/hooks/common/useIsDashboardPageLayoutInEditMode';
 import { type ReactNode } from 'react';
 
 type DashboardPageLayoutEditModeProviderProps = {

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { type Attachment } from '@/activities/files/types/Attachment';
-import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/useUpdatePageLayoutWidget';
+import { useUpdatePageLayoutWidget } from '@/page-layout/hooks/edit/useUpdatePageLayoutWidget';
 import { isDashboardInEditModeComponentState } from '@/page-layout/states/isDashboardInEditModeComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';

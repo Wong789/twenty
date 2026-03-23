@@ -1,7 +1,7 @@
 import { PageLayoutContent } from '@/page-layout/components/PageLayoutContent';
 import { PageLayoutContentProvider } from '@/page-layout/contexts/PageLayoutContentContext';
-import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/useCurrentPageLayoutOrThrow';
-import { usePageLayoutTabWithVisibleWidgetsOrThrow } from '@/page-layout/hooks/usePageLayoutTabWithVisibleWidgetsOrThrow';
+import { useCurrentPageLayoutOrThrow } from '@/page-layout/hooks/common/useCurrentPageLayoutOrThrow';
+import { usePageLayoutTabWithVisibleWidgetsOrThrow } from '@/page-layout/hooks/display/usePageLayoutTabWithVisibleWidgetsOrThrow';
 import { getTabLayoutMode } from '@/page-layout/utils/getTabLayoutMode';
 
 type PageLayoutMainContentProps = {

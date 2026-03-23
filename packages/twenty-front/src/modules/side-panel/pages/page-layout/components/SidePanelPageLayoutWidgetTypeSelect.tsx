@@ -1,11 +1,11 @@
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { FIND_MANY_FRONT_COMPONENTS } from '@/front-components/graphql/queries/findManyFrontComponents';
-import { useCreatePageLayoutFrontComponentWidget } from '@/page-layout/hooks/useCreatePageLayoutFrontComponentWidget';
-import { useCreatePageLayoutGraphWidget } from '@/page-layout/hooks/useCreatePageLayoutGraphWidget';
-import { useCreatePageLayoutIframeWidget } from '@/page-layout/hooks/useCreatePageLayoutIframeWidget';
-import { useCreatePageLayoutStandaloneRichTextWidget } from '@/page-layout/hooks/useCreatePageLayoutStandaloneRichTextWidget';
-import { useOpportunityDefaultChartConfig } from '@/page-layout/hooks/useOpportunityDefaultChartConfig';
-import { useRemovePageLayoutWidgetAndPreservePosition } from '@/page-layout/hooks/useRemovePageLayoutWidgetAndPreservePosition';
+import { useCreatePageLayoutFrontComponentWidget } from '@/page-layout/hooks/edit/useCreatePageLayoutFrontComponentWidget';
+import { useCreatePageLayoutGraphWidget } from '@/page-layout/hooks/edit/useCreatePageLayoutGraphWidget';
+import { useCreatePageLayoutIframeWidget } from '@/page-layout/hooks/edit/useCreatePageLayoutIframeWidget';
+import { useCreatePageLayoutStandaloneRichTextWidget } from '@/page-layout/hooks/edit/useCreatePageLayoutStandaloneRichTextWidget';
+import { useOpportunityDefaultChartConfig } from '@/page-layout/hooks/common/useOpportunityDefaultChartConfig';
+import { useRemovePageLayoutWidgetAndPreservePosition } from '@/page-layout/hooks/edit/useRemovePageLayoutWidgetAndPreservePosition';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutEditingWidgetIdComponentState } from '@/page-layout/states/pageLayoutEditingWidgetIdComponentState';
 import { getTabListInstanceIdFromPageLayoutAndRecord } from '@/page-layout/utils/getTabListInstanceIdFromPageLayoutAndRecord';

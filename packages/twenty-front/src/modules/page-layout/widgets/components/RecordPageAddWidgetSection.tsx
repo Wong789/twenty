@@ -1,6 +1,6 @@
-import { useCreateRecordPageFieldWidget } from '@/page-layout/hooks/useCreateRecordPageFieldWidget';
-import { useCreateRecordPageFieldsWidget } from '@/page-layout/hooks/useCreateRecordPageFieldsWidget';
-import { useNavigateToMoreWidgets } from '@/page-layout/hooks/useNavigateToMoreWidgets';
+import { useCreateRecordPageFieldWidget } from '@/page-layout/hooks/edit/useCreateRecordPageFieldWidget';
+import { useCreateRecordPageFieldsWidget } from '@/page-layout/hooks/edit/useCreateRecordPageFieldsWidget';
+import { useNavigateToMoreWidgets } from '@/page-layout/hooks/edit/useNavigateToMoreWidgets';
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
 import { useContext } from 'react';

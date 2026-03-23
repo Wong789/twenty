@@ -22,6 +22,8 @@ const LEAF_SUBDIRS_WITHOUT_FILE_NAMING_CONSTRAINT = new Set([
 
 const TESTING_DIRS = new Set(['__tests__', '__mocks__', '__snapshots__']);
 
+const HOOKS_SUBMODULE_DIRS = new Set(['common', 'display', 'edit']);
+
 const MAX_MODULE_DEPTH = 5;
 const MAX_HOOKS_INTERNAL_DEPTH = 2;
 
@@ -141,6 +143,11 @@ const validateSegment = (
           },
         };
       }
+      if (HOOKS_SUBMODULE_DIRS.has(segment)) {
+        return {
+          nextContext: { type: 'hooks', internalDepth: 0 },
+        };
+      }
       return {
         error: {
           messageId: 'invalidHooksEntry',
@@ -184,9 +191,7 @@ const validateSegment = (
   }
 };
 
-const extractModulesRelativePath = (
-  filename: string,
-): string | null => {
+const extractModulesRelativePath = (filename: string): string | null => {
   const marker = '/src/modules/';
   const index = filename.indexOf(marker);
 
@@ -217,7 +222,7 @@ export const rule = defineRule({
       hooksInternalTooDeep:
         'hooks/internal/ nesting exceeds maximum depth of {{ max }}.',
       invalidHooksEntry:
-        "Unexpected entry '{{ name }}' in hooks/. Only hook files, __tests__/, __mocks__/, and internal/ are allowed.",
+        "Unexpected entry '{{ name }}' in hooks/. Only hook files, __tests__/, __mocks__/, internal/, common/, display/, and edit/ are allowed.",
       utilFileNaming:
         "Util file '{{ name }}' must match {camelCase}.(ts|tsx) (e.g. 'myUtil.ts').",
       invalidUtilsEntry:
@@ -227,9 +232,7 @@ export const rule = defineRule({
   create: (context) => {
     return {
       Program: (node: any) => {
-        const relativePath = extractModulesRelativePath(
-          context.filename,
-        );
+        const relativePath = extractModulesRelativePath(context.filename);
 
         if (!relativePath) {
           return;

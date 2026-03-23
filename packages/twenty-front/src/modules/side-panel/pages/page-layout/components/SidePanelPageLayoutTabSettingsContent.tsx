@@ -1,8 +1,8 @@
 import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
-import { useDeletePageLayoutTab } from '@/page-layout/hooks/useDeletePageLayoutTab';
-import { useDuplicatePageLayoutTab } from '@/page-layout/hooks/useDuplicatePageLayoutTab';
-import { useMovePageLayoutTab } from '@/page-layout/hooks/useMovePageLayoutTab';
-import { useSetAsPinnedTab } from '@/page-layout/hooks/useSetAsPinnedTab';
+import { useDeletePageLayoutTab } from '@/page-layout/hooks/edit/useDeletePageLayoutTab';
+import { useDuplicatePageLayoutTab } from '@/page-layout/hooks/edit/useDuplicatePageLayoutTab';
+import { useMovePageLayoutTab } from '@/page-layout/hooks/edit/useMovePageLayoutTab';
+import { useSetAsPinnedTab } from '@/page-layout/hooks/edit/useSetAsPinnedTab';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutTabSettingsOpenTabIdComponentState } from '@/page-layout/states/pageLayoutTabSettingsOpenTabIdComponentState';
 import { getTabListInstanceIdFromPageLayoutAndRecord } from '@/page-layout/utils/getTabListInstanceIdFromPageLayoutAndRecord';

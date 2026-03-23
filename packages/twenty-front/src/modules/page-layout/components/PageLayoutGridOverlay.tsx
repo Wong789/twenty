@@ -1,6 +1,6 @@
 import { type PageLayoutBreakpoint } from '@/page-layout/constants/PageLayoutBreakpoints';
 import { PAGE_LAYOUT_GRID_OVERLAY_Z_INDEX } from '@/page-layout/constants/PageLayoutGridOverlayZIndex';
-import { useCreateWidgetFromClick } from '@/page-layout/hooks/useCreateWidgetFromClick';
+import { useCreateWidgetFromClick } from '@/page-layout/hooks/edit/useCreateWidgetFromClick';
 import { pageLayoutCurrentBreakpointComponentState } from '@/page-layout/states/pageLayoutCurrentBreakpointComponentState';
 import { pageLayoutCurrentLayoutsComponentState } from '@/page-layout/states/pageLayoutCurrentLayoutsComponentState';
 import { pageLayoutSelectedCellsComponentState } from '@/page-layout/states/pageLayoutSelectedCellsComponentState';
