@@ -14,7 +14,7 @@ export const SETTINGS_AI_AGENT_TABLE_METADATA: TableMetadata<Agent> = {
     {
       fieldLabel: msg`Type`,
       fieldName: 'isCustom',
-      fieldType: 'string',
+      fieldType: 'number',
       align: 'left',
     },
   ],

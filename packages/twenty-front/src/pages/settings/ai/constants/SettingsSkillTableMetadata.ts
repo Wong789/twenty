@@ -15,7 +15,7 @@ export const SETTINGS_SKILL_TABLE_METADATA: TableMetadata<Skill> = {
     {
       fieldLabel: msg`Type`,
       fieldName: 'isCustom',
-      fieldType: 'string',
+      fieldType: 'number',
       align: 'left',
     },
   ],
