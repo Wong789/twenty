@@ -157,6 +157,12 @@ export class FileStorageService {
       },
     });
 
+    const driver = this.fileStorageDriverFactory.getCurrentDriver();
+
+    await driver.delete({
+      folderPath: join(workspaceId, applicationUniversalIdentifier),
+    });
+
     await this.fileRepository.delete({
       applicationId: application.id,
       workspaceId,

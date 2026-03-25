@@ -5,6 +5,7 @@ import { FileFolder } from 'twenty-shared/types';
 import { WorkspaceMigrationRunnerActionHandler } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/interfaces/workspace-migration-runner-action-handler-service.interface';
 
 import { FileStorageService } from 'src/engine/core-modules/file-storage/file-storage.service';
+import { LogicFunctionDriverFactory } from 'src/engine/core-modules/logic-function/logic-function-drivers/logic-function-driver.factory';
 import { findFlatEntityByIdInFlatEntityMapsOrThrow } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps-or-throw.util';
 import { LogicFunctionEntity } from 'src/engine/metadata-modules/logic-function/logic-function.entity';
 import {
@@ -22,7 +23,10 @@ export class DeleteLogicFunctionActionHandlerService extends WorkspaceMigrationR
   'delete',
   'logicFunction',
 ) {
-  constructor(private readonly fileStorageService: FileStorageService) {
+  constructor(
+    private readonly fileStorageService: FileStorageService,
+    private readonly logicFunctionDriverFactory: LogicFunctionDriverFactory,
+  ) {
     super();
   }
 
@@ -57,6 +61,11 @@ export class DeleteLogicFunctionActionHandlerService extends WorkspaceMigrationR
       id: flatAction.entityId,
       workspaceId,
     });
+
+    const logicFunctionDriver =
+      this.logicFunctionDriverFactory.getCurrentDriver();
+
+    await logicFunctionDriver.delete(flatLogicFunction);
 
     const applicationUniversalIdentifier = flatApplication.universalIdentifier;
 

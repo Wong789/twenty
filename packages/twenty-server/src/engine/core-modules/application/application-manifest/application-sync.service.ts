@@ -18,6 +18,7 @@ import { buildFromToAllUniversalFlatEntityMaps } from 'src/engine/core-modules/a
 import { getApplicationSubAllFlatEntityMaps } from 'src/engine/core-modules/application/application-manifest/utils/get-application-sub-all-flat-entity-maps.util';
 import { ApplicationVariableEntityService } from 'src/engine/core-modules/application/application-variable/application-variable.service';
 import { FileStorageService } from 'src/engine/core-modules/file-storage/file-storage.service';
+import { LogicFunctionDriverFactory } from 'src/engine/core-modules/logic-function/logic-function-drivers/logic-function-driver.factory';
 import { createEmptyAllFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/constant/create-empty-all-flat-entity-maps.constant';
 import { getMetadataFlatEntityMapsKey } from 'src/engine/metadata-modules/flat-entity/utils/get-metadata-flat-entity-maps-key.util';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
@@ -37,6 +38,7 @@ export class ApplicationSyncService {
     private readonly workspaceMigrationValidateBuildAndRunService: WorkspaceMigrationValidateBuildAndRunService,
     private readonly workspaceCacheService: WorkspaceCacheService,
     private readonly fileStorageService: FileStorageService,
+    private readonly logicFunctionDriverFactory: LogicFunctionDriverFactory,
   ) {}
 
   public async synchronizeFromManifest({
@@ -199,6 +201,20 @@ export class ApplicationSyncService {
         'Validation errors occurred while uninstalling application',
       );
     }
+
+    const logicFunctionDriver =
+      this.logicFunctionDriverFactory.getCurrentDriver();
+
+    const flatLogicFunctions = Object.values(
+      applicationFromAllFlatEntityMaps.flatLogicFunctionMaps
+        .byUniversalIdentifier,
+    ).filter(isDefined);
+
+    await logicFunctionDriver.deleteApplicationResources({
+      workspaceId,
+      applicationUniversalIdentifier,
+      flatLogicFunctions,
+    });
 
     await this.applicationService.delete(
       applicationUniversalIdentifier,

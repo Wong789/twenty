@@ -161,6 +161,22 @@ export class LocalDriver implements LogicFunctionDriver {
 
   async delete() {}
 
+  async deleteApplicationResources({
+    workspaceId,
+    applicationUniversalIdentifier,
+  }: {
+    workspaceId: string;
+    applicationUniversalIdentifier: string;
+    flatLogicFunctions: unknown[];
+  }): Promise<void> {
+    const sdkLayerPath = this.getSdkLayerPath({
+      workspaceId,
+      applicationUniversalIdentifier,
+    });
+
+    await fs.rm(sdkLayerPath, { recursive: true, force: true });
+  }
+
   async build({
     flatApplication,
     applicationUniversalIdentifier,

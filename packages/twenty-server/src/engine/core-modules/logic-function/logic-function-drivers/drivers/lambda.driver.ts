@@ -802,6 +802,34 @@ export class LambdaDriver implements LogicFunctionDriver {
     }
   }
 
+  async deleteApplicationResources({
+    workspaceId,
+    applicationUniversalIdentifier,
+    flatLogicFunctions,
+  }: {
+    workspaceId: string;
+    applicationUniversalIdentifier: string;
+    flatLogicFunctions: FlatLogicFunction[];
+  }): Promise<void> {
+    await Promise.all(
+      flatLogicFunctions.map((flatLogicFunction) =>
+        this.delete(flatLogicFunction),
+      ),
+    );
+
+    const lambdaClient = await this.getLambdaClient();
+
+    const sdkLayerName = this.getSdkLayerName({
+      workspaceId,
+      applicationUniversalIdentifier,
+    });
+
+    await this.deleteAllLayerVersions({
+      lambdaClient,
+      layerName: sdkLayerName,
+    });
+  }
+
   private async deleteAllLayerVersions({
     lambdaClient,
     layerName,
