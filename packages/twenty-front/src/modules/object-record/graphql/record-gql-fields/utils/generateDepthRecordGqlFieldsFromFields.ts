@@ -55,9 +55,7 @@ export const generateDepthRecordGqlFieldsFromFields = ({
         );
 
         if (!targetObjectMetadataItem) {
-          throw new Error(
-            `Target object metadata item not found for ${fieldMetadata.name}`,
-          );
+          return recordGqlFields;
         }
 
         const isActivityTargetField =

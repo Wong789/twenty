@@ -58,9 +58,7 @@ export const useRelatedRecordCommands = ({
     );
 
     if (!isDefined(targetObjectMetadataItem)) {
-      throw new Error(
-        `Target object metadata item is undefined for field: ${field.id}`,
-      );
+      continue;
     }
 
     const targetObjectNameSingular = targetObjectMetadataItem.nameSingular;
