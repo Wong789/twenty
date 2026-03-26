@@ -132,14 +132,16 @@ export class BillingPlanService {
     }
     const { meteredProducts, licensedProducts } = plan;
 
-    const filterPricesByInterval = (product: BillingProductEntity) =>
-      product.billingPrices.filter((price) => price.interval === interval);
+    const filterActivePricesByInterval = (product: BillingProductEntity) =>
+      product.billingPrices.filter(
+        (price) => price.interval === interval && price.active,
+      );
 
     const meteredProductsPrices = meteredProducts.flatMap(
-      filterPricesByInterval,
+      filterActivePricesByInterval,
     );
     const licensedProductsPrices = licensedProducts.flatMap(
-      filterPricesByInterval,
+      filterActivePricesByInterval,
     );
 
     return {
