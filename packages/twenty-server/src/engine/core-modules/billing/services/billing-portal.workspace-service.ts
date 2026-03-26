@@ -314,7 +314,7 @@ export class BillingPortalWorkspaceService {
       ),
     );
 
-    return [
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       {
         price: defaultLicensedProductPrice.stripePriceId,
         quantity,
@@ -323,5 +323,11 @@ export class BillingPortalWorkspaceService {
         price: defaultMeteredProductPrice.stripePriceId,
       },
     ];
+
+    this.logger.log(
+      `Creating checkout session with price IDs: ${lineItems.map((item) => item.price).join(', ')}`,
+    );
+
+    return lineItems;
   }
 }
