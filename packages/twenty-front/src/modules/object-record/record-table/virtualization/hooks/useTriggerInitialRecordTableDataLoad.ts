@@ -1,5 +1,8 @@
+import { type ErrorLike } from '@apollo/client';
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { useCallback } from 'react';
 import { useStore } from 'jotai';
+import { isDefined } from 'twenty-shared/utils';
 
 import { useRecordIndexTableLazyQuery } from '@/object-record/record-index/hooks/useRecordIndexTableLazyQuery';
 import { recordIndexAllRecordIdsComponentSelector } from '@/object-record/record-index/states/selectors/recordIndexAllRecordIdsComponentSelector';
@@ -11,10 +14,10 @@ import { useScrollTableToPosition } from '@/object-record/record-table/hooks/use
 import { isRecordTableInitialLoadingComponentState } from '@/object-record/record-table/states/isRecordTableInitialLoadingComponentState';
 import { isRecordTableScrolledHorizontallyComponentState } from '@/object-record/record-table/states/isRecordTableScrolledHorizontallyComponentState';
 import { isRecordTableScrolledVerticallyComponentState } from '@/object-record/record-table/states/isRecordTableScrolledVerticallyComponentState';
+import { isRecordTableAccessDeniedComponentState } from '@/object-record/record-table/states/isRecordTableAccessDeniedComponentState';
 import { updateRecordTableCSSVariable } from '@/object-record/record-table/utils/updateRecordTableCSSVariable';
 import { useLoadRecordsToVirtualRows } from '@/object-record/record-table/virtualization/hooks/useLoadRecordsToVirtualRows';
 import { useReapplyRowSelection } from '@/object-record/record-table/virtualization/hooks/useReapplyRowSelection';
-
 import { useResetTableFocuses } from '@/object-record/record-table/virtualization/hooks/useResetTableFocuses';
 import { useResetVirtualizedRowTreadmill } from '@/object-record/record-table/virtualization/hooks/useResetVirtualizedRowTreadmill';
 import { dataPagesLoadedComponentState } from '@/object-record/record-table/virtualization/states/dataPagesLoadedComponentState';
@@ -31,7 +34,16 @@ import { dataLoadingStatusByRealIndexComponentState } from '@/object-record/reco
 import { recordIdByRealIndexComponentState } from '@/object-record/record-table/virtualization/states/recordIdByRealIndexComponentState';
 import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
 import { useAtomComponentSelectorCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentSelectorCallbackState';
-import { isDefined } from 'twenty-shared/utils';
+
+const isForbiddenError = (error: ErrorLike): boolean => {
+  if (!CombinedGraphQLErrors.is(error)) {
+    return false;
+  }
+
+  return error.errors.some(
+    (graphqlError) => graphqlError.extensions?.code === 'FORBIDDEN',
+  );
+};
 
 export const useTriggerInitialRecordTableDataLoad = () => {
   const { recordTableId, objectNameSingular } = useRecordTableContextOrThrow();
@@ -107,6 +119,11 @@ export const useTriggerInitialRecordTableDataLoad = () => {
       totalNumberOfRecordsToVirtualizeComponentState,
     );
 
+  const isRecordTableAccessDenied = useAtomComponentStateCallbackState(
+    isRecordTableAccessDeniedComponentState,
+    recordTableId,
+  );
+
   const triggerInitialRecordTableDataLoad = useCallback(
     async ({
       shouldScrollToStart = true,
@@ -120,6 +137,7 @@ export const useTriggerInitialRecordTableDataLoad = () => {
       }
 
       store.set(isInitializingVirtualTableDataLoadingCallbackState, true);
+      store.set(isRecordTableAccessDenied, false);
 
       try {
         resetTableFocuses();
@@ -165,8 +183,23 @@ export const useTriggerInitialRecordTableDataLoad = () => {
             newDataLoadingStatusByRealIndex,
           );
 
-          const { records: findManyRecords, totalCount: findManyTotalCount } =
-            await findManyRecordsLazy();
+          const {
+            records: findManyRecords,
+            totalCount: findManyTotalCount,
+            error: queryError,
+          } = await findManyRecordsLazy();
+
+          if (isDefined(queryError) && isForbiddenError(queryError)) {
+            store.set(isRecordTableAccessDenied, true);
+            store.set(totalNumberOfRecordsToVirtualizeCallbackState, 0);
+            store.set(recordIdByRealIndexCallbackState, new Map());
+            store.set(
+              dataLoadingStatusByRealIndexCallbackState,
+              new Map(),
+            );
+
+            return;
+          }
 
           records = findManyRecords;
           totalCount = findManyTotalCount;
@@ -201,6 +234,18 @@ export const useTriggerInitialRecordTableDataLoad = () => {
             verticalScrollInPx: 0,
           });
         }
+      } catch (error) {
+        if (
+          isDefined(error) &&
+          typeof error === 'object' &&
+          'name' in error &&
+          isForbiddenError(error as ErrorLike)
+        ) {
+          store.set(isRecordTableAccessDenied, true);
+        }
+        store.set(totalNumberOfRecordsToVirtualizeCallbackState, 0);
+        store.set(recordIdByRealIndexCallbackState, new Map());
+        store.set(dataLoadingStatusByRealIndexCallbackState, new Map());
       } finally {
         store.set(isInitializingVirtualTableDataLoadingCallbackState, false);
         store.set(isRecordTableInitialLoading, false);
@@ -229,6 +274,7 @@ export const useTriggerInitialRecordTableDataLoad = () => {
       loadRecordsToVirtualRows,
       reapplyRowSelection,
       recordTableId,
+      isRecordTableAccessDenied,
     ],
   );
 

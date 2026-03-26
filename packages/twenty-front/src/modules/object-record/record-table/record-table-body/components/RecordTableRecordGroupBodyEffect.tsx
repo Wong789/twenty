@@ -1,4 +1,7 @@
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { useEffect } from 'react';
+import { isDefined } from 'twenty-shared/utils';
+import { isNonEmptyString } from '@sniptt/guards';
 
 import { lastShowPageRecordIdState } from '@/object-record/record-field/ui/states/lastShowPageRecordId';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
@@ -10,10 +13,10 @@ import { RECORD_TABLE_ROW_HEIGHT } from '@/object-record/record-table/constants/
 import { useRecordTableContextOrThrow } from '@/object-record/record-table/contexts/RecordTableContext';
 import { useSetRecordTableData } from '@/object-record/record-table/hooks/internal/useSetRecordTableData';
 import { isRecordTableInitialLoadingComponentState } from '@/object-record/record-table/states/isRecordTableInitialLoadingComponentState';
+import { isRecordTableAccessDeniedComponentState } from '@/object-record/record-table/states/isRecordTableAccessDeniedComponentState';
 import { useScrollToPosition } from '@/ui/utilities/scroll/hooks/useScrollToPosition';
 import { useSetAtomComponentFamilyState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentFamilyState';
 import { useSetAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useSetAtomComponentState';
-import { isNonEmptyString } from '@sniptt/guards';
 
 export const RecordTableRecordGroupBodyEffect = () => {
   const { objectNameSingular } = useRecordTableContextOrThrow();
@@ -27,9 +30,14 @@ export const RecordTableRecordGroupBodyEffect = () => {
     isRecordTableInitialLoadingComponentState,
   );
 
+  const setIsAccessDenied = useSetAtomComponentState(
+    isRecordTableAccessDeniedComponentState,
+    recordTableId,
+  );
+
   const recordGroupId = useCurrentRecordGroupId();
 
-  const { records, loading, hasNextPage } =
+  const { records, loading, hasNextPage, error } =
     useRecordIndexTableQuery(objectNameSingular);
 
   const setRecordIndexHasFetchedAllRecordsByGroup =
@@ -43,7 +51,21 @@ export const RecordTableRecordGroupBodyEffect = () => {
   const { scrollToPosition } = useScrollToPosition();
 
   useEffect(() => {
+    if (isDefined(error) && CombinedGraphQLErrors.is(error)) {
+      const isForbidden = error.errors.some(
+        (graphqlError) => graphqlError.extensions?.code === 'FORBIDDEN',
+      );
+
+      if (isForbidden) {
+        setIsAccessDenied(true);
+        setIsRecordTableInitialLoading(false);
+
+        return;
+      }
+    }
+
     if (!loading) {
+      setIsAccessDenied(false);
       setRecordTableData({
         records,
         currentRecordGroupId: recordGroupId,
@@ -52,10 +74,12 @@ export const RecordTableRecordGroupBodyEffect = () => {
       setRecordIndexHasFetchedAllRecordsByGroup(!hasNextPage);
     }
   }, [
+    error,
     hasNextPage,
     loading,
     records,
     recordGroupId,
+    setIsAccessDenied,
     setRecordIndexHasFetchedAllRecordsByGroup,
     setIsRecordTableInitialLoading,
     setRecordTableData,

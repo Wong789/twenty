@@ -92,17 +92,26 @@ export const useComputeRecordRelationFilterLabelValue = ({
       ? `${labelValueItems.length} ${relationObjectLabelPlural.toLowerCase()}`
       : labelValueItems.join(', ');
 
+  if (labelValueItems.length > 0) {
+    return {
+      labelValue: getRecordFilterChipLabelValue({
+        recordFilter: {
+          ...recordFilter,
+          displayValue: filterDisplayValue,
+        },
+      }),
+    };
+  }
+
+  const hasUnresolvedRecords =
+    selectedRecordIds.length > 0 && selectedRecords.length === 0;
+
   return {
-    labelValue:
-      labelValueItems.length > 0
-        ? getRecordFilterChipLabelValue({
-            recordFilter: {
-              ...recordFilter,
-              displayValue: filterDisplayValue,
-            },
-          })
-        : getRecordFilterChipLabelValue({
-            recordFilter,
-          }),
+    labelValue: getRecordFilterChipLabelValue({
+      recordFilter: {
+        ...recordFilter,
+        ...(hasUnresolvedRecords ? { displayValue: t`Not found` } : {}),
+      },
+    }),
   };
 };
