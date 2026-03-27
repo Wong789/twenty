@@ -1,11 +1,11 @@
 import { isNonEmptyString, isObject } from '@sniptt/guards';
 import qs from 'qs';
 
-import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
-import { useObjectNameSingularFromPlural } from '@/object-metadata/hooks/useObjectNameSingularFromPlural';
+import { objectMetadataItemFamilySelector } from '@/object-metadata/states/objectMetadataItemFamilySelector';
 import { isCompositeFieldType } from '@/object-record/object-filter-dropdown/utils/isCompositeFieldType';
 import { type RecordFilterGroup } from '@/object-record/record-filter-group/types/RecordFilterGroup';
 import { type RecordFilter } from '@/object-record/record-filter/types/RecordFilter';
+import { useAtomFamilySelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomFamilySelectorValue';
 import { filterUrlQueryParamsSchema } from '@/views/schemas/filterUrlQueryParamsSchema';
 import { type ViewFilter } from '@/views/types/ViewFilter';
 import { deserializeUrlRecursiveFilterGroup } from '@/views/utils/deserializeUrlRecursiveFilterGroup';
@@ -18,16 +18,20 @@ import { isDefined, isExpectedSubFieldName } from 'twenty-shared/utils';
 export const useFiltersFromQueryParams = () => {
   const [searchParams] = useSearchParams();
   const { objectNamePlural = '' } = useParams();
-  const { objectNameSingular } = useObjectNameSingularFromPlural({
-    objectNamePlural,
-  });
-  const { objectMetadataItem } = useObjectMetadataItem({
-    objectNameSingular,
-  });
+
+  const objectMetadataItem = useAtomFamilySelectorValue(
+    objectMetadataItemFamilySelector,
+    {
+      objectName: objectNamePlural,
+      objectNameType: 'plural',
+    },
+  );
 
   const queryParamsValidation = filterUrlQueryParamsSchema.safeParse(
     qs.parse(searchParams.toString()),
   );
+
+  const fields = objectMetadataItem?.fields ?? [];
 
   const getFiltersFromQueryParams = useCallback(async (): Promise<
     ViewFilter[]
@@ -55,7 +59,7 @@ export const useFiltersFromQueryParams = () => {
           const { baseFieldName, subFieldName } =
             splitFieldNameIntoBaseAndSubField(fieldName);
 
-          const fieldMetadataItem = objectMetadataItem.fields.find(
+          const fieldMetadataItem = fields.find(
             (field) => field.name === baseFieldName,
           );
 
@@ -109,7 +113,7 @@ export const useFiltersFromQueryParams = () => {
     }
 
     return (await Promise.all(promises)).filter(isDefined);
-  }, [queryParamsValidation, objectMetadataItem.fields]);
+  }, [queryParamsValidation, fields]);
 
   const filterGroupQueryParams = queryParamsValidation.success
     ? queryParamsValidation.data.filterGroup
@@ -119,7 +123,7 @@ export const useFiltersFromQueryParams = () => {
     recordFilters: RecordFilter[];
     recordFilterGroups: RecordFilterGroup[];
   }> => {
-    if (!isDefined(filterGroupQueryParams)) {
+    if (!isDefined(filterGroupQueryParams) || !isDefined(objectMetadataItem)) {
       return { recordFilters: [], recordFilterGroups: [] };
     }
 

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useSortsFromQueryParams } from '@/views/hooks/internal/useSortsFromQueryParams';
 import { useApplyViewSortsToCurrentRecordSorts } from '@/views/hooks/useApplyViewSortsToCurrentRecordSorts';
 import { useGetCurrentViewOnly } from '@/views/hooks/useGetCurrentViewOnly';
+import { isDefined } from 'twenty-shared/utils';
 
 export const QueryParamsSortsEffect = () => {
   const { hasSortsQueryParams, getSortsFromQueryParams, objectMetadataItem } =
@@ -14,6 +15,7 @@ export const QueryParamsSortsEffect = () => {
     useApplyViewSortsToCurrentRecordSorts();
 
   const currentViewObjectMetadataItemIsDifferentFromURLObjectMetadataItem =
+    !isDefined(objectMetadataItem) ||
     currentView?.objectMetadataId !== objectMetadataItem.id;
 
   useEffect(() => {

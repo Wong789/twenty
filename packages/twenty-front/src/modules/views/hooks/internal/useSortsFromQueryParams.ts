@@ -1,9 +1,9 @@
 import qs from 'qs';
 import { useCallback, useMemo } from 'react';
 
-import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
-import { useObjectNameSingularFromPlural } from '@/object-metadata/hooks/useObjectNameSingularFromPlural';
+import { objectMetadataItemFamilySelector } from '@/object-metadata/states/objectMetadataItemFamilySelector';
 import { type RecordSort } from '@/object-record/record-sort/types/RecordSort';
+import { useAtomFamilySelectorValue } from '@/ui/utilities/state/jotai/hooks/useAtomFamilySelectorValue';
 import { sortUrlQueryParamsSchema } from '@/views/schemas/sortUrlQueryParamsSchema';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { isDefined } from 'twenty-shared/utils';
@@ -12,12 +12,14 @@ import { type ViewSortDirection } from '~/generated-metadata/graphql';
 export const useSortsFromQueryParams = () => {
   const [searchParams] = useSearchParams();
   const { objectNamePlural = '' } = useParams();
-  const { objectNameSingular } = useObjectNameSingularFromPlural({
-    objectNamePlural,
-  });
-  const { objectMetadataItem } = useObjectMetadataItem({
-    objectNameSingular,
-  });
+
+  const objectMetadataItem = useAtomFamilySelectorValue(
+    objectMetadataItemFamilySelector,
+    {
+      objectName: objectNamePlural,
+      objectNameType: 'plural',
+    },
+  );
 
   const queryParamsValidation = sortUrlQueryParamsSchema.safeParse(
     qs.parse(searchParams.toString()),
@@ -32,12 +34,14 @@ export const useSortsFromQueryParams = () => {
   const hasSortsQueryParams =
     isDefined(sortQueryParams) && Object.entries(sortQueryParams).length > 0;
 
+  const fields = objectMetadataItem?.fields ?? [];
+
   const getSortsFromQueryParams = useCallback((): RecordSort[] => {
     if (!hasSortsQueryParams) return [];
 
     return Object.entries(sortQueryParams)
       .map(([fieldName, direction]) => {
-        const fieldMetadataItem = objectMetadataItem.fields.find(
+        const fieldMetadataItem = fields.find(
           (field) => field.name === fieldName,
         );
 
@@ -50,7 +54,7 @@ export const useSortsFromQueryParams = () => {
         };
       })
       .filter(isDefined);
-  }, [hasSortsQueryParams, sortQueryParams, objectMetadataItem.fields]);
+  }, [hasSortsQueryParams, sortQueryParams, fields]);
 
   return {
     hasSortsQueryParams,
