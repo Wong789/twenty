@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { createWriteStream } from 'fs';
@@ -22,6 +22,7 @@ import {
   SdkClientException,
   SdkClientExceptionCode,
 } from 'src/engine/core-modules/sdk-client/exceptions/sdk-client.exception';
+import { SdkClientGenerationService } from 'src/engine/core-modules/sdk-client/sdk-client-generation.service';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
 import { streamToBuffer } from 'src/utils/stream-to-buffer';
 
@@ -29,11 +30,15 @@ const SDK_CLIENT_ARCHIVE_NAME = 'twenty-client-sdk.zip';
 
 @Injectable()
 export class SdkClientArchiveService {
+  private readonly logger = new Logger(SdkClientArchiveService.name);
+
   constructor(
     private readonly fileStorageService: FileStorageService,
     @InjectRepository(ApplicationEntity)
     private readonly applicationRepository: Repository<ApplicationEntity>,
     private readonly workspaceCacheService: WorkspaceCacheService,
+    @Inject(forwardRef(() => SdkClientGenerationService))
+    private readonly sdkClientGenerationService: SdkClientGenerationService,
   ) {}
 
   async downloadAndExtractToPackage({
@@ -154,13 +159,49 @@ export class SdkClientArchiveService {
         error instanceof FileStorageException &&
         error.code === FileStorageExceptionCode.FILE_NOT_FOUND
       ) {
-        throw new SdkClientException(
-          `SDK client archive "${SDK_CLIENT_ARCHIVE_NAME}" not found for application "${applicationUniversalIdentifier}" in workspace "${workspaceId}".`,
-          SdkClientExceptionCode.ARCHIVE_NOT_FOUND,
-        );
+        return this.generateAndRetryReadArchiveStream({
+          workspaceId,
+          applicationUniversalIdentifier,
+        });
       }
 
       throw error;
     }
+  }
+
+  private async generateAndRetryReadArchiveStream({
+    workspaceId,
+    applicationUniversalIdentifier,
+  }: {
+    workspaceId: string;
+    applicationUniversalIdentifier: string;
+  }): Promise<Readable> {
+    const application = await this.applicationRepository.findOne({
+      where: { workspaceId, universalIdentifier: applicationUniversalIdentifier },
+    });
+
+    if (!application) {
+      throw new SdkClientException(
+        `SDK client archive "${SDK_CLIENT_ARCHIVE_NAME}" not found for application "${applicationUniversalIdentifier}" in workspace "${workspaceId}".`,
+        SdkClientExceptionCode.ARCHIVE_NOT_FOUND,
+      );
+    }
+
+    this.logger.log(
+      `SDK client archive missing for application "${applicationUniversalIdentifier}", generating on-the-fly`,
+    );
+
+    await this.sdkClientGenerationService.generateSdkClientForApplication({
+      workspaceId,
+      applicationId: application.id,
+      applicationUniversalIdentifier,
+    });
+
+    return this.fileStorageService.readFile({
+      workspaceId,
+      applicationUniversalIdentifier,
+      fileFolder: FileFolder.GeneratedSdkClient,
+      resourcePath: SDK_CLIENT_ARCHIVE_NAME,
+    });
   }
 }
