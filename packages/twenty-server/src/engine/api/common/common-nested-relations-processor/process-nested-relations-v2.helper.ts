@@ -61,29 +61,32 @@ export class ProcessNestedRelationsV2Helper {
     // oxlint-disable-next-line @typescripttypescript/no-explicit-any
     selectedFields: Record<string, any>;
   }): Promise<void> {
-    const processRelationTasks = Object.entries(relations).map(
-      ([sourceFieldName, nestedRelations]) =>
-        this.processRelation({
-          flatObjectMetadataMaps,
-          flatFieldMetadataMaps,
-          parentObjectMetadataItem,
-          parentObjectRecords,
-          parentObjectRecordsAggregatedValues,
-          sourceFieldName,
-          nestedRelations,
-          aggregate,
-          limit,
-          authContext,
-          workspaceDataSource,
-          rolePermissionConfig,
-          selectedFields:
-            selectedFields[sourceFieldName] instanceof Object
-              ? selectedFields[sourceFieldName]
-              : undefined,
-        }),
-    );
-
-    await Promise.all(processRelationTasks);
+    // Serialize relation queries to avoid exhausting the pg connection pool.
+    // With Promise.all, queries like FindOneCompany fire 10+ parallel DB
+    // queries (one per relation), saturating the default pool of 10
+    // connections and causing "Connection terminated unexpectedly" errors.
+    for (const [sourceFieldName, nestedRelations] of Object.entries(
+      relations,
+    )) {
+      await this.processRelation({
+        flatObjectMetadataMaps,
+        flatFieldMetadataMaps,
+        parentObjectMetadataItem,
+        parentObjectRecords,
+        parentObjectRecordsAggregatedValues,
+        sourceFieldName,
+        nestedRelations,
+        aggregate,
+        limit,
+        authContext,
+        workspaceDataSource,
+        rolePermissionConfig,
+        selectedFields:
+          selectedFields[sourceFieldName] instanceof Object
+            ? selectedFields[sourceFieldName]
+            : undefined,
+      });
+    }
   }
 
   private async processRelation<T extends ObjectRecord = ObjectRecord>({
