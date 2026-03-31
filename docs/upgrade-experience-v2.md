@@ -65,6 +65,10 @@ A workspace can only be upgraded by a version bundle if it is at exactly `instan
 
 On a fresh install, `instanceVersion` is set to `APP_VERSION` (no upgrade needed). On an existing instance that predates this feature, the migration that introduces `instanceVersion` seeds it from the current `APP_VERSION` at the time of deployment.
 
+### New Workspace Version
+
+When a new workspace is created, it receives `instanceVersion` as its workspace version -- not `APP_VERSION`. This ensures the workspace is aligned with the last fully-completed upgrade state. During cloud development, `APP_VERSION` may be ahead of `instanceVersion` (e.g. `APP_VERSION = 1.21.0` while `instanceVersion = 1.20.0`), so using `instanceVersion` prevents creating workspaces at a version that hasn't been fully upgraded to yet.
+
 ---
 
 ## Command Taxonomy
@@ -179,9 +183,9 @@ The upgrade processes **one version bundle at a time**, fully completing it befo
 
 2. **Stamp `instanceVersion`** to this version. The shared database is now at this version's global state.
 
-3. **Run `perWorkspaceCommands` array** for all workspaces at `instanceVersion - 1`. The orchestrator queries for workspaces at exactly the previous version and runs each `PerWorkspaceCommand` in order. Commands already recorded as `completed` in `workspace_upgrade_history` for a given workspace are skipped. Each workspace's version is stamped after all its per-workspace commands complete.
+3. **Run `perWorkspaceCommands` array** for all workspaces at `instanceVersion - 1`. The orchestrator queries for workspaces at exactly the previous version and runs each `PerWorkspaceCommand` in order. Commands already recorded as `completed` in `workspace_upgrade_history` for a given workspace are skipped. Each workspace's version is stamped after all its per-workspace commands complete. If a workspace fails, the orchestrator records the failure and **continues to the next workspace** -- it does not stop at the first failure.
 
-4. **All workspaces must succeed** before the orchestrator moves to the next version bundle. If any workspace fails during a per-workspace command, the upgrade **stops entirely**. The failed workspace keeps its current version stamp. The operator must fix the issue and re-run.
+4. **All workspaces must succeed** before the orchestrator moves to the next version bundle. After attempting all workspaces, if any failed, the upgrade halts. The `instanceVersion` advancement guard enforces this: the next bundle cannot start because not all workspace versions equal `instanceVersion`. The operator must fix the failing workspaces and re-run.
 
 ### No Straggler Rescue
 
@@ -224,10 +228,14 @@ this.allBundles = {
       Workspace A stamped to 1.19.0
     > Workspace B:
       [per-workspace] backfill feature flags    FAILED
-      *** Upgrade stops. Workspace B stays at 1.18.0. ***
+      Workspace B stays at 1.18.0
+    > Workspace C:
+      [per-workspace] backfill feature flags    OK
+      Workspace C stamped to 1.19.0
+  *** 1 workspace failed. Upgrade halts after this bundle. ***
 ```
 
-**The upgrade halts.** `instanceVersion` is `1.19.0` (stamped after `instanceCommands`), but workspace B is still at `1.18.0`. Workspace A is at `1.19.0`, workspace C is at `1.18.0` (not yet attempted).
+**The upgrade halts.** `instanceVersion` is `1.19.0` (stamped after `instanceCommands`). Workspaces A and C are at `1.19.0`, but workspace B is still at `1.18.0`. All three workspaces were attempted -- the orchestrator did not stop at B's failure.
 
 The operator investigates workspace B's failure (using the `workspace_upgrade_history` table and its captured logs), fixes the underlying issue, and re-runs the upgrade command.
 
@@ -235,21 +243,21 @@ The operator investigates workspace B's failure (using the `workspace_upgrade_hi
 
 ```
 > instanceVersion = 1.19.0, target = 1.20.0
-> Processing bundle_1190...
+> Advancement guard: all workspace versions must equal instanceVersion (1.19.0)
+>   Workspace B is at 1.18.0 -- NOT OK
+> Processing bundle_1190 (perWorkspaceCommands only, instanceCommands already completed)...
 
   instanceCommands:
     [global] TypeORM migrations for 1.19.0    SKIP (completed in history)
     [global] Schema change ABC                SKIP (completed in history)
   instanceVersion already at 1.19.0 (no-op)
 
-  perWorkspaceCommands (workspaces at 1.18.0: B, C):
-    > Workspace A: already at 1.19.0, not eligible (skipped)
+  perWorkspaceCommands (workspaces at 1.18.0: B):
+    > Workspace A: already at 1.19.0 (skipped)
     > Workspace B:
       [per-workspace] backfill feature flags    OK (fixed)
       Workspace B stamped to 1.19.0
-    > Workspace C:
-      [per-workspace] backfill feature flags    OK
-      Workspace C stamped to 1.19.0
+    > Workspace C: already at 1.19.0 (skipped)
 
 > Processing bundle_1200...
 
@@ -277,16 +285,17 @@ The operator investigates workspace B's failure (using the `workspace_upgrade_hi
 
 - The upgrade is strictly sequential: `bundle_1190` must fully complete (`instanceCommands` + all workspaces `perWorkspaceCommands`) before `bundle_1200` starts.
 - `instanceVersion` is stamped after `instanceCommands` complete -- it advanced to `1.19.0` even though workspace B failed. On re-run, the orchestrator sees `instanceVersion = 1.19.0` and skips `instanceCommands` for `bundle_1190`.
-- On re-run, instance commands are skipped (recorded as `completed` in `instance_upgrade_history`). Workspace A is already at `1.19.0` so it's not eligible for `bundle_1190.perWorkspaceCommands`.
+- All workspaces are attempted even when one fails. Workspace C was upgraded successfully despite workspace B's failure. This maximizes progress per run.
+- On re-run, instance commands are skipped (recorded as `completed` in `instance_upgrade_history`). Workspaces A and C are already at `1.19.0` so they're skipped. Only workspace B is re-attempted.
+- The `instanceVersion` advancement guard blocked `bundle_1200` from starting because workspace B was still at `1.18.0` (not equal to `instanceVersion = 1.19.0`). Once B succeeds on re-run, all workspaces are at `1.19.0` and the guard passes.
 - `perWorkspaceCommands` contains only `PerWorkspaceCommand` entries. Any global work belongs in `instanceCommands`.
-- The failure of workspace B blocked the entire upgrade, forcing the operator to fix it before proceeding.
 
 ### Failure Behavior
 
 - **Instance command failure**: the upgrade aborts immediately. `instanceVersion` is not stamped (the failing command's transaction is rolled back, previously completed commands remain applied). No per-workspace commands run.
-- **Per-workspace command failure (any workspace)**: the upgrade stops entirely. `instanceVersion` was already stamped (after `instanceCommands`). The failed workspace keeps its current version. Workspaces already upgraded in this bundle's per-workspace pass keep their new version stamp. The operator must fix the issue and re-run -- already-completed commands are skipped via the history tables. Critically, the `instanceVersion` advancement guard prevents the next bundle from starting: since the failed workspace's version is still at `instanceVersion - 1` (not equal to `instanceVersion`), the orchestrator will refuse to advance further until all workspaces catch up.
+- **Per-workspace command failure (any workspace)**: the orchestrator **continues attempting all remaining workspaces** -- it does not stop at the first failure. `instanceVersion` was already stamped (after `instanceCommands`). Failed workspaces keep their current version. Successfully upgraded workspaces keep their new version stamp. After all workspaces have been attempted, the upgrade halts. The `instanceVersion` advancement guard prevents the next bundle from starting: since the failed workspace's version is still at `instanceVersion - 1` (not equal to `instanceVersion`), the orchestrator will refuse to advance further until all workspaces catch up. The operator must fix the failing workspaces and re-run -- already-completed commands (including successful workspaces) are skipped via the history tables.
 
-The final report includes per-workspace status (success / failure / not-attempted).
+The final report includes per-workspace status (success / failure).
 
 ### Guard Logic
 
@@ -415,7 +424,7 @@ During the development cycle for a new version (e.g. `1.21.0`), the cloud produc
 
 - **`instanceCommands` run automatically on each deploy** via a dedicated CLI mode (similar to `database:reset --force`). Each deploy runs the full `instanceCommands` array for the current version bundle. Commands already recorded as `completed` in `instance_upgrade_history` are skipped. New commands added since the last deploy are executed. **`instanceVersion` is not stamped** -- it stays at the previous stable version (e.g. `1.20.0`) throughout the development cycle. The skip-if-completed mechanism (via `instance_upgrade_history`) is what prevents re-running already-applied commands on subsequent deploys, not the version stamp.
 - **`perWorkspaceCommands` are run manually** by developers via CLI as needed. This gives developers control over when workspace-level migrations run during the development cycle.
-- **New workspaces** created during the development cycle get the last **sealed** workspace version (e.g. `1.20.0`). They will be upgraded when the release owner runs the full orchestrator.
+- **New workspaces** created during the development cycle get `instanceVersion` as their workspace version (e.g. `1.20.0`). Since `instanceVersion` is not stamped during deploys, this is always the last fully-completed version -- not `APP_VERSION`. These workspaces will be upgraded when the release owner runs the full orchestrator.
 - **At stable release**, the release owner runs the full upgrade orchestrator. The orchestrator processes `bundle_1210`: `instanceCommands` are all skipped (already `completed` in history), then `perWorkspaceCommands` run for all workspaces still at `1.20.0` (commands already applied manually during the dev cycle are skipped via `workspace_upgrade_history`). Once all workspaces succeed, `instanceVersion` is stamped to `1.21.0` along with all workspace versions. This is the first and only time `instanceVersion` advances.
 
 ### Real-World Example
