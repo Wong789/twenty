@@ -123,13 +123,6 @@
         "command": "node dist/queue-worker/queue-worker.js"
       }
     },
-    "worker:dev": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "packages/twenty-server",
-        "command": "node dist/queue-worker/queue-worker.js"
-      }
-    },
     "typeorm": {
       "executor": "nx:run-commands",
       "options": {
