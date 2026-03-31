@@ -16,6 +16,8 @@ import {
   AgentExceptionCode,
 } from 'src/engine/metadata-modules/ai/ai-agent/agent.exception';
 import { type BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
+import { AgentMessageStatus } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
+import { mapDBPartsToUIMessageParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapDBPartsToUIMessageParts';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
 import {
   STREAM_AGENT_CHAT_JOB_NAME,
@@ -131,56 +133,51 @@ export class AgentChatStreamingService {
     threadId: string,
     userWorkspaceId: string,
     workspaceId: string,
+    hasTitle: boolean,
   ): Promise<void> {
-    const queuedMessages =
-      await this.agentChatService.getQueuedMessages(threadId);
-
-    if (queuedMessages.length === 0) {
-      return;
-    }
-
-    const nextMessage = queuedMessages[0];
-    const textPart = nextMessage.parts?.find((part) => part.type === 'text');
-    const messageText = textPart?.textContent ?? '';
-
-    if (messageText === '') {
-      await this.agentChatService.deleteQueuedMessage(nextMessage.id, threadId);
-
-      return;
-    }
-
-    // Promote the queued message to sent status
-    await this.agentChatService.promoteQueuedMessage(nextMessage.id);
-
-    const thread = await this.threadRepository.findOne({
-      where: { id: threadId },
-    });
-
-    if (!thread) {
-      return;
-    }
-
-    // Fetch all sent messages for this thread to build full conversation
+    // Single query: fetch all messages (sent + queued) to avoid
+    // a separate getQueuedMessages round-trip.
     const allMessages = await this.agentChatService.getMessagesForThread(
       threadId,
       userWorkspaceId,
     );
 
-    // Build ExtendedUIMessage array from DB messages for the stream job
+    const nextQueued = allMessages.find(
+      (message) => message.status === AgentMessageStatus.QUEUED,
+    );
+
+    if (!nextQueued) {
+      return;
+    }
+
+    const textPart = nextQueued.parts?.find((part) => part.type === 'text');
+    const messageText = textPart?.textContent ?? '';
+
+    if (messageText === '') {
+      await this.agentChatService.deleteQueuedMessage(nextQueued.id, threadId);
+
+      return;
+    }
+
+    await this.agentChatService.promoteQueuedMessage(nextQueued.id, threadId);
+
+    // Build conversation context from sent messages (using proper mapper)
     const uiMessages = allMessages
-      .filter((message) => message.status !== 'queued')
+      .filter((message) => message.status !== AgentMessageStatus.QUEUED)
       .map((message) => ({
         id: message.id,
         role: message.role as 'user' | 'assistant' | 'system',
-        parts: (message.parts ?? []).map((part) => {
-          if (part.type === 'text') {
-            return { type: 'text' as const, text: part.textContent ?? '' };
-          }
-
-          return { type: part.type as 'text', text: '' };
-        }),
+        parts: mapDBPartsToUIMessageParts(message.parts ?? []),
         createdAt: message.createdAt,
       }));
+
+    // Append the just-promoted message
+    uiMessages.push({
+      id: nextQueued.id,
+      role: 'user',
+      parts: [{ type: 'text', text: messageText }],
+      createdAt: nextQueued.createdAt,
+    });
 
     const streamId = generateId();
 
@@ -195,7 +192,7 @@ export class AgentChatStreamingService {
         browsingContext: null,
         lastUserMessageText: messageText,
         lastUserMessageParts: [{ type: 'text', text: messageText }],
-        hasTitle: !!thread.title,
+        hasTitle,
       },
     );
 

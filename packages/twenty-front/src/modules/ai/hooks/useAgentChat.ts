@@ -282,9 +282,6 @@ export const useAgentChat = (
         },
         body: JSON.stringify({
           text: contentToSend,
-          ...(isDefined(modelIdForRequest) && {
-            modelId: modelIdForRequest,
-          }),
         }),
       })
         .then(() => {

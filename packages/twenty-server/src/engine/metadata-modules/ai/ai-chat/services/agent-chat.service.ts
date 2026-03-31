@@ -133,11 +133,9 @@ export class AgentChatService {
   async queueMessage({
     threadId,
     text,
-    modelId,
   }: {
     threadId: string;
     text: string;
-    modelId?: string;
   }): Promise<AgentMessageEntity> {
     const message = this.messageRepository.create({
       threadId,
@@ -185,10 +183,14 @@ export class AgentChatService {
     return (result.affected ?? 0) > 0;
   }
 
-  async promoteQueuedMessage(messageId: string): Promise<void> {
-    await this.messageRepository.update(messageId, {
-      status: AgentMessageStatus.SENT,
-    });
+  async promoteQueuedMessage(
+    messageId: string,
+    threadId: string,
+  ): Promise<void> {
+    await this.messageRepository.update(
+      { id: messageId, threadId, status: AgentMessageStatus.QUEUED },
+      { status: AgentMessageStatus.SENT },
+    );
   }
 
   async generateTitleIfNeeded(

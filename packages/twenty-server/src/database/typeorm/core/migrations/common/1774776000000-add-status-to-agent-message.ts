@@ -5,24 +5,26 @@ export class AddStatusToAgentMessage1774776000000
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TYPE "agentMessage_status_enum" AS ENUM ('queued', 'sent')`,
+      `CREATE TYPE "core"."agentMessage_status_enum" AS ENUM ('queued', 'sent')`,
     );
     await queryRunner.query(
-      `ALTER TABLE "agentMessage" ADD COLUMN "status" "agentMessage_status_enum" NOT NULL DEFAULT 'sent'`,
+      `ALTER TABLE "core"."agentMessage" ADD COLUMN "status" "core"."agentMessage_status_enum" NOT NULL DEFAULT 'sent'`,
     );
     await queryRunner.query(
-      `ALTER TABLE "agentMessage" ALTER COLUMN "turnId" DROP NOT NULL`,
+      `ALTER TABLE "core"."agentMessage" ALTER COLUMN "turnId" DROP NOT NULL`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DELETE FROM "agentMessage" WHERE "turnId" IS NULL`,
+      `DELETE FROM "core"."agentMessage" WHERE "turnId" IS NULL`,
     );
     await queryRunner.query(
-      `ALTER TABLE "agentMessage" ALTER COLUMN "turnId" SET NOT NULL`,
+      `ALTER TABLE "core"."agentMessage" ALTER COLUMN "turnId" SET NOT NULL`,
     );
-    await queryRunner.query(`ALTER TABLE "agentMessage" DROP COLUMN "status"`);
-    await queryRunner.query(`DROP TYPE "agentMessage_status_enum"`);
+    await queryRunner.query(
+      `ALTER TABLE "core"."agentMessage" DROP COLUMN "status"`,
+    );
+    await queryRunner.query(`DROP TYPE "core"."agentMessage_status_enum"`);
   }
 }

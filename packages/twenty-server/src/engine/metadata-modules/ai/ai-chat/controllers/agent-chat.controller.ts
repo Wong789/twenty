@@ -187,7 +187,7 @@ export class AgentChatController {
   @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
   async queueMessage(
     @Param('threadId') threadId: string,
-    @Body() body: { text: string; modelId?: string },
+    @Body() body: { text: string },
     @AuthUserWorkspaceId() userWorkspaceId: string,
   ) {
     const thread = await this.threadRepository.findOne({
@@ -204,7 +204,6 @@ export class AgentChatController {
     const message = await this.agentChatService.queueMessage({
       threadId,
       text: body.text,
-      modelId: body.modelId,
     });
 
     return { id: message.id, threadId, status: 'queued' };

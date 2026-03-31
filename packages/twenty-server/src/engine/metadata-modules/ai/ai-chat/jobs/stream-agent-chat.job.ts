@@ -114,6 +114,7 @@ export class StreamAgentChatJob {
           data.threadId,
           data.userWorkspaceId,
           data.workspaceId,
+          data.hasTitle,
         )
         .catch((error) => {
           this.logger.error(

@@ -54,12 +54,7 @@ export const AIChatQueuedMessages = () => {
 
   const queuedMessages = useMemo(
     () =>
-      agentChatFetchedMessages.filter(
-        (message) =>
-          message.role === 'user' &&
-          'status' in message &&
-          message.status === 'queued',
-      ),
+      agentChatFetchedMessages.filter((message) => message.status === 'queued'),
     [agentChatFetchedMessages],
   );
 
