@@ -2448,7 +2448,7 @@ export interface AgentChatThread {
 export interface AgentMessage {
     id: Scalars['UUID']
     threadId: Scalars['UUID']
-    turnId: Scalars['UUID']
+    turnId?: Scalars['UUID']
     agentId?: Scalars['UUID']
     role: Scalars['String']
     status: Scalars['String']

@@ -2787,7 +2787,7 @@ type AgentChatThread {
 type AgentMessage {
   id: UUID!
   threadId: UUID!
-  turnId: UUID!
+  turnId: UUID
   agentId: UUID
   role: String!
   status: String!
