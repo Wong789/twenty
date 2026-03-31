@@ -17,7 +17,6 @@ import { Processor } from 'src/engine/core-modules/message-queue/decorators/proc
 import { MessageQueue } from 'src/engine/core-modules/message-queue/message-queue.constants';
 import { AgentMessageRole } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 import { AgentChatStreamingService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-streaming.service';
-import type { BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
 import { computeCostBreakdown } from 'src/engine/metadata-modules/ai/ai-billing/utils/compute-cost-breakdown.util';
 import { convertDollarsToBillingCredits } from 'src/engine/metadata-modules/ai/ai-billing/utils/convert-dollars-to-billing-credits.util';
 import { extractCacheCreationTokens } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
@@ -28,20 +27,12 @@ import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/service
 import { ChatExecutionService } from 'src/engine/metadata-modules/ai/ai-chat/services/chat-execution.service';
 import { getCancelChannel } from 'src/engine/metadata-modules/ai/ai-chat/utils/get-cancel-channel.util';
 
-export const STREAM_AGENT_CHAT_JOB_NAME = 'StreamAgentChatJob';
+import {
+  STREAM_AGENT_CHAT_JOB_NAME,
+  type StreamAgentChatJobData,
+} from './stream-agent-chat-job.types';
 
-export type StreamAgentChatJobData = {
-  threadId: string;
-  streamId: string;
-  userWorkspaceId: string;
-  workspaceId: string;
-  messages: ExtendedUIMessage[];
-  browsingContext: BrowsingContextType | null;
-  modelId?: string;
-  lastUserMessageText: string;
-  lastUserMessageParts: ExtendedUIMessagePart[];
-  hasTitle: boolean;
-};
+export { STREAM_AGENT_CHAT_JOB_NAME, type StreamAgentChatJobData };
 
 @Processor({ queueName: MessageQueue.aiStreamQueue, scope: Scope.REQUEST })
 export class StreamAgentChatJob {

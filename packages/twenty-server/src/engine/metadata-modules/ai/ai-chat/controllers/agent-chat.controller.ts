@@ -206,7 +206,7 @@ export class AgentChatController {
       text: body.text,
     });
 
-    return { id: message.id, threadId, status: 'queued' };
+    return { id: message.id, threadId, status: message.status };
   }
 
   @Delete(':threadId/queue/:messageId')

@@ -23,5 +23,5 @@ type Metadata = {
 
 export type ExtendedUIMessage = UIMessage<Metadata, DataMessagePart> & {
   threadId?: Nullable<string>;
-  status?: string;
+  status?: 'queued' | 'sent';
 };

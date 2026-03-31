@@ -22,7 +22,7 @@ import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/en
 import {
   STREAM_AGENT_CHAT_JOB_NAME,
   type StreamAgentChatJobData,
-} from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat.job';
+} from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat-job.types';
 import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 
 import { AgentChatResumableStreamService } from './agent-chat-resumable-stream.service';
@@ -135,16 +135,11 @@ export class AgentChatStreamingService {
     workspaceId: string,
     hasTitle: boolean,
   ): Promise<void> {
-    // Single query: fetch all messages (sent + queued) to avoid
-    // a separate getQueuedMessages round-trip.
-    const allMessages = await this.agentChatService.getMessagesForThread(
-      threadId,
-      userWorkspaceId,
-    );
+    // Lightweight check: only query queued messages first
+    const queuedMessages =
+      await this.agentChatService.getQueuedMessages(threadId);
 
-    const nextQueued = allMessages.find(
-      (message) => message.status === AgentMessageStatus.QUEUED,
-    );
+    const nextQueued = queuedMessages[0];
 
     if (!nextQueued) {
       return;
@@ -161,6 +156,12 @@ export class AgentChatStreamingService {
 
     await this.agentChatService.promoteQueuedMessage(nextQueued.id, threadId);
 
+    // Only load full conversation when we actually need to stream
+    const allMessages = await this.agentChatService.getMessagesForThread(
+      threadId,
+      userWorkspaceId,
+    );
+
     // Build conversation context from sent messages (using proper mapper)
     const uiMessages = allMessages
       .filter((message) => message.status !== AgentMessageStatus.QUEUED)
@@ -170,14 +171,6 @@ export class AgentChatStreamingService {
         parts: mapDBPartsToUIMessageParts(message.parts ?? []),
         createdAt: message.createdAt,
       }));
-
-    // Append the just-promoted message
-    uiMessages.push({
-      id: nextQueued.id,
-      role: 'user',
-      parts: [{ type: 'text', text: messageText }],
-      createdAt: nextQueued.createdAt,
-    });
 
     const streamId = generateId();
 

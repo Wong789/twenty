@@ -15,6 +15,7 @@ export const mapDBPartToUIMessagePart = (
       return {
         type: 'reasoning',
         text: part.reasoningContent ?? '',
+        state: (part.state as 'streaming' | 'done') ?? 'done',
       };
     case 'file':
       return {
