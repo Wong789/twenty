@@ -15,7 +15,6 @@ export const mapDBPartToUIMessagePart = (
       return {
         type: 'reasoning',
         text: part.reasoningContent ?? '',
-        providerOptions: {},
       };
     case 'file':
       return {
