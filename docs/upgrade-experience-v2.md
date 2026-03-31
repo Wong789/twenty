@@ -96,7 +96,7 @@ Commands use the standard NestJS `Logger` (`this.logger`) -- no custom callback 
 - The global `LoggerService` includes this correlation ID in every log line, regardless of which Logger instance or service emits it (command code, TypeORM, repositories, framework internals).
 - A per-command buffer captures all correlated log lines during execution. This gives true per-command log isolation -- ORM queries, SQL errors, service calls, and the command's own narrative all appear in one unified stream.
 - Tail-truncated to last 5,000 lines if exceeded. A `[TRUNCATED]` header is prepended when truncation occurs.
-- On **failure**: the buffer is stored in the `logs` column of the `workspace_upgrade_history` table.
+- On **failure**: the buffer is stored in the `logs` column of the relevant history table (`instance_upgrade_history` or `workspace_upgrade_history`).
 - On **success**: the buffer is discarded (already written to stdout).
 
 This approach avoids the fragility of wrapping individual Logger instances and naturally supports future parallelized workspace upgrades (each command execution has its own correlation ID).
@@ -223,7 +223,7 @@ this.allBundles = {
 
 **The upgrade halts.** `instanceVersion` is `1.19.0`, but workspace B is still at `1.18.0`. Workspaces A is at `1.19.0`, C is still at `1.18.0` (not yet attempted).
 
-The operator investigates workspace B's failure (using the `workspace_upgrade_history` table and captured logs), fixes the underlying issue, and re-runs the upgrade command.
+The operator investigates workspace B's failure (using the `workspace_upgrade_history` table and its captured logs), fixes the underlying issue, and re-runs the upgrade command.
 
 **Re-run**:
 
@@ -324,26 +324,50 @@ This recap is also the foundation for the "report-a-problem" template and the se
 
 ## Upgrade History
 
-### `workspace_upgrade_history` Table
+Two tables in the **core schema** (shared, not per-workspace) that record command executions. Splitting mirrors the taxonomy: `instanceCommands` -> `instance_upgrade_history`, `perWorkspaceCommands` -> `workspace_upgrade_history`. This avoids nullable foreign keys and makes each table's schema tight and query-friendly.
 
-A new table in the **core schema** (shared, not per-workspace) that records every command execution. This provides persistent audit trail, enables skipping already-completed commands, and feeds the workspace recap tooling and report-a-problem template.
+### `instance_upgrade_history` Table
+
+Tracks execution of `GlobalCommand` entries from `instanceCommands` arrays.
 
 **Columns**:
 
 - `id` (uuid, PK)
-- `workspaceId` (uuid, nullable -- null for global commands)
 - `version` (varchar -- the version bundle this command belongs to, e.g. `1.20.0`)
-- `commandName` (varchar -- unique identifier for the command, e.g. `backfillCommandMenuItems`)
-- `commandType` (varchar -- `global` or `per-workspace`)
+- `commandName` (varchar -- unique identifier for the command, e.g. `typeOrmMigration`)
 - `status` (varchar -- `started` / `completed` / `failed`)
 - `runByVersion` (varchar -- the `APP_VERSION` of the Twenty instance that executed this command, e.g. `1.20.1`. Useful for debugging: if a command was completed by a buggy version, this tells you which build ran it.)
 - `startedAt` (timestamp)
 - `completedAt` (timestamp, nullable)
 - `error` (text, nullable -- full error string from `UpgradeCommandResult.error` on failure, including stack trace)
-- `logs` (text, nullable -- all log output correlated to this command execution via correlation ID. Includes the command's own logs, ORM queries, SQL errors, service calls, and framework context -- one unified stream. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
+- `logs` (text, nullable -- all log output correlated to this command execution via correlation ID. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
 - `createdAt` / `updatedAt` (timestamps)
 
-**Lifecycle**: one row per (`commandName`, `version`, `workspaceId`) combination, upserted across re-runs:
+**Unique key**: `(commandName, version)`.
+
+### `workspace_upgrade_history` Table
+
+Tracks execution of `PerWorkspaceCommand` entries from `perWorkspaceCommands` arrays.
+
+**Columns**:
+
+- `id` (uuid, PK)
+- `workspaceId` (uuid, NOT NULL)
+- `version` (varchar -- the version bundle this command belongs to, e.g. `1.20.0`)
+- `commandName` (varchar -- unique identifier for the command, e.g. `backfillCommandMenuItems`)
+- `status` (varchar -- `started` / `completed` / `failed`)
+- `runByVersion` (varchar -- the `APP_VERSION` of the Twenty instance that executed this command, e.g. `1.20.1`.)
+- `startedAt` (timestamp)
+- `completedAt` (timestamp, nullable)
+- `error` (text, nullable -- full error string from `UpgradeCommandResult.error` on failure, including stack trace)
+- `logs` (text, nullable -- all log output correlated to this command execution via correlation ID. Tail-truncated to last 5,000 lines if exceeded; when truncated, a `[TRUNCATED - showing last 5000 of N total lines]` header is prepended. Stored on failure only.)
+- `createdAt` / `updatedAt` (timestamps)
+
+**Unique key**: `(commandName, version, workspaceId)`.
+
+### Shared Lifecycle
+
+Both tables follow the same upsert model -- one row per unique key, updated across re-runs:
 
 - First execution: insert with `status: started`.
 - On completion: update to `completed`, clear `error` and `logs`.
@@ -352,11 +376,11 @@ A new table in the **core schema** (shared, not per-workspace) that records ever
 
 A crash mid-command leaves a `started` row with no `completedAt` -- the orchestrator treats this as "not completed" on re-run.
 
-Previous failure logs are overwritten when a command is re-run. This is intentional -- the table reflects the **current state** of each command, not a full execution history. Failure logs serve their purpose in real-time (the operator reads them, fixes the issue, re-runs). Once the command succeeds, old failure context is no longer relevant.
+Previous failure logs are overwritten when a command is re-run. This is intentional -- the tables reflect the **current state** of each command, not a full execution history. Failure logs serve their purpose in real-time (the operator reads them, fixes the issue, re-runs). Once the command succeeds, old failure context is no longer relevant.
 
 ### Re-Run Behavior
 
-All commands always run, relying on idempotency. The history table is an **audit log**, not a control mechanism -- the orchestrator does not query it to decide whether to run a command.
+All commands always run, relying on idempotency. The history tables are an **audit log**, not a control mechanism -- the orchestrator does not query them to decide whether to run a command.
 
 On re-run after a partial failure, the orchestrator walks through all commands again. Already-completed commands no-op quickly thanks to idempotency (e.g. a backfill with `WHERE column IS NULL` returns 0 rows on an indexed column). The workspace version stamp ensures the orchestrator only processes version bundles the workspace hasn't fully completed.
 
@@ -364,9 +388,9 @@ On re-run after a partial failure, the orchestrator walks through all commands a
 
 If idempotent no-op commands become a performance bottleneck at scale (e.g. a full table scan on a very large table that no-ops row by row), a `skipIfCompleted` mechanism could be introduced:
 
-- Each command could declare `skipIfCompleted: true` to let the orchestrator check the history table and skip it if already recorded as `completed`.
+- Each command could declare `skipIfCompleted: true` to let the orchestrator check the relevant history table and skip it if already recorded as `completed`.
 - A `--force-rerun` flag would override this and run everything regardless.
-- This adds complexity (configuration per command, history table becomes a control mechanism, risk of masking bugs) so it should only be added when there's a demonstrated need.
+- This adds complexity (configuration per command, history tables become a control mechanism, risk of masking bugs) so it should only be added when there's a demonstrated need.
 
 ---
 
@@ -376,7 +400,7 @@ After all version bundles complete, the orchestrator runs a health check:
 
 - **Instance version**: confirm `instanceVersion` matches `APP_VERSION`.
 - **Workspace versions**: confirm all workspace versions match `APP_VERSION`.
-- **Command completion**: verify all commands in the `workspace_upgrade_history` table are `completed` (no `started` rows without `completedAt`, which would indicate a crash mid-command).
+- **Command completion**: verify all commands in both `instance_upgrade_history` and `workspace_upgrade_history` are `completed` (no `started` rows without `completedAt`, which would indicate a crash mid-command).
 
 Health check results are included in the upgrade report. Failures are warnings (the upgrade itself already succeeded), not rollback triggers.
 
@@ -388,7 +412,7 @@ Note: broader workspace health (metadata consistency, runtime checks, etc.) is a
 
 ### Structured Upgrade Report
 
-Replace raw stack traces with a structured report, built from the `workspace_upgrade_history` table:
+Replace raw stack traces with a structured report, built from the `instance_upgrade_history` and `workspace_upgrade_history` tables:
 
 - Per-workspace status: success / failure / not-attempted / refused (below supported range, with `--force`).
 - For failures: the command that failed, a human-readable error message, and the full stack trace captured (not dumped to stdout).
