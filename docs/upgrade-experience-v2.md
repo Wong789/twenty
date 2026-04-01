@@ -168,7 +168,9 @@ Each version defines its upgrade bundle as two ordered arrays:
 ```typescript
 const bundle_1200: UpgradeVersionBundle = {
   instanceCommands: [
-    { type: 'global', command: this.typeOrmMigrationCommand },
+    { type: 'global', command: this.typeOrmMigrationCommandA },
+    { type: 'global', command: this.typeOrmMigrationCommandB },
+    { type: 'global', command: this.typeOrmMigrationCommandC },
   ],
   perWorkspaceCommands: [
     { type: 'per-workspace', command: this.backfillCommandMenuItemsCommand },
