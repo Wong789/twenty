@@ -180,6 +180,30 @@ const bundle_1200: UpgradeVersionBundle = {
 };
 ```
 
+### TypeORM Migration Generation
+
+TypeORM migrations are no longer generated directly through the raw TypeORM
+CLI. They now go through a dedicated NestJS command that associates each newly
+generated migration with the **latest known version line**.
+
+**Why**:
+
+- TypeORM migrations are part of `instanceCommands`, so they must belong to a
+  specific upgrade bundle.
+- We want one canonical place to decide which version line a new migration
+  belongs to.
+- This avoids developers generating a migration and then manually forgetting to
+  associate it with the latest bundle.
+
+**How it works**:
+
+1. A developer runs a NestJS command to generate the migration.
+2. That command resolves the latest known version from
+   `UPGRADE_COMMAND_SUPPORTED_VERSIONS`.
+3. The generated migration is associated with that latest known version line.
+4. The matching `TypeOrmMigrationCommand` for that bundle will execute it as
+   part of the bundle's `instanceCommands`.
+
 ### Orchestrator
 
 `UpgradeCommandOrchestrator` (renamed from `UpgradeCommand`) is responsible for:
