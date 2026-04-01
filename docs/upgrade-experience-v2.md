@@ -13,7 +13,7 @@ The current upgrade system has several pain points:
 ## Success Metrics
 
 - **Cross-version upgrade** works across the ordered list of supported versions (a workspace on `1.18.0` targeting `1.20.0` runs `1.19.0` then `1.20.0` bundles sequentially).
-- **Patch-version upgrade support**: the upgrade triggers on patch version differences, not just major.minor. Currently `compareVersionMajorAndMinor` ignores patches entirely, meaning a workspace on `1.20.0` is considered "equal" to `1.20.1` and patch-level upgrade commands cannot run.
+- **Major.minor bundle identity**: the orchestrator groups upgrade commands by `major.minor`. Patch releases do not create new bundles, but they may patch an existing version line by adding new corrective commands inside the existing `major.minor` bundle.
 - **Post-upgrade health check** validates workspace consistency after migration.
 - **Improved developer experience** for twenty-eng: clear command taxonomy, scoped responsibilities, easy to add new version bundles and commands.
 - **Report-a-problem template** that gathers workspace status including upgrade stack traces.
@@ -29,6 +29,38 @@ The current upgrade system has several pain points:
 - **Forward compatibility of global changes**: global commands (especially `instanceCommands` like TypeORM migrations) must produce a schema that is compatible with workspaces still at `instanceVersion - 1`. Since `instanceVersion` is stamped after `instanceCommands`, workspaces are still at the previous version when the global schema changes land. A global schema change that breaks those workspaces violates the upgrade contract.
 - **Breaking change backward compatibility**: a breaking change introduced in version N's `instanceCommands` must not invalidate any upgrade command in a version bundle still present in `UPGRADE_COMMAND_SUPPORTED_VERSIONS`. During a cross-version upgrade, older bundles' `perWorkspaceCommands` run against the global schema that all preceding `instanceCommands` (including N's) have already modified. If a breaking change in N makes a command in bundle M (where M < N) fail -- e.g. dropping a column that M's command reads -- then M and every version below it must be removed from `UPGRADE_COMMAND_SUPPORTED_VERSIONS`. This narrows the supported upgrade range, so breaking changes should be avoided or deferred whenever possible.
 - **No downgrade support**: the upgrade path is forward-only.
+
+---
+
+## Upgrade Command Golden Rules
+
+These rules define how upgrade commands evolve over time. They exist to avoid
+history collisions, make patching safe, and keep command intent readable months
+after a release shipped.
+
+1. **A command name is a contract**: once a command has shipped, its name
+   becomes part of the upgrade history contract. A successful history row for
+   `commandName = foo` means "the logical operation `foo` already ran".
+2. **Do not silently change the meaning of a released command**: if a command
+   already shipped and later turns out to be incomplete, buggy, or wrongly
+   ordered, do not keep the same name and change the implementation in place.
+3. **New intent requires new identity**: if behavior materially changes, create
+   a new command name (`foo-fix-missing-bar`, `foo-v2`,
+   `rebuild-foo-after-order-fix`, etc.). This lets the new command run once
+   without colliding with prior successful history rows.
+4. **Ordering fixes are modeled as new commands**: if a command was released in
+   the wrong order, fix the workflow by adding a new compensating command in the
+   correct position, not by trying to reinterpret the old history row.
+5. **Prefer additive repair over replaying history**: if production data needs
+   correction after release, prefer adding a new corrective command rather than
+   renaming or deleting history rows.
+6. **Idempotency still applies**: even when introducing corrective commands, the
+   new command must still be safe to re-run after partial failure.
+
+These rules are especially important for patching an existing version line. If
+`1.20.1` needs to fix work already attempted by `1.20.0`, the fix should
+generally be represented as a **new command in the `1.20` bundle**, not as a
+silent rewrite of the old command's meaning.
 
 ---
 
@@ -622,7 +654,7 @@ The refactor is designed to be shipped incrementally, phase by phase, without re
 **What stays the same**:
 
 - `UpgradeCommand` remains the nest-commander entry point, delegating to the orchestrator.
-- Version comparison still uses major.minor (patch support comes in Phase 2).
+- Version comparison still uses major.minor.
 - Only the current version bundle is refactored; older version entries (e.g. `1.19.0: []`) are left as-is or trivially wrapped.
 
 **Going forward**: the next version's upgrade commands (e.g. `1.21.0`) should be written directly against the new pattern -- extending `GlobalCommand` or `PerWorkspaceCommand` and registered in an `UpgradeVersionBundle`. This validates the new taxonomy on a real upgrade cycle.
@@ -640,7 +672,7 @@ The refactor is designed to be shipped incrementally, phase by phase, without re
 - `instanceVersion` advancement guard: before running `instanceCommands` for a bundle, verify all workspace versions equal `instanceVersion`. If any workspace is behind, the orchestrator refuses to advance.
 - Workspace eligibility: only workspaces at exactly `instanceVersion - 1` are upgraded. No straggler rescue.
 - Hard-block on failure: if any workspace fails during per-workspace commands, the upgrade stops entirely.
-- Version comparison is updated to support patch-level diffs (not just major.minor).
+- Version comparison remains major.minor at the bundle identity level. Patch releases can patch an existing version line, but corrective work should generally be introduced as **new command identities inside the same major.minor bundle** rather than by mutating previously shipped commands in place.
 - Guard logic: workspaces below `instanceVersion` block the upgrade (self-hosted default) or are skipped with `--force`.
 
 ### Phase 3: Health Check and Error Reporting
@@ -671,3 +703,80 @@ The current inheritance chain in `command-runners/` is replaced in Phase 1:
 - `UpgradeCommand` -- Stays as the nest-commander entry point, delegates to orchestrator
 
 Individual commands (e.g. `backfillCommandMenuItems`) keep their current granularity but extend either `GlobalCommand` or `PerWorkspaceCommand` explicitly.
+
+---
+
+## Real-World Scenarios
+
+### 1. Happy Path
+
+`APP_VERSION = 1.21.0`, `instanceVersion = 1.20.0`, all workspaces at
+`1.20.0`.
+
+- The orchestrator runs `bundle_1210.instanceCommands`.
+- `instanceVersion` is stamped to `1.21.0`.
+- The orchestrator runs `bundle_1210.perWorkspaceCommands` for every workspace.
+- All workspaces succeed and are stamped to `1.21.0`.
+- Final state: `instanceVersion = 1.21.0`, all workspace versions = `1.21.0`.
+
+### 2. One Command Failed
+
+`APP_VERSION = 1.21.0`, `instanceVersion = 1.20.0`, workspaces A/B/C at
+`1.20.0`.
+
+- `bundle_1210.instanceCommands` succeed and `instanceVersion` is stamped to
+  `1.21.0`.
+- Workspace A succeeds and is stamped to `1.21.0`.
+- Workspace B fails on `backfill-new-field` and stays at `1.20.0`.
+- Workspace C is still attempted and succeeds, ending at `1.21.0`.
+- The upgrade halts after the full workspace pass.
+- On re-run, instance commands are skipped by history; only workspace B is
+  retried.
+- The next bundle cannot start until B also reaches `1.21.0`.
+
+### 3. `1.20.0` to `1.20.1`: Add a New Command
+
+`1.20.0` shipped with:
+
+- `foo`
+- `bar`
+
+After release, we realize some data still needs a missing backfill. In
+`1.20.1`, we keep the existing `1.20` bundle identity and add:
+
+- `foo`
+- `bar`
+- `backfill-missing-baz`
+
+Expected behavior:
+
+- History already contains successful rows for `foo` and `bar`.
+- Those commands are skipped.
+- `backfill-missing-baz` has never run, so it executes once.
+- History remains readable: the patch added a new corrective operation instead
+  of reinterpreting an old one.
+
+### 4. `1.20.0` to `1.20.1`: Rename a Previously Released Command
+
+`1.20.0` shipped with a command named `foo`.
+
+Later we discover `foo` was semantically wrong: maybe it updated the right data
+set but missed a required transformation, or maybe it should have run after
+another command. In `1.20.1`, we **do not** keep the name `foo` and change its
+meaning silently. Instead we introduce a new command such as:
+
+- `foo`
+- `foo-fix-missing-transformation`
+
+or:
+
+- `foo`
+- `rebuild-foo-after-order-fix`
+
+Expected behavior:
+
+- The successful `foo` history rows remain valid and untouched.
+- The new corrective command runs once because it has a new identity.
+- Operators can clearly see what happened in history: first `foo`, then the
+  later repair command.
+- This avoids history collisions and makes the patch behavior explicit.
