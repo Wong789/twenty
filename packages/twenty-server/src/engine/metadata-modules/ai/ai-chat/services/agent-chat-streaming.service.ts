@@ -17,10 +17,8 @@ import { type BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agen
 import { AgentMessageStatus } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 import { mapDBPartsToUIMessageParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapDBPartsToUIMessageParts';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
-import {
-  STREAM_AGENT_CHAT_JOB_NAME,
-  type StreamAgentChatJobData,
-} from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat-job.types';
+import { STREAM_AGENT_CHAT_JOB_NAME } from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat-job-name.constant';
+import { type StreamAgentChatJobData } from 'src/engine/metadata-modules/ai/ai-chat/jobs/stream-agent-chat-job.types';
 import { AgentChatEventPublisherService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat-event-publisher.service';
 import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/services/agent-chat.service';
 
@@ -115,7 +113,7 @@ export class AgentChatStreamingService {
     const messageText = textPart?.textContent ?? '';
 
     if (messageText === '') {
-      await this.agentChatService.deleteQueuedMessage(nextQueued.id, threadId);
+      await this.agentChatService.deleteQueuedMessage(nextQueued.id);
 
       return;
     }

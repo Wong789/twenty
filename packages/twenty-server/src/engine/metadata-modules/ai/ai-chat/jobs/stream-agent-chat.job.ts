@@ -27,10 +27,8 @@ import { AgentChatService } from 'src/engine/metadata-modules/ai/ai-chat/service
 import { ChatExecutionService } from 'src/engine/metadata-modules/ai/ai-chat/services/chat-execution.service';
 import { getCancelChannel } from 'src/engine/metadata-modules/ai/ai-chat/utils/get-cancel-channel.util';
 
-import {
-  STREAM_AGENT_CHAT_JOB_NAME,
-  type StreamAgentChatJobData,
-} from './stream-agent-chat-job.types';
+import { STREAM_AGENT_CHAT_JOB_NAME } from './stream-agent-chat-job-name.constant';
+import { type StreamAgentChatJobData } from './stream-agent-chat-job.types';
 
 export { STREAM_AGENT_CHAT_JOB_NAME, type StreamAgentChatJobData };
 

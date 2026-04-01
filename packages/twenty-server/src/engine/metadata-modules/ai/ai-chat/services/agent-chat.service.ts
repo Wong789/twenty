@@ -171,13 +171,17 @@ export class AgentChatService {
     });
   }
 
-  async deleteQueuedMessage(
+  async findQueuedMessage(
     messageId: string,
-    threadId: string,
-  ): Promise<boolean> {
+  ): Promise<AgentMessageEntity | null> {
+    return this.messageRepository.findOne({
+      where: { id: messageId, status: AgentMessageStatus.QUEUED },
+    });
+  }
+
+  async deleteQueuedMessage(messageId: string): Promise<boolean> {
     const result = await this.messageRepository.delete({
       id: messageId,
-      threadId,
       status: AgentMessageStatus.QUEUED,
     });
 

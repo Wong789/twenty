@@ -172,16 +172,24 @@ export class AgentChatController {
     return { success: true };
   }
 
-  @Delete(':threadId/queue/:messageId')
+  @Delete('queue/:messageId')
   @UseGuards(SettingsPermissionGuard(PermissionFlagType.AI))
   async deleteQueuedMessage(
-    @Param('threadId') threadId: string,
     @Param('messageId') messageId: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
     @AuthWorkspace() workspace: WorkspaceEntity,
   ) {
+    const message = await this.agentChatService.findQueuedMessage(messageId);
+
+    if (!isDefined(message)) {
+      throw new AgentException(
+        'Queued message not found',
+        AgentExceptionCode.AGENT_EXECUTION_FAILED,
+      );
+    }
+
     const thread = await this.threadRepository.findOne({
-      where: { id: threadId, userWorkspaceId },
+      where: { id: message.threadId, userWorkspaceId },
     });
 
     if (!isDefined(thread)) {
@@ -191,14 +199,11 @@ export class AgentChatController {
       );
     }
 
-    const deleted = await this.agentChatService.deleteQueuedMessage(
-      messageId,
-      threadId,
-    );
+    const deleted = await this.agentChatService.deleteQueuedMessage(messageId);
 
     if (deleted) {
       await this.eventPublisherService.publish({
-        threadId,
+        threadId: message.threadId,
         workspaceId: workspace.id,
         event: { type: 'queue-updated' },
       });

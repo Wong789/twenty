@@ -1,6 +1,7 @@
 import { styled } from '@linaria/react';
 
 import { AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME } from '@/ai/constants/AgentChatRefetchMessagesEventName';
+import { useAuthenticatedFetch } from '@/ai/hooks/useAuthenticatedFetch';
 import { agentChatQueuedMessagesComponentFamilyState } from '@/ai/states/agentChatQueuedMessagesComponentFamilyState';
 import { currentAIChatThreadState } from '@/ai/states/currentAIChatThreadState';
 import { REST_API_BASE_URL } from '@/apollo/constant/rest-api-base-url';
@@ -46,6 +47,7 @@ const StyledQueuedText = styled.span`
 
 export const AIChatQueuedMessages = () => {
   const currentAIChatThread = useAtomStateValue(currentAIChatThreadState);
+  const { authenticatedFetch } = useAuthenticatedFetch();
   const agentChatQueuedMessages = useAtomComponentFamilyStateValue(
     agentChatQueuedMessagesComponentFamilyState,
     { threadId: currentAIChatThread },
@@ -62,15 +64,12 @@ export const AIChatQueuedMessages = () => {
       return;
     }
 
-    fetch(
-      `${REST_API_BASE_URL}/agent-chat/${currentAIChatThread}/queue/${messageId}`,
-      {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${tokenPair.accessOrWorkspaceAgnosticToken.token}`,
-        },
+    authenticatedFetch(`${REST_API_BASE_URL}/agent-chat/queue/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenPair.accessOrWorkspaceAgnosticToken.token}`,
       },
-    )
+    })
       .then(() => {
         dispatchBrowserEvent(AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME);
       })

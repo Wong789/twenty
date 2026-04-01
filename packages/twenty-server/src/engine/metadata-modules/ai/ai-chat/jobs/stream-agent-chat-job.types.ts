@@ -5,8 +5,6 @@ import type {
 
 import type { BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
 
-export const STREAM_AGENT_CHAT_JOB_NAME = 'StreamAgentChatJob';
-
 export type StreamAgentChatJobData = {
   threadId: string;
   streamId: string;
