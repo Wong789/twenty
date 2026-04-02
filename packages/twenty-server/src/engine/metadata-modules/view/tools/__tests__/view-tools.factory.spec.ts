@@ -1,6 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 
 import {
+  FieldMetadataType,
   OrderByDirection,
   ViewType,
   ViewVisibility,
@@ -36,18 +37,21 @@ describe('ViewToolsFactory', () => {
       'field-universal-id': {
         id: mockCalendarFieldMetadataId,
         name: 'dueAt',
+        type: FieldMetadataType.DATE_TIME,
         objectMetadataId: mockObjectMetadataId,
         universalIdentifier: 'field-universal-id',
       },
       'name-field-universal-id': {
         id: mockNameFieldMetadataId,
         name: 'name',
+        type: FieldMetadataType.TEXT,
         objectMetadataId: mockObjectMetadataId,
         universalIdentifier: 'name-field-universal-id',
       },
       'stage-field-universal-id': {
         id: mockStageFieldMetadataId,
         name: 'stage',
+        type: FieldMetadataType.SELECT,
         objectMetadataId: mockObjectMetadataId,
         universalIdentifier: 'stage-field-universal-id',
       },
@@ -360,6 +364,53 @@ describe('ViewToolsFactory', () => {
           ],
           workspaceId: mockWorkspaceId,
         });
+      });
+
+      it('should throw when KANBAN view missing mainGroupByFieldName', async () => {
+        const tools = viewToolsFactory.generateWriteTools(
+          mockWorkspaceId,
+          mockUserWorkspaceId,
+        );
+
+        await expect(
+          callExecute(tools['create_view'], {
+            name: 'Kanban View',
+            objectNameSingular: mockObjectNameSingular,
+            type: ViewType.KANBAN,
+          }),
+        ).rejects.toThrow('KANBAN views require mainGroupByFieldName');
+      });
+
+      it('should throw when CALENDAR view missing calendarFieldName', async () => {
+        const tools = viewToolsFactory.generateWriteTools(
+          mockWorkspaceId,
+          mockUserWorkspaceId,
+        );
+
+        await expect(
+          callExecute(tools['create_view'], {
+            name: 'Calendar View',
+            objectNameSingular: mockObjectNameSingular,
+            type: ViewType.CALENDAR,
+            calendarLayout: ViewCalendarLayout.WEEK,
+          }),
+        ).rejects.toThrow('CALENDAR views require calendarFieldName');
+      });
+
+      it('should throw when CALENDAR view missing calendarLayout', async () => {
+        const tools = viewToolsFactory.generateWriteTools(
+          mockWorkspaceId,
+          mockUserWorkspaceId,
+        );
+
+        await expect(
+          callExecute(tools['create_view'], {
+            name: 'Calendar View',
+            objectNameSingular: mockObjectNameSingular,
+            type: ViewType.CALENDAR,
+            calendarFieldName: 'dueAt',
+          }),
+        ).rejects.toThrow('CALENDAR views require calendarLayout');
       });
 
       it('should not create view fields when fieldNames is not provided', async () => {

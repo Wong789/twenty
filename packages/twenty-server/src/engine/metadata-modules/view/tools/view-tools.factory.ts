@@ -18,7 +18,7 @@ import { ViewCalendarLayout } from 'src/engine/metadata-modules/view/enums/view-
 import { ViewQueryParamsService } from 'src/engine/metadata-modules/view/services/view-query-params.service';
 import { ViewService } from 'src/engine/metadata-modules/view/services/view.service';
 import { WorkspaceMigrationBuilderException } from 'src/engine/workspace-manager/workspace-migration/exceptions/workspace-migration-builder-exception';
-import { isNonEmptyArray } from 'twenty-shared/utils';
+import { isFieldMetadataDateKind, isNonEmptyArray } from 'twenty-shared/utils';
 
 const GetViewsInputSchema = z.object({
   objectNameSingular: z
@@ -217,6 +217,42 @@ export class ViewToolsFactory {
     return fieldMetadata.id;
   }
 
+  private async resolveCalendarFieldMetadataId(
+    workspaceId: string,
+    objectMetadataId: string,
+    fieldName: string,
+  ): Promise<string> {
+    const { flatFieldMetadataMaps } =
+      await this.flatEntityMapsCacheService.getOrRecomputeManyOrAllFlatEntityMaps(
+        {
+          workspaceId,
+          flatMapsKeys: ['flatFieldMetadataMaps'],
+        },
+      );
+
+    const fieldMetadata = Object.values(
+      flatFieldMetadataMaps.byUniversalIdentifier,
+    ).find(
+      (field) =>
+        field?.name === fieldName &&
+        field?.objectMetadataId === objectMetadataId,
+    );
+
+    if (!fieldMetadata) {
+      throw new Error(
+        `Field "${fieldName}" not found on this object. Use get_field_metadata to list available fields.`,
+      );
+    }
+
+    if (!isFieldMetadataDateKind(fieldMetadata.type)) {
+      throw new Error(
+        `Field "${fieldName}" has type "${fieldMetadata.type}" and cannot be used as a calendar field. Only DATE or DATE_TIME fields are supported.`,
+      );
+    }
+
+    return fieldMetadata.id;
+  }
+
   generateReadTools(
     workspaceId: string,
     userWorkspaceId?: string,
@@ -304,6 +340,29 @@ export class ViewToolsFactory {
               parameters.objectNameSingular,
             );
 
+            if (
+              parameters.type === ViewType.KANBAN &&
+              !parameters.mainGroupByFieldName
+            ) {
+              throw new Error(
+                'KANBAN views require mainGroupByFieldName. Provide a SELECT field name (e.g., "stage", "status") to group records into columns.',
+              );
+            }
+
+            if (parameters.type === ViewType.CALENDAR) {
+              if (!parameters.calendarFieldName) {
+                throw new Error(
+                  'CALENDAR views require calendarFieldName. Provide a DATE or DATE_TIME field name (e.g., "dueAt", "createdAt").',
+                );
+              }
+
+              if (!parameters.calendarLayout) {
+                throw new Error(
+                  'CALENDAR views require calendarLayout. Provide one of: "DAY", "WEEK", "MONTH".',
+                );
+              }
+            }
+
             let mainGroupByFieldMetadataId: string | undefined;
             let kanbanAggregateOperationFieldMetadataId: string | undefined;
             let calendarFieldMetadataId: string | undefined;
@@ -327,11 +386,12 @@ export class ViewToolsFactory {
             }
 
             if (parameters.calendarFieldName) {
-              calendarFieldMetadataId = await this.resolveFieldMetadataId(
-                workspaceId,
-                objectMetadataId,
-                parameters.calendarFieldName,
-              );
+              calendarFieldMetadataId =
+                await this.resolveCalendarFieldMetadataId(
+                  workspaceId,
+                  objectMetadataId,
+                  parameters.calendarFieldName,
+                );
             }
 
             const view = await this.viewService.createOne({
