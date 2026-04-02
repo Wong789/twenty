@@ -326,7 +326,7 @@ ${hasWebSearch ? '3' : '2'}. **Other tools**: First call \`${LEARN_TOOLS_TOOL_NA
       case ToolCategory.METADATA:
         return 'Metadata Tools (schema management)';
       case ToolCategory.VIEW:
-        return 'View Tools (query views)';
+        return 'View Tools (manage views, filters, and sorts)';
       case ToolCategory.DASHBOARD:
         return 'Dashboard Tools (create/manage dashboards)';
       case ToolCategory.LOGIC_FUNCTION:
@@ -335,10 +335,6 @@ ${hasWebSearch ? '3' : '2'}. **Other tools**: First call \`${LEARN_TOOLS_TOOL_NA
         return 'Native Model Capabilities (e.g. web search)';
       case ToolCategory.VIEW_FIELD:
         return 'View Field Tools (manage view columns)';
-      case ToolCategory.VIEW_FILTER:
-        return 'View Filter Tools (manage view filters)';
-      case ToolCategory.VIEW_SORT:
-        return 'View Sort Tools (manage view sorts)';
       default:
         return assertUnreachable(category);
     }

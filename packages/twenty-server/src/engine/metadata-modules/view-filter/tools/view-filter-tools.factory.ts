@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { formatValidationErrors } from 'src/engine/core-modules/tool-provider/utils/format-validation-errors.util';
 import { ViewFilterService } from 'src/engine/metadata-modules/view-filter/services/view-filter.service';
+import { type ViewFilterValue } from 'src/engine/metadata-modules/view-filter/types/view-filter-value.type';
 import { WorkspaceMigrationBuilderException } from 'src/engine/workspace-manager/workspace-migration/exceptions/workspace-migration-builder-exception';
 
 const VIEW_FILTER_OPERAND_OPTIONS = Object.values(ViewFilterOperand);
@@ -134,7 +135,7 @@ export class ViewFilterToolsFactory {
                 viewId: parameters.viewId,
                 fieldMetadataId: parameters.fieldMetadataId,
                 operand: parameters.operand,
-                value: parameters.value as string,
+                value: parameters.value as ViewFilterValue,
                 subFieldName: parameters.subFieldName,
               },
               workspaceId,
@@ -178,7 +179,7 @@ export class ViewFilterToolsFactory {
                   viewId: filterInput.viewId,
                   fieldMetadataId: filterInput.fieldMetadataId,
                   operand: filterInput.operand,
-                  value: filterInput.value as string,
+                  value: filterInput.value as ViewFilterValue,
                   subFieldName: filterInput.subFieldName,
                 },
                 workspaceId,
@@ -218,7 +219,7 @@ export class ViewFilterToolsFactory {
                 id: parameters.id,
                 update: {
                   operand: parameters.operand,
-                  value: parameters.value as string,
+                  value: parameters.value as ViewFilterValue,
                   subFieldName: parameters.subFieldName,
                 },
               },
