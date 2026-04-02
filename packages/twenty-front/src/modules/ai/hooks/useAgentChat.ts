@@ -1,3 +1,4 @@
+import { useApolloClient } from '@apollo/client';
 import { useStore } from 'jotai';
 import { useCallback, useState } from 'react';
 import { type ExtendedUIMessage } from 'twenty-shared/ai';
@@ -8,6 +9,8 @@ import { AGENT_CHAT_INSTANCE_ID } from '@/ai/constants/AgentChatInstanceId';
 import { AGENT_CHAT_REFETCH_MESSAGES_EVENT_NAME } from '@/ai/constants/AgentChatRefetchMessagesEventName';
 import { AGENT_CHAT_SEND_MESSAGE_EVENT_NAME } from '@/ai/constants/AgentChatSendMessageEventName';
 import { AGENT_CHAT_STOP_EVENT_NAME } from '@/ai/constants/AgentChatStopEventName';
+import { SEND_CHAT_MESSAGE } from '@/ai/graphql/mutations/sendChatMessage';
+import { STOP_AGENT_CHAT_STREAM } from '@/ai/graphql/mutations/stopAgentChatStream';
 import {
   AGENT_CHAT_NEW_THREAD_DRAFT_KEY,
   agentChatDraftsByThreadIdState,
@@ -19,7 +22,6 @@ import { agentChatMessagesComponentFamilyState } from '@/ai/states/agentChatMess
 import { currentAIChatThreadState } from '@/ai/states/currentAIChatThreadState';
 import { useGetBrowsingContext } from '@/ai/hooks/useBrowsingContext';
 import { useAgentChatModelId } from '@/ai/hooks/useAgentChatModelId';
-import { useAuthenticatedAgentChatFetch } from '@/ai/hooks/useAuthenticatedAgentChatFetch';
 import { useListenToBrowserEvent } from '@/browser-event/hooks/useListenToBrowserEvent';
 import { dispatchBrowserEvent } from '@/browser-event/utils/dispatchBrowserEvent';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
@@ -31,7 +33,7 @@ export const useAgentChat = (
 ) => {
   const { modelIdForRequest } = useAgentChatModelId();
   const { getBrowsingContext } = useGetBrowsingContext();
-  const { authenticatedFetch } = useAuthenticatedAgentChatFetch();
+  const apolloClient = useApolloClient();
   const setCurrentAIChatThread = useSetAtomState(currentAIChatThreadState);
   const store = useStore();
 
@@ -88,9 +90,10 @@ export const useAgentChat = (
     }));
 
     const browsingContext = getBrowsingContext();
+    const messageId = v4();
 
     const optimisticUserMessage: ExtendedUIMessage = {
-      id: v4(),
+      id: messageId,
       role: 'user',
       parts: [
         { type: 'text' as const, text: contentToSend },
@@ -119,39 +122,25 @@ export const useAgentChat = (
     setAgentChatUploadedFiles([]);
 
     try {
-      const response = await authenticatedFetch(
-        `/agent-chat/${threadId}/message`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: contentToSend,
-            browsingContext,
-            ...(isDefined(modelIdForRequest) && {
-              modelId: modelIdForRequest,
-            }),
-          }),
+      const { data } = await apolloClient.mutate({
+        mutation: SEND_CHAT_MESSAGE,
+        variables: {
+          threadId,
+          text: contentToSend,
+          messageId,
+          browsingContext: browsingContext ?? null,
+          modelId: modelIdForRequest ?? undefined,
         },
-      );
+      });
 
-      if (!response?.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      const responseBody = await response.json();
-
-      if (responseBody.queued) {
+      if (data?.sendChatMessage?.queued) {
         const latestMessages = store.get(
           agentChatMessagesComponentFamilyState.atomFamily(atomKey),
         );
 
         store.set(
           agentChatMessagesComponentFamilyState.atomFamily(atomKey),
-          latestMessages.filter(
-            (message) => message.id !== optimisticUserMessage.id,
-          ),
+          latestMessages.filter((message) => message.id !== messageId),
         );
       }
 
@@ -171,9 +160,7 @@ export const useAgentChat = (
 
       store.set(
         agentChatMessagesComponentFamilyState.atomFamily(atomKey),
-        latestMessages.filter(
-          (message) => message.id !== optimisticUserMessage.id,
-        ),
+        latestMessages.filter((message) => message.id !== messageId),
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,7 +175,7 @@ export const useAgentChat = (
     setAgentChatDraftsByThreadId,
     modelIdForRequest,
     setCurrentAIChatThread,
-    authenticatedFetch,
+    apolloClient,
   ]);
 
   useListenToBrowserEvent({
@@ -203,10 +190,13 @@ export const useAgentChat = (
       return;
     }
 
-    authenticatedFetch(`/agent-chat/${threadId}/stream`, {
-      method: 'DELETE',
-    }).catch(() => {});
-  }, [store, authenticatedFetch]);
+    apolloClient
+      .mutate({
+        mutation: STOP_AGENT_CHAT_STREAM,
+        variables: { threadId },
+      })
+      .catch(() => {});
+  }, [store, apolloClient]);
 
   useListenToBrowserEvent({
     eventName: AGENT_CHAT_STOP_EVENT_NAME,

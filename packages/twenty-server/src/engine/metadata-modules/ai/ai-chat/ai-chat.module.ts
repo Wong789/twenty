@@ -33,7 +33,6 @@ import { WorkspaceCacheModule } from 'src/engine/workspace-cache/workspace-cache
 import { DashboardToolsModule } from 'src/modules/dashboard/tools/dashboard-tools.module';
 import { WorkflowToolsModule } from 'src/modules/workflow/workflow-tools/workflow-tools.module';
 
-import { AgentChatController } from './controllers/agent-chat.controller';
 import { AgentChatThreadDTO } from './dtos/agent-chat-thread.dto';
 import { AgentChatThreadEntity } from './entities/agent-chat-thread.entity';
 import { StreamAgentChatJob } from './jobs/stream-agent-chat.job';
@@ -102,7 +101,6 @@ import { SystemPromptBuilderService } from './services/system-prompt-builder.ser
     DashboardToolsModule,
     WorkflowToolsModule,
   ],
-  controllers: [AgentChatController],
   providers: [
     AgentChatCancelSubscriberService,
     AgentChatEventPublisherService,

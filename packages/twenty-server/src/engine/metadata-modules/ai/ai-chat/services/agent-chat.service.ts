@@ -104,12 +104,14 @@ export class AgentChatService {
     uiMessage,
     agentId,
     turnId,
+    id,
   }: {
     threadId: string;
     uiMessage: Omit<ExtendedUIMessage, 'id'>;
     uiMessageParts?: UIMessagePart<UIDataTypes, UITools>[];
     agentId?: string;
     turnId?: string;
+    id?: string;
   }) {
     let actualTurnId = turnId;
 
@@ -125,6 +127,7 @@ export class AgentChatService {
     }
 
     const message = this.messageRepository.create({
+      ...(id ? { id } : {}),
       threadId,
       turnId: actualTurnId,
       role: uiMessage.role as AgentMessageRole,
@@ -171,11 +174,14 @@ export class AgentChatService {
   async queueMessage({
     threadId,
     text,
+    id,
   }: {
     threadId: string;
     text: string;
+    id?: string;
   }): Promise<AgentMessageEntity> {
     const message = this.messageRepository.create({
+      ...(id ? { id } : {}),
       threadId,
       turnId: null,
       role: AgentMessageRole.USER,

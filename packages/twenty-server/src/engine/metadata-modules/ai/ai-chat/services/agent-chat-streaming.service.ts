@@ -31,6 +31,7 @@ export type StreamAgentChatOptions = {
   text: string;
   browsingContext: BrowsingContextType | null;
   modelId?: string;
+  messageId?: string;
 };
 
 @Injectable()
@@ -53,6 +54,7 @@ export class AgentChatStreamingService {
     text,
     browsingContext,
     modelId,
+    messageId,
   }: StreamAgentChatOptions): Promise<{ streamId: string; messageId: string }> {
     const thread = await this.threadRepository.findOne({
       where: {
@@ -70,6 +72,7 @@ export class AgentChatStreamingService {
 
     const savedUserMessage = await this.agentChatService.addMessage({
       threadId,
+      id: messageId,
       uiMessage: {
         role: AgentMessageRole.USER,
         parts: [{ type: 'text' as const, text }],
