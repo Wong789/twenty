@@ -29,6 +29,9 @@ export type VersionCommands = WorkspaceCommandRunner[];
 export type AllCommands = Record<UpgradeCommandVersion, VersionCommands>;
 
 export type UpgradeCommandOptions = {
+  workspaceId?: Set<string>;
+  startFromWorkspaceId?: string;
+  workspaceCountLimit?: number;
   dryRun?: boolean;
   verbose?: boolean;
 };
@@ -43,10 +46,6 @@ export abstract class UpgradeCommandRunner extends CommandRunner {
   protected logger: CommandLogger;
 
   public abstract allCommands: AllCommands;
-
-  private workspaceIds: Set<string> = new Set();
-  private startFromWorkspaceId: string | undefined;
-  private workspaceCountLimit: number | undefined;
 
   constructor(
     @InjectRepository(WorkspaceEntity)
@@ -87,10 +86,12 @@ export abstract class UpgradeCommandRunner extends CommandRunner {
       'workspace id. Command runs on all active/suspended workspaces if not provided.',
     required: false,
   })
-  parseWorkspaceId(val: string): Set<string> {
-    this.workspaceIds.add(val);
+  parseWorkspaceId(val: string, previous?: Set<string>): Set<string> {
+    const accumulator = previous ?? new Set<string>();
 
-    return this.workspaceIds;
+    accumulator.add(val);
+
+    return accumulator;
   }
 
   @Option({
@@ -100,8 +101,6 @@ export abstract class UpgradeCommandRunner extends CommandRunner {
     required: false,
   })
   parseStartFromWorkspaceId(val: string): string {
-    this.startFromWorkspaceId = val;
-
     return val;
   }
 
@@ -112,17 +111,17 @@ export abstract class UpgradeCommandRunner extends CommandRunner {
     required: false,
   })
   parseWorkspaceCountLimit(val: string): number {
-    this.workspaceCountLimit = parseInt(val);
+    const limit = parseInt(val);
 
-    if (isNaN(this.workspaceCountLimit)) {
+    if (isNaN(limit)) {
       throw new Error('Workspace count limit must be a number');
     }
 
-    if (this.workspaceCountLimit <= 0) {
+    if (limit <= 0) {
       throw new Error('Workspace count limit must be greater than 0');
     }
 
-    return this.workspaceCountLimit;
+    return limit;
   }
 
   override async run(
@@ -171,11 +170,11 @@ Please roll back to that version and run the upgrade command again.`,
 
       const iteratorReport = await this.workspaceIteratorService.iterate({
         workspaceIds:
-          this.workspaceIds.size > 0
-            ? Array.from(this.workspaceIds)
+          options.workspaceId && options.workspaceId.size > 0
+            ? Array.from(options.workspaceId)
             : undefined,
-        startFromWorkspaceId: this.startFromWorkspaceId,
-        workspaceCountLimit: this.workspaceCountLimit,
+        startFromWorkspaceId: options.startFromWorkspaceId,
+        workspaceCountLimit: options.workspaceCountLimit,
         dryRun: options.dryRun,
         callback: async (context) => {
           await this.runOnWorkspace(context, options, versionContext);

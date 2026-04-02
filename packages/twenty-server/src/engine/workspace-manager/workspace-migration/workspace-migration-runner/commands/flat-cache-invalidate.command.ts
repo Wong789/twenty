@@ -16,6 +16,7 @@ import { getMetadataRelatedMetadataNames } from 'src/engine/metadata-modules/fla
 import { WorkspaceMigrationRunnerService } from 'src/engine/workspace-manager/workspace-migration/workspace-migration-runner/services/workspace-migration-runner.service';
 
 type FlatCacheFlushCommandOptions = ActiveOrSuspendedWorkspaceCommandOptions & {
+  metadataName?: string[];
   allMetadata?: boolean;
 };
 
@@ -25,7 +26,6 @@ type FlatCacheFlushCommandOptions = ActiveOrSuspendedWorkspaceCommandOptions & {
     'Flush flat entity cache for specific metadata names and workspaces',
 })
 export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspaceCommandRunner<FlatCacheFlushCommandOptions> {
-  private metadataNames: string[] = [];
   private flatMapsKeysToFlush: (keyof AllFlatEntityMaps)[] = [];
 
   constructor(
@@ -41,10 +41,12 @@ export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspaceComman
       'Metadata name(s) to flush cache for. Can be specified multiple times.',
     required: false,
   })
-  parseMetadataName(val: string): string[] {
-    this.metadataNames.push(val);
+  parseMetadataName(val: string, previous?: string[]): string[] {
+    const accumulator = previous ?? [];
 
-    return this.metadataNames;
+    accumulator.push(val);
+
+    return accumulator;
   }
 
   @Option({
@@ -61,7 +63,9 @@ export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspaceComman
     passedParams: string[],
     options: FlatCacheFlushCommandOptions,
   ): Promise<void> {
-    if (!options.allMetadata && this.metadataNames.length === 0) {
+    const metadataNames = options.metadataName ?? [];
+
+    if (!options.allMetadata && metadataNames.length === 0) {
       this.logger.error(
         'Either --all-metadata or at least one --metadataName must be provided.',
       );
@@ -70,7 +74,7 @@ export class FlatCacheInvalidateCommand extends ActiveOrSuspendedWorkspaceComman
     }
 
     const validatedMetadataNames = this.validateAndExpandMetadataNames({
-      inputMetadataNames: this.metadataNames,
+      inputMetadataNames: metadataNames,
       allMetadata: options.allMetadata,
     });
 

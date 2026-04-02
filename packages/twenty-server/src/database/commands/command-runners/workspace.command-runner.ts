@@ -7,7 +7,7 @@ import { CommandLogger } from 'src/database/commands/logger';
 import { GlobalWorkspaceDataSource } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-datasource';
 
 export type WorkspaceCommandOptions = {
-  workspaceIds: string[];
+  workspaceId?: Set<string>;
   startFromWorkspaceId?: string;
   workspaceCountLimit?: number;
   dryRun?: boolean;
@@ -26,10 +26,6 @@ export abstract class WorkspaceCommandRunner<
   Options extends WorkspaceCommandOptions = WorkspaceCommandOptions,
 > extends CommandRunner {
   protected logger: CommandLogger;
-
-  protected workspaceIds: Set<string> = new Set();
-  private startFromWorkspaceId: string | undefined;
-  private workspaceCountLimit: number | undefined;
 
   constructor(
     protected readonly workspaceIteratorService: WorkspaceIteratorService,
@@ -67,8 +63,6 @@ export abstract class WorkspaceCommandRunner<
     required: false,
   })
   parseStartFromWorkspaceId(val: string): string {
-    this.startFromWorkspaceId = val;
-
     return val;
   }
 
@@ -79,17 +73,17 @@ export abstract class WorkspaceCommandRunner<
     required: false,
   })
   parseWorkspaceCountLimit(val: string): number {
-    this.workspaceCountLimit = parseInt(val);
+    const limit = parseInt(val);
 
-    if (isNaN(this.workspaceCountLimit)) {
+    if (isNaN(limit)) {
       throw new Error('Workspace count limit must be a number');
     }
 
-    if (this.workspaceCountLimit <= 0) {
+    if (limit <= 0) {
       throw new Error('Workspace count limit must be greater than 0');
     }
 
-    return this.workspaceCountLimit;
+    return limit;
   }
 
   @Option({
@@ -98,10 +92,12 @@ export abstract class WorkspaceCommandRunner<
       'workspace id. Command runs on all workspaces matching the activation statuses if not provided.',
     required: false,
   })
-  parseWorkspaceId(val: string): Set<string> {
-    this.workspaceIds.add(val);
+  parseWorkspaceId(val: string, previous?: Set<string>): Set<string> {
+    const accumulator = previous ?? new Set<string>();
 
-    return this.workspaceIds;
+    accumulator.add(val);
+
+    return accumulator;
   }
 
   override async run(_passedParams: string[], options: Options): Promise<void> {
@@ -115,12 +111,12 @@ export abstract class WorkspaceCommandRunner<
     try {
       await this.workspaceIteratorService.iterate({
         workspaceIds:
-          this.workspaceIds.size > 0
-            ? Array.from(this.workspaceIds)
+          options.workspaceId && options.workspaceId.size > 0
+            ? Array.from(options.workspaceId)
             : undefined,
         activationStatuses: this.activationStatuses,
-        startFromWorkspaceId: this.startFromWorkspaceId,
-        workspaceCountLimit: this.workspaceCountLimit,
+        startFromWorkspaceId: options.startFromWorkspaceId,
+        workspaceCountLimit: options.workspaceCountLimit,
         dryRun: options.dryRun,
         callback: async (context) => {
           await this.runOnWorkspace({
