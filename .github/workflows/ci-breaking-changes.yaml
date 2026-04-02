@@ -228,7 +228,6 @@ jobs:
           echo "Current branch files downloaded:"
           ls -la current-*
 
-
       - name: Preserve current branch files
         run: |
           # Create a temp directory to store current branch files
@@ -290,7 +289,7 @@ jobs:
 
           set_env_var "PG_DATABASE_URL" "postgres://postgres:postgres@localhost:5432/main_branch"
           set_env_var "NODE_PORT" "${{ env.MAIN_SERVER_PORT }}"
-          set_env_var "REDIS_URL" "redis://localhost:6379"
+          set_env_var "REDIS_URL" "redis://localhost:6379/1"
           set_env_var "CLICKHOUSE_URL" "http://default:clickhousePassword@localhost:8123/twenty"
           set_env_var "CLICKHOUSE_PASSWORD" "clickhousePassword"
 
@@ -380,7 +379,6 @@ jobs:
           echo "Main branch files downloaded:"
           ls -la main-*
 
-
       - name: Restore current branch files
         run: |
           # Move current branch files back to working directory
@@ -399,11 +397,20 @@ jobs:
           valid=true
 
           for file in main-schema-introspection.json current-schema-introspection.json \
-                      main-metadata-schema-introspection.json current-metadata-schema-introspection.json \
-                      main-rest-api.json current-rest-api.json \
-                      main-rest-metadata-api.json current-rest-metadata-api.json; do
+                      main-metadata-schema-introspection.json current-metadata-schema-introspection.json; do
             if [ ! -f "$file" ] || ! jq empty "$file" 2>/dev/null; then
               echo "::warning::Invalid or missing schema file: $file"
+              valid=false
+            elif ! jq -e '.data.__schema' "$file" > /dev/null 2>&1; then
+              echo "::warning::Schema file is not a valid GraphQL introspection response: $file"
+              valid=false
+            fi
+          done
+
+          for file in main-rest-api.json current-rest-api.json \
+                      main-rest-metadata-api.json current-rest-metadata-api.json; do
+            if [ ! -f "$file" ] || ! jq empty "$file" 2>/dev/null; then
+              echo "::warning::Invalid or missing REST API file: $file"
               valid=false
             fi
           done
