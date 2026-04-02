@@ -70,8 +70,16 @@ export class BillingPlanService {
           active: true,
         },
       },
-      relations: ['billingPrices.billingProduct'],
+      relations: ['billingPrices'],
     });
+
+    // Populate the billingProduct back-reference on each price in memory
+    // to avoid a circular self-join (billingProduct → billingPrice → billingProduct)
+    for (const product of products) {
+      for (const price of product.billingPrices) {
+        price.billingProduct = product;
+      }
+    }
 
     return planKeys.map((planKey) => {
       const planProducts = products.filter(
