@@ -47,6 +47,12 @@ export const SentryInitEffect = () => {
                 onunhandledrejection: false, // handled in PromiseRejectionEffect
               }),
             ],
+            ignoreErrors: [
+              // Transient browser network errors from reverse proxy 502/503/504
+              'NetworkError when attempting to fetch resource',
+              'Failed to fetch',
+              'Load failed',
+            ],
             tracePropagationTargets: [
               'localhost:3001',
               REACT_APP_SERVER_BASE_URL,
