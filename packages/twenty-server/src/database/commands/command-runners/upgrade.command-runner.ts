@@ -194,11 +194,10 @@ Please roll back to that version and run the upgrade command again.`,
           `Upgrade summary: ${iteratorReport.success.length} succeeded, ${iteratorReport.fail.length} failed`,
         ),
       );
+      this.logger.log(chalk.blue('Command completed!'));
     } catch (error) {
       this.logger.error(chalk.red(`Upgrade failed: ${error.message}`));
       throw error;
-    } finally {
-      this.logger.log(chalk.blue('Command completed!'));
     }
   }
 
