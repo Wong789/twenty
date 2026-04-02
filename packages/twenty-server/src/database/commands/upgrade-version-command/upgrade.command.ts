@@ -68,8 +68,6 @@ export class UpgradeCommand extends UpgradeCommandRunner {
     private readonly makeWorkflowSearchableCommand: MakeWorkflowSearchableCommand,
 
     // 1.21 Commands
-    private readonly backfillDatasourceToWorkspaceCommand: BackfillDatasourceToWorkspaceCommand,
-    private readonly backfillPageLayoutsAndFieldsWidgetViewFieldsCommand: BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand,
     private readonly addGlobalKeyValuePairUniqueIndexCommand: AddGlobalKeyValuePairUniqueIndexCommand,
     private readonly backfillDatasourceToWorkspaceCommand: BackfillDatasourceToWorkspaceCommand,
     private readonly backfillPageLayoutsAndFieldsWidgetViewFieldsCommand: BackfillPageLayoutsAndFieldsWidgetViewFieldsCommand,
