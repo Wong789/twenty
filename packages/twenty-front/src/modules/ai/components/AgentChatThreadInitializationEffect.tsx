@@ -52,7 +52,7 @@ export const AgentChatThreadInitializationEffect = () => {
 
     hasInitializedRef.current = true;
 
-    const sortedThreads = [...agentChatThreads].sort(
+    const sortedThreads = agentChatThreads.toSorted(
       (a: FlatAgentChatThread, b: FlatAgentChatThread) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
