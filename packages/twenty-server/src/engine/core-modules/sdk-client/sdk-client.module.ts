@@ -6,6 +6,7 @@ import { ApplicationEntity } from 'src/engine/core-modules/application/applicati
 import { SdkClientController } from 'src/engine/core-modules/sdk-client/controllers/sdk-client.controller';
 import { SdkClientArchiveService } from 'src/engine/core-modules/sdk-client/sdk-client-archive.service';
 import { SdkClientGenerationService } from 'src/engine/core-modules/sdk-client/sdk-client-generation.service';
+import { GenerateSdkClientJob } from 'src/engine/core-modules/sdk-client/jobs/generate-sdk-client.job';
 import { WorkspaceCacheModule } from 'src/engine/workspace-cache/workspace-cache.module';
 
 @Module({
@@ -15,7 +16,11 @@ import { WorkspaceCacheModule } from 'src/engine/workspace-cache/workspace-cache
     CoreGraphQLApiModule,
   ],
   controllers: [SdkClientController],
-  providers: [SdkClientGenerationService, SdkClientArchiveService],
+  providers: [
+    SdkClientGenerationService,
+    SdkClientArchiveService,
+    GenerateSdkClientJob,
+  ],
   exports: [SdkClientGenerationService, SdkClientArchiveService],
 })
 export class SdkClientModule {}
