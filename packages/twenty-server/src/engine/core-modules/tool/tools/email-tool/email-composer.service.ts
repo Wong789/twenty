@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { render, toPlainText } from '@react-email/render';
+import { toPlainText } from '@react-email/render';
 import DOMPurify from 'dompurify';
-import { reactMarkupFromJSON } from 'twenty-emails';
 import { FileFolder } from 'twenty-shared/types';
 import { isDefined, isValidUuid } from 'twenty-shared/utils';
 import { WorkflowAttachment } from 'twenty-shared/workflow';
@@ -19,14 +18,13 @@ import {
 import { EmailComposerResult } from 'src/engine/core-modules/tool/tools/email-tool/types/email-composer-result.type';
 import { EmailToolInput } from 'src/engine/core-modules/tool/tools/email-tool/types/email-tool-input.type';
 import { parseCommaSeparatedEmails } from 'src/engine/core-modules/tool/tools/email-tool/utils/parse-comma-separated-emails.util';
-import { ToolExecutionContext } from 'src/engine/core-modules/tool/types/tool.type';
+import { type ToolExecutionContext } from 'src/engine/core-modules/tool/types/tool.type';
 import { ConnectedAccountDataAccessService } from 'src/engine/metadata-modules/connected-account/data-access/services/connected-account-data-access.service';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { buildSystemAuthContext } from 'src/engine/twenty-orm/utils/build-system-auth-context.util';
 import { MessagingAccountAuthenticationService } from 'src/modules/messaging/message-import-manager/services/messaging-account-authentication.service';
 import { type MessageAttachment } from 'src/modules/messaging/message-import-manager/types/message';
 import { type ConnectedAccountWorkspaceEntity } from 'src/modules/connected-account/standard-objects/connected-account.workspace-entity';
-import { parseEmailBody } from 'src/utils/parse-email-body';
 import { streamToBuffer } from 'src/utils/stream-to-buffer';
 @Injectable()
 export class EmailComposerService {
@@ -288,15 +286,12 @@ export class EmailComposerService {
 
     const attachments = await this.getAttachments(files || [], workspaceId);
 
-    const parsedBody = parseEmailBody(body);
-    const reactMarkup = reactMarkupFromJSON(parsedBody);
-    const htmlBody = await render(reactMarkup);
-    const plainTextBody = toPlainText(htmlBody);
-
     const { JSDOM } = await import('jsdom');
     const window = new JSDOM('').window;
     const purify = DOMPurify(window);
-    const sanitizedHtmlBody = purify.sanitize(htmlBody || '');
+
+    const sanitizedHtmlBody = purify.sanitize(body || '');
+    const plainTextBody = toPlainText(sanitizedHtmlBody);
     const sanitizedSubject = purify.sanitize(subject || '');
 
     return {
