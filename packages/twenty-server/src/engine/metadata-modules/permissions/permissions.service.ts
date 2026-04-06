@@ -148,10 +148,28 @@ export class PermissionsService {
         workspaceId,
       );
 
-      const role = await this.roleRepository.findOne({
+      let role = await this.roleRepository.findOne({
         where: { id: roleId, workspaceId },
         relations: ['permissionFlags'],
       });
+
+      // Role from cache may be stale — recompute and retry once
+      if (!isDefined(role)) {
+        await this.workspaceCacheService.invalidateAndRecompute(workspaceId, [
+          'apiKeyRoleMap',
+        ]);
+
+        const refreshedRoleId =
+          await this.apiKeyRoleService.getRoleIdForApiKeyId(
+            apiKeyId,
+            workspaceId,
+          );
+
+        role = await this.roleRepository.findOne({
+          where: { id: refreshedRoleId, workspaceId },
+          relations: ['permissionFlags'],
+        });
+      }
 
       if (!isDefined(role)) {
         throw new PermissionsException(
