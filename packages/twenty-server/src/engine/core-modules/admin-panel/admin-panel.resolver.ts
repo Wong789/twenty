@@ -268,6 +268,7 @@ export class AdminPanelResolver {
     value: ConfigVariables[keyof ConfigVariables],
   ): Promise<boolean> {
     await this.twentyConfigService.set(key, value);
+    this.aiModelRegistryService.refreshRegistry();
 
     return true;
   }
@@ -280,6 +281,7 @@ export class AdminPanelResolver {
     value: ConfigVariables[keyof ConfigVariables],
   ): Promise<boolean> {
     await this.twentyConfigService.update(key, value);
+    this.aiModelRegistryService.refreshRegistry();
 
     return true;
   }
@@ -290,6 +292,7 @@ export class AdminPanelResolver {
     @Args('key', { type: () => String }) key: keyof ConfigVariables,
   ): Promise<boolean> {
     await this.twentyConfigService.delete(key);
+    this.aiModelRegistryService.refreshRegistry();
 
     return true;
   }
