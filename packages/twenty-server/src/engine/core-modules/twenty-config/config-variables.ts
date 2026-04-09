@@ -1623,6 +1623,43 @@ export class ConfigVariables {
   AWS_SES_ACCOUNT_ID: string;
 
   @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.AWS_SES_SETTINGS,
+    description:
+      'Domain used for inbound email forwarding (the right-hand side of ch_xxx@<domain>). Required to enable email forwarding channels.',
+    type: ConfigVariableType.STRING,
+  })
+  @IsOptional()
+  INBOUND_EMAIL_DOMAIN: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.AWS_SES_SETTINGS,
+    description:
+      'S3 bucket where SES inbound action writes raw messages. Required to enable email forwarding channels.',
+    type: ConfigVariableType.STRING,
+  })
+  @IsOptional()
+  INBOUND_EMAIL_S3_BUCKET: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.AWS_SES_SETTINGS,
+    description:
+      'Region for the inbound-email S3 bucket. Defaults to AWS_SES_REGION when unset.',
+    type: ConfigVariableType.STRING,
+  })
+  @IsOptional()
+  INBOUND_EMAIL_S3_REGION: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.AWS_SES_SETTINGS,
+    description:
+      'Maximum number of S3 keys listed per poll of the inbound-email bucket.',
+    type: ConfigVariableType.NUMBER,
+  })
+  @CastToPositiveNumber()
+  @IsOptional()
+  INBOUND_EMAIL_POLL_BATCH_SIZE: number = 500;
+
+  @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.ADVANCED_SETTINGS,
     description: 'Timeout in milliseconds for primary database queries',
     type: ConfigVariableType.NUMBER,

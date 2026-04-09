@@ -23,6 +23,8 @@ export const messageChannelGraphqlApiExceptionHandler = (error: Error) => {
         throw new UserInputError(error);
       case MessageChannelExceptionCode.MESSAGE_CHANNEL_OWNERSHIP_VIOLATION:
         throw new ForbiddenError(error);
+      case MessageChannelExceptionCode.EMAIL_FORWARDING_NOT_CONFIGURED:
+        throw new UserInputError(error);
       default: {
         return assertUnreachable(error.code);
       }

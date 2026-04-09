@@ -1,21 +1,33 @@
+import { randomBytes } from 'crypto';
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { isNonEmptyString } from '@sniptt/guards';
 import { In, Repository } from 'typeorm';
 
 import {
+  ConnectedAccountProvider,
+  MessageChannelContactAutoCreationPolicy,
+  MessageChannelPendingGroupEmailsAction,
   MessageChannelSyncStage,
   MessageChannelType,
   MessageChannelVisibility,
 } from 'twenty-shared/types';
 
+import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { ConnectedAccountMetadataService } from 'src/engine/metadata-modules/connected-account/connected-account-metadata.service';
+import { CreateEmailForwardingChannelOutput } from 'src/engine/metadata-modules/message-channel/dtos/create-email-forwarding-channel.output';
 import { MessageChannelDTO } from 'src/engine/metadata-modules/message-channel/dtos/message-channel.dto';
 import { MessageChannelEntity } from 'src/engine/metadata-modules/message-channel/entities/message-channel.entity';
 import {
   MessageChannelException,
   MessageChannelExceptionCode,
 } from 'src/engine/metadata-modules/message-channel/message-channel.exception';
+import {
+  INBOUND_EMAIL_LOCAL_PART_PREFIX,
+  INBOUND_EMAIL_LOCAL_PART_RANDOM_BYTES,
+} from 'src/modules/messaging/message-import-manager/drivers/inbound-email/constants/inbound-email.constants';
 
 @Injectable()
 export class MessageChannelMetadataService {
@@ -23,6 +35,7 @@ export class MessageChannelMetadataService {
     @InjectRepository(MessageChannelEntity)
     private readonly repository: Repository<MessageChannelEntity>,
     private readonly connectedAccountMetadataService: ConnectedAccountMetadataService,
+    private readonly twentyConfigService: TwentyConfigService,
   ) {}
 
   async findAll(workspaceId: string): Promise<MessageChannelDTO[]> {
@@ -170,6 +183,60 @@ export class MessageChannelMetadataService {
     );
 
     return this.repository.findOneOrFail({ where: { id, workspaceId } });
+  }
+
+  async createEmailForwardingChannel({
+    userWorkspaceId,
+    workspaceId,
+  }: {
+    userWorkspaceId: string;
+    workspaceId: string;
+  }): Promise<CreateEmailForwardingChannelOutput> {
+    const inboundEmailDomain = this.twentyConfigService.get(
+      'INBOUND_EMAIL_DOMAIN',
+    );
+
+    if (!isNonEmptyString(inboundEmailDomain)) {
+      throw new MessageChannelException(
+        'Email forwarding is not configured: INBOUND_EMAIL_DOMAIN is not set',
+        MessageChannelExceptionCode.EMAIL_FORWARDING_NOT_CONFIGURED,
+      );
+    }
+
+    const localPart =
+      INBOUND_EMAIL_LOCAL_PART_PREFIX +
+      randomBytes(INBOUND_EMAIL_LOCAL_PART_RANDOM_BYTES).toString('hex');
+
+    const forwardingAddress = `${localPart}@${inboundEmailDomain}`;
+
+    const connectedAccount =
+      await this.connectedAccountMetadataService.create({
+        workspaceId,
+        handle: forwardingAddress,
+        provider: ConnectedAccountProvider.EMAIL_FORWARDING,
+        userWorkspaceId,
+        accessToken: null,
+        refreshToken: null,
+      });
+
+    const messageChannel = await this.create({
+      workspaceId,
+      handle: forwardingAddress,
+      connectedAccountId: connectedAccount.id,
+      type: MessageChannelType.EMAIL_FORWARDING,
+      visibility: MessageChannelVisibility.SHARE_EVERYTHING,
+      syncStage: MessageChannelSyncStage.PENDING_CONFIGURATION,
+      isSyncEnabled: true,
+      isContactAutoCreationEnabled: true,
+      contactAutoCreationPolicy:
+        MessageChannelContactAutoCreationPolicy.SENT_AND_RECEIVED,
+      excludeGroupEmails: false,
+      excludeNonProfessionalEmails: false,
+      pendingGroupEmailsAction:
+        MessageChannelPendingGroupEmailsAction.NONE,
+    });
+
+    return { messageChannel, forwardingAddress };
   }
 
   async delete({
