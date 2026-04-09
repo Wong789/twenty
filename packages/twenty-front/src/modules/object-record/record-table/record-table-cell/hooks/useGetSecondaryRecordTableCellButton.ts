@@ -22,8 +22,6 @@ export const useGetSecondaryRecordTableCellButton = () => {
 
   const isEmailField = isFieldEmails(fieldDefinition);
 
-  // Only fire the connected-account query for email fields — phone and link
-  // fields never use the in-app composer so the request would be wasted.
   const { openEmail } = useOpenEmailInAppOrFallback({ skip: !isEmailField });
 
   const fieldValue = useRecordFieldValue<
@@ -39,8 +37,6 @@ export const useGetSecondaryRecordTableCellButton = () => {
     return [];
   }
 
-  // Email fields default to opening the in-app composer; other field types
-  // default to opening the platform link handler.
   const defaultClickAction = isEmailField
     ? FieldMetadataSettingsOnClickAction.OPEN_IN_APP
     : FieldMetadataSettingsOnClickAction.OPEN_LINK;
@@ -48,9 +44,6 @@ export const useGetSecondaryRecordTableCellButton = () => {
   const mainActionOnClick =
     fieldDefinition.metadata.settings?.clickAction ?? defaultClickAction;
 
-  // The secondary button always exposes the "other" useful action: if main is
-  // a copy then offer an open action, otherwise offer copy. For emails the
-  // open action is the in-app composer rather than mailto.
   const openActionForFieldType = isEmailField
     ? FieldMetadataSettingsOnClickAction.OPEN_IN_APP
     : FieldMetadataSettingsOnClickAction.OPEN_LINK;

@@ -11,9 +11,6 @@ export const EmailsFieldDisplay = () => {
   const { copyToClipboard } = useCopyToClipboard();
   const { t } = useLingui();
 
-  // Email fields default to opening the in-app composer when no setting is
-  // explicitly stored. The mailto-based <a> stays as the rendered href so the
-  // link is still right-clickable / openable in a new tab.
   const onClickAction =
     fieldDefinition.metadata.settings?.clickAction ??
     FieldMetadataSettingsOnClickAction.OPEN_IN_APP;
@@ -21,8 +18,6 @@ export const EmailsFieldDisplay = () => {
   const isOpenInApp =
     onClickAction === FieldMetadataSettingsOnClickAction.OPEN_IN_APP;
 
-  // Only fire the connected-account query when the click action is
-  // OPEN_IN_APP — COPY and OPEN_LINK don't need it.
   const { openEmail } = useOpenEmailInAppOrFallback({ skip: !isOpenInApp });
 
   const handleEmailClick = (
@@ -43,7 +38,6 @@ export const EmailsFieldDisplay = () => {
       return;
     }
 
-    // OPEN_LINK: let the native <a href="mailto:…"> behaviour handle it.
   };
 
   return <EmailsDisplay value={fieldValue} onEmailClick={handleEmailClick} />;

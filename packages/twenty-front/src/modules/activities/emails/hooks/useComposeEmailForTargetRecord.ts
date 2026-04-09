@@ -6,9 +6,6 @@ import { SettingsPath } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { useNavigateSettings } from '~/hooks/useNavigateSettings';
 
-// Wires the compose-email side panel to the record currently shown in the
-// page (Person, Company or Opportunity). Used by both the inbox header `+`
-// button and the empty-inbox CTA so they stay in sync.
 export const useComposeEmailForTargetRecord = () => {
   const targetRecord = useTargetRecord();
   const { openComposeEmailInSidePanel } = useOpenComposeEmailInSidePanel();

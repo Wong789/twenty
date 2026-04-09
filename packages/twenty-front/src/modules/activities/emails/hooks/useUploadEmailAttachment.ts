@@ -12,10 +12,6 @@ import { formatFileSize } from '@/file/utils/formatFileSize';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { logError } from '~/utils/logError';
 
-// Email attachment uploads return the same `FileWithSignedUrlDTO` shape as
-// every other typed upload mutation; we declare it locally to avoid depending
-// on a codegen-generated document for this mutation (see comment in
-// uploadEmailAttachmentFile.ts).
 type UploadEmailAttachmentFileResponse = {
   uploadEmailAttachmentFile: {
     id: string;
@@ -38,10 +34,6 @@ export const useUploadEmailAttachment = () => {
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const { t } = useLingui();
 
-  // We reuse `WorkflowAttachment` as the in-memory shape because the SendEmail
-  // mutation input mirrors it field-for-field — sharing the type keeps the
-  // composer wiring trivial. The persisted file lives under the
-  // `email-attachment` folder, not the workflow folder.
   const uploadEmailAttachment = async (
     file: File,
   ): Promise<WorkflowAttachment | null> => {

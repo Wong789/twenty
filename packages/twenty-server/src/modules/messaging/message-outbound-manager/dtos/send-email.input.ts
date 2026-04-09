@@ -1,10 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 
-// Mirrors the `WorkflowAttachment` shape from twenty-shared (id/name/size/type/
-// createdAt). Inlined as a GraphQL input so the side-panel composer can pass
-// already-uploaded files without depending on workflow types. If you change
-// either side, keep both in sync — `EmailComposerService.getAttachments`
-// resolves files by id, so the field names matter.
+// Must stay in sync with WorkflowAttachment from twenty-shared.
 @InputType()
 export class SendEmailAttachmentInput {
   @Field(() => String)

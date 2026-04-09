@@ -943,11 +943,6 @@ export const STANDARD_COMMAND_MENU_ITEMS = {
     hotKeys: null,
     payload: { path: '/settings/updates' },
   },
-  // Per-object Send Email items: same engine component as the global
-  // Compose Email command, but scoped to a record selection so the composer
-  // can be opened pre-filled with the selected record's email address.
-  // Person allows >= 1 so it works both from a record show page and from a
-  // bulk selection on the people index page.
   composeEmailToPerson: {
     universalIdentifier: 'f01d4b8b-2b4e-4ae0-9c6f-0b9a9a3e5b21',
     label: 'Send Email',

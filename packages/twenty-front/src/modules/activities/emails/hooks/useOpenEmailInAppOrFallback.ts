@@ -5,16 +5,11 @@ import { useOpenComposeEmailInSidePanel } from '@/side-panel/hooks/useOpenCompos
 import { isDefined } from 'twenty-shared/utils';
 
 type UseOpenEmailInAppOrFallbackOptions = {
-  // When true the underlying connected-account query is skipped entirely,
-  // avoiding an unnecessary network request for non-email field types or when
-  // the click action is not OPEN_IN_APP.
   skip?: boolean;
 };
 
-// Opens the in-app email composer for the given email address. When the user
-// has no connected account we cannot send through the side panel, so we fall
-// back to the OS-level mailto handler instead of redirecting to settings —
-// the user explicitly opted into "Open in app" and the link is still useful.
+// Falls back to mailto: when no connected account exists, rather than
+// redirecting to settings.
 export const useOpenEmailInAppOrFallback = (
   options?: UseOpenEmailInAppOrFallbackOptions,
 ) => {

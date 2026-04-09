@@ -45,9 +45,6 @@ export class FileEmailAttachmentService {
         },
       );
 
-    // Email attachments are transient: once the email is sent, the local
-    // copy is no longer needed for retrieval. Mark as temporary so the
-    // file deletion job can sweep it.
     const savedFile = await this.fileStorageService.writeFile({
       sourceFile: sanitizedFile,
       resourcePath: name,

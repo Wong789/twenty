@@ -12,9 +12,6 @@ type UseEmailComposerStateArgs = {
   onSent?: () => void;
 };
 
-// Light-weight count of comma-separated recipients. Mirrors the backend
-// `parseCommaSeparatedEmails` splitter so the disabled state matches what the
-// server would actually accept — we just count, no validation.
 const countRecipients = (csv: string): number =>
   csv
     .split(',')

@@ -7,11 +7,6 @@ type UseResolveDefaultEmailRecipientParams = {
   recordId: string | null | undefined;
 };
 
-// Resolves the default `to` email recipient for a record so that the email
-// composer can be opened pre-filled. The recipient depends on the object type:
-// - person: the person's primary email
-// - company: the primary email of the first person attached to the company
-// - opportunity: the primary email of the opportunity's point of contact
 export const useResolveDefaultEmailRecipient = ({
   objectNameSingular,
   recordId,

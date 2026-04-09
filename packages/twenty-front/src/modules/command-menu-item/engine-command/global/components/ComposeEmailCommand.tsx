@@ -26,17 +26,10 @@ export const ComposeEmailCommand = () => {
   const objectNameSingular = objectMetadataItem?.nameSingular ?? null;
   const isPerson = objectNameSingular === CoreObjectNameSingular.Person;
 
-  // Bulk means more than one record is selected *or* the user is in
-  // exclusion/"select all" mode where selectedRecords is empty but the
-  // graphqlFilter encodes the full target set.
   const isBulkPerson =
     isPerson &&
     (selectedRecords.length > 1 || targetedRecordsRule.mode === 'exclusion');
 
-  // For bulk Person selections we fetch emails directly from the server so
-  // we always have the data regardless of which columns are visible in the
-  // current view. Capped at MAX_EMAIL_RECIPIENTS since the backend will
-  // reject anything above that anyway.
   const { records: bulkPersonRecords, loading: bulkLoading } =
     useFindManyRecords({
       objectNameSingular: CoreObjectNameSingular.Person,
@@ -46,8 +39,6 @@ export const ComposeEmailCommand = () => {
       skip: !isBulkPerson,
     });
 
-  // For single-record selection we use the shared resolver which handles
-  // the per-object-type fetching (Person, Company, Opportunity).
   const singleSelectedRecordId = !isBulkPerson
     ? (selectedRecords[0]?.id ?? null)
     : null;

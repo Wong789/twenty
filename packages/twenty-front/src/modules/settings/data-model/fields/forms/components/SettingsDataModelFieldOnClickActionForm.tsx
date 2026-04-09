@@ -37,8 +37,6 @@ export const SettingsDataModelFieldOnClickActionForm = ({
 
   const isEmailField = fieldType === FieldMetadataType.EMAILS;
 
-  // For email fields we offer (and default to) opening the in-app composer.
-  // Other field types keep "Open as link" as the default.
   const defaultClickAction = isEmailField
     ? FieldMetadataSettingsOnClickAction.OPEN_IN_APP
     : FieldMetadataSettingsOnClickAction.OPEN_LINK;
