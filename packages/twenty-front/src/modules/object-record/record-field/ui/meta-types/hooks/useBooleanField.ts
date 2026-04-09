@@ -6,6 +6,7 @@ import { FieldMetadataType } from '~/generated-metadata/graphql';
 import { FieldContext } from '@/object-record/record-field/ui/contexts/FieldContext';
 import { assertFieldMetadata } from '@/object-record/record-field/ui/types/guards/assertFieldMetadata';
 import { isFieldBoolean } from '@/object-record/record-field/ui/types/guards/isFieldBoolean';
+import { isFieldBooleanValue } from '@/object-record/record-field/ui/types/guards/isFieldBooleanValue';
 import { useAtomFamilySelectorState } from '@/ui/utilities/state/jotai/hooks/useAtomFamilySelectorState';
 
 export const useBooleanField = () => {
@@ -24,7 +25,7 @@ export const useBooleanField = () => {
     { recordId, fieldName },
   );
 
-  const typedFieldValue = fieldValue as boolean;
+  const typedFieldValue = isFieldBooleanValue(fieldValue) ? fieldValue : false;
 
   return {
     fieldDefinition,

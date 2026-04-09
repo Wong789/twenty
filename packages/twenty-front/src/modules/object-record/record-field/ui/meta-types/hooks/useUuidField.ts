@@ -1,7 +1,6 @@
 import { useContext } from 'react';
 
 import { FieldContext } from '@/object-record/record-field/ui/contexts/FieldContext';
-import { type FieldUUidValue } from '@/object-record/record-field/ui/types/FieldMetadata';
 import { assertFieldMetadata } from '@/object-record/record-field/ui/types/guards/assertFieldMetadata';
 import { isFieldTextValue } from '@/object-record/record-field/ui/types/guards/isFieldTextValue';
 import { isFieldUuid } from '@/object-record/record-field/ui/types/guards/isFieldUuid';
@@ -21,9 +20,7 @@ export const useUuidField = () => {
     { recordId, fieldName },
   );
 
-  const fieldTextValue = isFieldTextValue(fieldValue as FieldUUidValue)
-    ? (fieldValue as FieldUUidValue)
-    : '';
+  const fieldTextValue = isFieldTextValue(fieldValue) ? fieldValue : '';
 
   return {
     fieldDefinition,

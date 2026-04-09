@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import { useRecordFieldInput } from '@/object-record/record-field/ui/hooks/useRecordFieldInput';
 import { type FieldDateValue } from '@/object-record/record-field/ui/types/FieldMetadata';
 import { isFieldDate } from '@/object-record/record-field/ui/types/guards/isFieldDate';
+import { isFieldDateValue } from '@/object-record/record-field/ui/types/guards/isFieldDateValue';
 import { recordStoreFamilySelector } from '@/object-record/record-store/states/selectors/recordStoreFamilySelector';
 import { FieldMetadataType } from '~/generated-metadata/graphql';
 
@@ -22,7 +23,7 @@ export const useDateField = () => {
     { recordId, fieldName },
   );
 
-  const typedFieldValue = fieldValue as string | null | undefined;
+  const typedFieldValue = isFieldDateValue(fieldValue) ? fieldValue : undefined;
 
   const { setDraftValue } = useRecordFieldInput<FieldDateValue>();
 
