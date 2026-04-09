@@ -200,8 +200,16 @@ export class ChatExecutionService {
         toolContext,
         directTools,
       ),
-      [LOAD_SKILL_TOOL_NAME]: createLoadSkillTool((skillNames) =>
-        this.skillService.findFlatSkillsByNames(skillNames, workspace.id),
+      [LOAD_SKILL_TOOL_NAME]: createLoadSkillTool(
+        (skillNames) =>
+          this.skillService.findFlatSkillsByNames(skillNames, workspace.id),
+        async () => {
+          const skills = await this.skillService.findAllFlatSkills(
+            workspace.id,
+          );
+
+          return skills.map((skill) => skill.name);
+        },
       ),
     };
 

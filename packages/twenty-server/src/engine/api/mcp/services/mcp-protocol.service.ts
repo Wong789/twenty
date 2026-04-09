@@ -148,8 +148,16 @@ export class McpProtocolService {
         inputSchema: executeToolInputSchema,
       },
       [LOAD_SKILL_TOOL_NAME]: {
-        ...createLoadSkillTool((names) =>
-          this.skillService.findFlatSkillsByNames(names, workspace.id),
+        ...createLoadSkillTool(
+          (names) =>
+            this.skillService.findFlatSkillsByNames(names, workspace.id),
+          async () => {
+            const skills = await this.skillService.findAllFlatSkills(
+              workspace.id,
+            );
+
+            return skills.map((skill) => skill.name);
+          },
         ),
         inputSchema: zodSchema(loadSkillInputSchema),
       },
