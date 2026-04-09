@@ -19,10 +19,8 @@ import { SupportDriver } from 'src/engine/core-modules/twenty-config/interfaces/
 
 import { CaptchaDriverType } from 'src/engine/core-modules/captcha/interfaces';
 import { CodeInterpreterDriverType } from 'src/engine/core-modules/code-interpreter/code-interpreter.interface';
+import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
 import { EmailDriver } from 'src/engine/core-modules/email/enums/email-driver.enum';
-import { type AiModelPreferences } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-preferences.type';
-import { type AiProvidersConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-providers-config.type';
-import { loadDefaultModelPreferences } from 'src/engine/metadata-modules/ai/ai-models/utils/load-default-model-preferences.util';
 import { ExceptionHandlerDriver } from 'src/engine/core-modules/exception-handler/interfaces';
 import { StorageDriverType } from 'src/engine/core-modules/file-storage/interfaces';
 import { LoggerDriverType } from 'src/engine/core-modules/logger/interfaces';
@@ -44,6 +42,9 @@ import {
   ConfigVariableException,
   ConfigVariableExceptionCode,
 } from 'src/engine/core-modules/twenty-config/twenty-config.exception';
+import { type AiModelPreferences } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-preferences.type';
+import { type AiProvidersConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-providers-config.type';
+import { loadDefaultModelPreferences } from 'src/engine/metadata-modules/ai/ai-models/utils/load-default-model-preferences.util';
 
 export class ConfigVariables {
   @ConfigVariablesMetadata({
@@ -80,6 +81,16 @@ export class ConfigVariables {
   })
   @IsOptional()
   OUTBOUND_HTTP_SAFE_MODE_ENABLED = true;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.ADVANCED_SETTINGS,
+    description:
+      'Lock workspace schema DDL changes (for hot upgrades). Blocks sign-up, workspace deletion, and all metadata schema changes.',
+    isEnvOnly: true,
+    type: ConfigVariableType.BOOLEAN,
+  })
+  @IsOptional()
+  WORKSPACE_SCHEMA_DDL_LOCKED = false;
 
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.TOKENS_DURATION,
@@ -233,6 +244,16 @@ export class ConfigVariables {
     type: ConfigVariableType.BOOLEAN,
   })
   MESSAGING_PROVIDER_MICROSOFT_ENABLED = false;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.ADVANCED_SETTINGS,
+    description:
+      'Number of messages fetched per batch during message import, adjust incase of rate limiting caused by Gmail, Outlook or IMAP',
+    type: ConfigVariableType.NUMBER,
+  })
+  @CastToPositiveNumber()
+  @IsOptional()
+  MESSAGING_MESSAGES_GET_BATCH_SIZE = 400;
 
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.MICROSOFT_AUTH,
@@ -650,6 +671,35 @@ export class ConfigVariables {
   @IsOptional()
   @CastToPositiveNumber()
   CODE_INTERPRETER_TIMEOUT_MS = 300_000;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.LLM,
+    description:
+      'Web search driver type - EXA for Exa search, DISABLED to turn off',
+    type: ConfigVariableType.STRING,
+    options: Object.values(WebSearchDriverType),
+  })
+  @IsOptional()
+  @CastToUpperSnakeCase()
+  WEB_SEARCH_DRIVER: WebSearchDriverType = WebSearchDriverType.DISABLED;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.LLM,
+    description: 'Exa API key for web search',
+    type: ConfigVariableType.STRING,
+    isSensitive: true,
+  })
+  @ValidateIf((env) => env.WEB_SEARCH_DRIVER === WebSearchDriverType.EXA)
+  EXA_API_KEY?: string;
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.LLM,
+    description:
+      'When true, use native provider search (Anthropic/OpenAI) when available. When false, always prefer the configured driver (e.g. Exa).',
+    type: ConfigVariableType.BOOLEAN,
+  })
+  @IsOptional()
+  WEB_SEARCH_PREFER_NATIVE = false;
 
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.ANALYTICS_CONFIG,
@@ -1601,6 +1651,16 @@ export class ConfigVariables {
   @IsUrl({ require_tld: false })
   @IsOptional()
   APP_REGISTRY_URL: string = 'https://registry.npmjs.org';
+
+  @ConfigVariablesMetadata({
+    group: ConfigVariablesGroup.ADVANCED_SETTINGS,
+    description:
+      'CDN base URL for serving files from registry (e.g. https://unpkg.com)',
+    type: ConfigVariableType.STRING,
+  })
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  APP_REGISTRY_CDN_URL: string = 'https://unpkg.com';
 
   @ConfigVariablesMetadata({
     group: ConfigVariablesGroup.ADVANCED_SETTINGS,

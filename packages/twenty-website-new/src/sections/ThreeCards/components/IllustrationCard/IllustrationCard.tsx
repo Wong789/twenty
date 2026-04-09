@@ -1,6 +1,9 @@
+'use client';
+
 import { Body, Heading, IconButton } from '@/design-system/components';
 import { ArrowRightIcon } from '@/icons';
-import { ThreeCardsIllustrationCardType } from '@/sections/ThreeCards/types';
+import { THREE_CARDS_ILLUSTRATIONS } from '@/illustrations';
+import type { ThreeCardsIllustrationCardType } from '@/sections/ThreeCards/types';
 import { theme } from '@/theme';
 import { styled } from '@linaria/react';
 import { ThreeCardsCardShape } from './CardShape';
@@ -26,7 +29,7 @@ const CardRule = styled.div`
   width: 100%;
 `;
 
-const CardEmbed = styled.iframe`
+const CardEmbed = styled.div`
   width: 100%;
   height: 240px;
   border: none;
@@ -69,6 +72,9 @@ export function IllustrationCard({
   illustrationCard,
   variant = 'shaped',
 }: IllustrationCardProps) {
+  const ThreeCardsIllustration =
+    THREE_CARDS_ILLUSTRATIONS[illustrationCard.illustration];
+
   return (
     <IllustrationCardContainer>
       {variant === 'shaped' && (
@@ -84,13 +90,9 @@ export function IllustrationCard({
         weight="medium"
       />
       <CardRule />
-      <CardEmbed
-        src="https://app.endlesstools.io/embed/1a3f6b56-90bb-4951-9401-c01a79fdc4f1"
-        title={illustrationCard.heading.text}
-        allow="clipboard-write; encrypted-media; gyroscope; web-share"
-        referrerPolicy="strict-origin-when-cross-origin"
-        allowFullScreen
-      />
+      <CardEmbed>
+        <ThreeCardsIllustration />
+      </CardEmbed>
       <CardRule />
       <CardBodyCell>
         <Body body={illustrationCard.body} size="sm" weight="regular" />

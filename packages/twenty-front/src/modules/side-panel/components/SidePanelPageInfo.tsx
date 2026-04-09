@@ -5,9 +5,8 @@ import {
   OverflowingTextWithTooltip,
 } from 'twenty-ui/display';
 
-import { NavigationMenuItemType, SidePanelPages } from 'twenty-shared/types';
-import { useNavigationMenuItemSectionItems } from '@/navigation-menu-item/display/hooks/useNavigationMenuItemSectionItems';
 import { selectedNavigationMenuItemIdInEditModeState } from '@/navigation-menu-item/common/states/selectedNavigationMenuItemIdInEditModeState';
+import { useNavigationMenuItemSectionItems } from '@/navigation-menu-item/display/hooks/useNavigationMenuItemSectionItems';
 import { SidePanelAskAIInfo } from '@/side-panel/components/SidePanelAskAIInfo';
 import { SidePanelFolderInfo } from '@/side-panel/components/SidePanelFolderInfo';
 import { SidePanelLinkInfo } from '@/side-panel/components/SidePanelLinkInfo';
@@ -17,7 +16,9 @@ import { SidePanelPageInfoLayout } from '@/side-panel/components/SidePanelPageIn
 import { SidePanelPageLayoutInfo } from '@/side-panel/components/SidePanelPageLayoutInfo';
 import { SidePanelRecordInfo } from '@/side-panel/components/SidePanelRecordInfo';
 import { SidePanelWorkflowStepInfo } from '@/side-panel/components/SidePanelWorkflowStepInfo';
+import { isPageLayoutSidePanelPage } from '@/side-panel/pages/page-layout/utils/isPageLayoutSidePanelPage';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import { NavigationMenuItemType, SidePanelPages } from 'twenty-shared/types';
 
 import { type SidePanelContextChipProps } from '@/side-panel/components/SidePanelContextChip';
 import { useContext } from 'react';
@@ -95,14 +96,7 @@ export const SidePanelPageInfo = ({ pageChip }: SidePanelPageInfoProps) => {
   }
 
   const isPageLayoutPage = pageChip.page?.page
-    ? [
-        SidePanelPages.PageLayoutWidgetTypeSelect,
-        SidePanelPages.PageLayoutGraphTypeSelect,
-        SidePanelPages.PageLayoutIframeSettings,
-        SidePanelPages.PageLayoutTabSettings,
-        SidePanelPages.PageLayoutFieldsSettings,
-        SidePanelPages.PageLayoutRecordTableSettings,
-      ].includes(pageChip.page?.page)
+    ? isPageLayoutSidePanelPage(pageChip.page.page)
     : false;
 
   if (isPageLayoutPage) {

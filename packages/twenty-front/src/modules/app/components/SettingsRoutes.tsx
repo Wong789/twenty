@@ -155,6 +155,18 @@ const SettingsAI = lazy(() =>
   })),
 );
 
+const SettingsAIUsageUserDetail = lazy(() =>
+  import('~/pages/settings/ai/SettingsAIUsageUserDetail').then((module) => ({
+    default: module.SettingsAIUsageUserDetail,
+  })),
+);
+
+const SettingsToolDetail = lazy(() =>
+  import('~/pages/settings/ai/SettingsToolDetail').then((module) => ({
+    default: module.SettingsToolDetail,
+  })),
+);
+
 const SettingsApplications = lazy(() =>
   import('~/pages/settings/applications/SettingsApplications').then(
     (module) => ({
@@ -537,6 +549,14 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
           element={<SettingsSkillForm mode="edit" />}
         />
         <Route
+          path={SettingsPath.AIUsageUserDetail}
+          element={<SettingsAIUsageUserDetail />}
+        />
+        <Route
+          path={SettingsPath.AIToolDetail}
+          element={<SettingsToolDetail />}
+        />
+        <Route
           path={SettingsPath.LogicFunctionDetail}
           element={<SettingsLogicFunctionDetail />}
         />
@@ -679,7 +699,7 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
       <Route
         element={
           <SettingsProtectedRouteWrapper
-            requiredFeatureFlag={FeatureFlagKey.IS_APPLICATION_ENABLED}
+            settingsPermission={PermissionFlagType.APPLICATIONS}
           />
         }
       >

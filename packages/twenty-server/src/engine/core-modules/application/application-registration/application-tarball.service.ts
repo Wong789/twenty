@@ -5,6 +5,7 @@ import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+import semver from 'semver';
 import { FileFolder } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
@@ -63,6 +64,10 @@ export class ApplicationTarballService {
         };
       }>(contentDir, 'manifest.json');
 
+      const packageJson = await readJsonFile<{
+        version: string;
+      }>(contentDir, 'package.json');
+
       if (manifest === null) {
         throw new ApplicationRegistrationException(
           'manifest.json not found or invalid in tarball',
@@ -99,11 +104,42 @@ export class ApplicationTarballService {
             ApplicationRegistrationExceptionCode.SOURCE_CHANNEL_MISMATCH,
           );
         }
+
+        if (
+          appRegistration.sourceType ===
+            ApplicationRegistrationSourceType.TARBALL &&
+          isDefined(appRegistration.latestAvailableVersion) &&
+          isDefined(packageJson?.version)
+        ) {
+          const incomingVersion = packageJson.version;
+          const currentVersion = appRegistration.latestAvailableVersion;
+
+          if (!isDefined(semver.valid(incomingVersion))) {
+            throw new ApplicationRegistrationException(
+              `Invalid version "${incomingVersion}" in package.json. Must be a valid semver version.`,
+              ApplicationRegistrationExceptionCode.INVALID_INPUT,
+            );
+          }
+
+          if (
+            isDefined(semver.valid(currentVersion)) &&
+            semver.lte(incomingVersion, currentVersion)
+          ) {
+            throw new ApplicationRegistrationException(
+              `Cannot deploy ${universalIdentifier}@${incomingVersion}: version must be higher than the currently deployed version ${currentVersion}. Please bump the version in package.json.`,
+              ApplicationRegistrationExceptionCode.VERSION_ALREADY_EXISTS,
+            );
+          }
+        }
       } else {
         appRegistration = this.appRegistrationRepository.create({
           universalIdentifier,
           name: manifest.application?.displayName ?? 'Unknown App',
           sourceType: ApplicationRegistrationSourceType.TARBALL,
+          manifest,
+          latestAvailableVersion: packageJson?.version ?? null,
+          isListed: false,
+          isFeatured: false,
           oAuthClientId: v4(),
           oAuthRedirectUris: [],
           oAuthScopes: [],
@@ -137,6 +173,12 @@ export class ApplicationTarballService {
       await this.appRegistrationRepository.update(appRegistration.id, {
         sourceType: ApplicationRegistrationSourceType.TARBALL,
         tarballFileId: savedFile.id,
+        name: manifest.application?.displayName ?? 'Unknown App',
+        manifest,
+        latestAvailableVersion: packageJson?.version ?? null,
+        isListed: false,
+        isFeatured: false,
+        ownerWorkspaceId: params.ownerWorkspaceId,
       });
 
       this.logger.log(

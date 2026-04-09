@@ -76,7 +76,7 @@ export const usePageLayoutHeaderInfo = ({
       };
     }
 
-    case SidePanelPages.PageLayoutIframeSettings: {
+    case SidePanelPages.DashboardIframeSettings: {
       if (!isDefined(pageLayoutEditingWidgetId)) {
         return null;
       }
@@ -106,7 +106,7 @@ export const usePageLayoutHeaderInfo = ({
       };
     }
 
-    case SidePanelPages.PageLayoutGraphTypeSelect: {
+    case SidePanelPages.DashboardChartSettings: {
       if (!isDefined(pageLayoutEditingWidgetId)) {
         return null;
       }
@@ -145,7 +145,7 @@ export const usePageLayoutHeaderInfo = ({
       };
     }
 
-    case SidePanelPages.PageLayoutFieldsSettings: {
+    case SidePanelPages.RecordPageFieldsSettings: {
       if (!isDefined(pageLayoutEditingWidgetId)) {
         return null;
       }
@@ -175,7 +175,37 @@ export const usePageLayoutHeaderInfo = ({
       };
     }
 
-    case SidePanelPages.PageLayoutRecordTableSettings: {
+    case SidePanelPages.RecordPageFieldSettings: {
+      if (!isDefined(pageLayoutEditingWidgetId)) {
+        return null;
+      }
+
+      const widgetInEditMode = draftPageLayout.tabs
+        .flatMap((tab) => tab.widgets)
+        .find((widget) => widget.id === pageLayoutEditingWidgetId);
+
+      if (!isDefined(widgetInEditMode)) {
+        return null;
+      }
+
+      const title = isDefined(editedTitle)
+        ? editedTitle
+        : isDefined(widgetInEditMode.title) && widgetInEditMode.title !== ''
+          ? widgetInEditMode.title
+          : '';
+
+      return {
+        headerIcon: IconList,
+        headerIconColor: iconColor,
+        headerType: t`Field Widget`,
+        title,
+        isReadonly: false,
+        tab: undefined,
+        widgetInEditMode,
+      };
+    }
+
+    case SidePanelPages.DashboardRecordTableSettings: {
       if (!isDefined(pageLayoutEditingWidgetId)) {
         return null;
       }
@@ -205,7 +235,19 @@ export const usePageLayoutHeaderInfo = ({
       };
     }
 
-    case SidePanelPages.PageLayoutWidgetTypeSelect: {
+    case SidePanelPages.PageLayoutDashboardWidgetTypeSelect: {
+      return {
+        headerIcon: IconPlus,
+        headerIconColor: iconColor,
+        headerType: '',
+        title: t`New widget`,
+        isReadonly: true,
+        tab: undefined,
+        widgetInEditMode: undefined,
+      };
+    }
+
+    case SidePanelPages.PageLayoutRecordPageWidgetTypeSelect: {
       return {
         headerIcon: IconPlus,
         headerIconColor: iconColor,

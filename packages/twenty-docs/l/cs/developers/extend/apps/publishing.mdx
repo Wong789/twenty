@@ -4,15 +4,81 @@ description: Distribuujte svou aplikaci Twenty do Marketplace nebo ji nasaďte i
 ---
 
 <Warning>
-Aplikace jsou aktuálně v alfa testování. Tato funkce je funkční, ale stále se vyvíjí.
+  Aplikace jsou aktuálně v alfa fázi. Funkce funguje, ale stále se vyvíjí.
 </Warning>
 
 ## Přehled
 
 Jakmile je vaše aplikace [sestavena a otestována lokálně](/l/cs/developers/extend/apps/building), máte dvě cesty, jak ji distribuovat:
 
+* **Nasaďte tarball** — nahrajte svou aplikaci přímo na konkrétní server Twenty pro interní nebo soukromé použití.
 * **Publish to npm** — uveďte svou aplikaci v Marketplace Twenty, aby ji mohl kterýkoli pracovní prostor objevit a nainstalovat.
-* **Odeslat tarball** — nasaďte svou aplikaci na konkrétní server Twenty pro interní použití, aniž by byla veřejně dostupná.
+
+Obě cesty začínají stejným krokem **build**.
+
+## Sestavení vaší aplikace
+
+Spusťte příkaz build ke zkompilování své aplikace a k vygenerování souboru `manifest.json` připraveného k distribuci:
+
+```bash filename="Terminal"
+yarn twenty build
+```
+
+Tím se zkompilují zdrojové soubory TypeScriptu, transpilují logické funkce a frontendové komponenty a vše se zapíše do `.twenty/output/`. Přidejte `--tarball`, abyste také vytvořili balíček `.tgz` pro ruční distribuci nebo příkaz deploy.
+
+## Nasazení na server (tarball)
+
+U aplikací, které nechcete zpřístupnit veřejně — proprietární nástroje, integrace pouze pro enterprise nebo experimentální buildy — můžete nasadit tarball přímo na server Twenty.
+
+### Předpoklady
+
+Před nasazením potřebujete nakonfigurovaný vzdálený cíl směřující na cílový server. Vzdálené cíle ukládají adresu URL serveru a přihlašovací údaje lokálně v `~/.twenty/config.json`.
+
+Přidat vzdálený cíl:
+
+```bash filename="Terminal"
+yarn twenty remote add --api-url https://your-twenty-server.com --as production
+```
+
+### Nasazení
+
+Sestavte a nahrajte svou aplikaci na server v jednom kroku:
+
+```bash filename="Terminal"
+yarn twenty deploy
+# To deploy to a specific remote:
+# yarn twenty deploy --remote production
+```
+
+### Sdílení nasazené aplikace
+
+<Warning>
+Sdílení soukromých (tarball) aplikací napříč pracovními prostory je funkcí **Enterprise**. Karta **Distribution** bude místo ovládacích prvků sdílení zobrazovat výzvu k upgradu, dokud váš pracovní prostor nebude mít platný klíč Enterprise. Přejděte do [Nastavení > Admin Panel > Enterprise](/settings/admin-panel#enterprise) a aktivujte ji.
+</Warning>
+
+Aplikace ve formě tarball nejsou uvedeny ve veřejném tržišti, takže je ostatní pracovní prostory na tomtéž serveru procházením neobjeví. Jakmile je váš pracovní prostor na tarifu Enterprise, můžete sdílet nasazenou aplikaci takto:
+
+1. Přejděte do **Nastavení > Aplikace > Registrace** a otevřete svou aplikaci
+2. Na kartě **Distribuce** klikněte na **Zkopírovat odkaz ke sdílení**
+3. Sdílejte tento odkaz s uživateli v jiných pracovních prostorech — zavede je přímo na instalační stránku aplikace
+
+Odkaz ke sdílení používá základní adresu URL serveru (bez jakékoli subdomény pracovního prostoru), takže funguje pro libovolný pracovní prostor na serveru.
+
+### Správa verzí
+
+When updating an already deployed tarball app, the server requires the `version` in `package.json` to be **strictly higher** (per [semver](https://semver.org) ordering) than the currently deployed version. Re-deploying the same version, or pushing a lower one, is rejected before the tarball is stored — you'll see a `VERSION_ALREADY_EXISTS` error from the CLI.
+
+Chcete-li vydat aktualizaci:
+
+1. Bump the `version` field in your `package.json` (e.g. `1.2.3` → `1.2.4`, `1.3.0`, or `2.0.0`)
+2. Spusťte `yarn twenty deploy` (nebo `yarn twenty deploy --remote production`)
+3. Pracovní prostory, které mají aplikaci nainstalovanou, uvidí dostupnou aktualizaci ve svém nastavení
+
+<Note>
+Pre-release tags work as expected: bumping `1.0.0-rc.1` → `1.0.0-rc.2` is allowed, and a final release like `1.0.0` is correctly recognized as higher than `1.0.0-rc.5`. The version in `package.json` must itself be a valid semver string.
+</Note>
+
+{/* TODO: add screenshot of the Upgrade button */}
 
 ## Publikování na npm
 
@@ -21,29 +87,69 @@ Publikování na npm zajistí, že bude vaše aplikace dohledatelná v Marketpla
 ### Požadavky
 
 * Účet na [npm](https://www.npmjs.com)
-* Název vašeho balíčku **musí** používat předponu `twenty-app-` (např. `twenty-app-postcard-sender`)
+* Klíčové slovo `twenty-app` ve vašem poli `keywords` v souboru `package.json` (již je zahrnuto, když založíte projekt pomocí `create-twenty-app`)
 
-### Postup
-
-1. **Sestavte svou aplikaci** — CLI zkompiluje vaše zdrojové soubory TypeScript a vygeneruje manifest aplikace:
-
-```bash filename="Terminal"
-yarn twenty build
+```json filename="package.json"
+{
+  "name": "twenty-app-postcard-sender",
+  "version": "1.0.0",
+  "keywords": ["twenty-app"]
+}
 ```
 
-2. **Publikujte na npm** — odešlete sestavený balíček do registru npm:
+### Metadata tržiště
 
-```bash filename="Terminal"
-npx twenty publish
+Konfigurace `defineApplication()` podporuje volitelná pole, která určují, jak se vaše aplikace zobrazuje v tržišti. Použijte `logoUrl` a `screenshots` k odkazování na obrázky ze složky `public/`:
+
+```ts src/application-config.ts
+export default defineApplication({
+  universalIdentifier: '...',
+  displayName: 'My App',
+  description: 'A great app',
+  defaultRoleUniversalIdentifier: DEFAULT_ROLE_UNIVERSAL_IDENTIFIER,
+  logoUrl: 'public/logo.png',
+  screenshots: [
+    'public/screenshot-1.png',
+    'public/screenshot-2.png',
+  ],
+});
 ```
 
-### Automatické rozpoznání
+Podívejte se na [sekci defineApplication](/l/cs/developers/extend/apps/building#defineentity-functions) na stránce Building Apps pro úplný seznam polí tržiště (`author`, `category`, `aboutDescription`, `websiteUrl`, `termsUrl` atd.).
 
-Balíčky s předponou `twenty-app-` jsou automaticky rozpoznávány katalogem Marketplace Twenty. Po publikování se vaše aplikace během několika minut objeví v Marketplace — nevyžaduje žádnou ruční registraci ani schvalování.
+### Publikování
+
+```bash filename="Terminal"
+yarn twenty publish
+```
+
+Chcete-li publikovat pod konkrétním dist-tagem (např. `beta` nebo `next`):
+
+```bash filename="Terminal"
+yarn twenty publish --tag beta
+```
+
+### Jak funguje objevování v tržišti
+
+Server Twenty synchronizuje svůj katalog tržiště z registru npm **každou hodinu**.
+
+Synchronizaci můžete spustit okamžitě místo čekání:
+
+```bash filename="Terminal"
+yarn twenty catalog-sync
+# To target a specific remote:
+# yarn twenty catalog-sync --remote production
+```
+
+Metadata zobrazená v tržišti pocházejí z vaší konfigurace `defineApplication()` — z polí jako `displayName`, `description`, `author`, `category`, `logoUrl`, `screenshots`, `aboutDescription`, `websiteUrl` a `termsUrl`.
+
+<Note>
+Pokud vaše aplikace nedefinuje `aboutDescription` v `defineApplication()`, tržiště automaticky použije soubor `README.md` vašeho balíčku z npm jako obsah stránky O aplikaci. To znamená, že můžete spravovat jediný soubor README jak pro npm, tak pro tržiště Twenty. Pokud chcete v tržišti jiný popis, explicitně nastavte `aboutDescription`.
+</Note>
 
 ### Publikování pomocí CI
 
-Vygenerovaný projekt obsahuje pracovní postup GitHub Actions, který publikuje při každém vydání. Spouští `app:build`, a poté `npm publish --provenance` z výstupu buildu:
+Použijte tento pracovní postup GitHub Actions k automatickému publikování při každém vydání (používá [OIDC](https://docs.npmjs.com/trusted-publishers)):
 
 ```yaml filename=".github/workflows/publish.yml"
 name: Publish
@@ -68,52 +174,33 @@ jobs:
       - run: npx twenty build
       - run: npm publish --provenance --access public
         working-directory: .twenty/output
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-Pro jiné systémy CI (GitLab CI, CircleCI atd.) platí stejné tři příkazy: `yarn install`, `npx twenty build` a poté `npm publish` z `.twenty/output`.
-
-<Tip>
-**npm provenance** je volitelné, ale doporučené. Publikování s `--provenance` přidá k vašemu záznamu na npm odznak důvěryhodnosti a umožní uživatelům ověřit, že balíček byl sestaven z konkrétního commitu ve veřejné CI pipeline. Pokyny k nastavení najdete v [dokumentaci k npm provenance](https://docs.npmjs.com/generating-provenance-statements).
-</Tip>
-
-## Interní distribuce
-
-Pro aplikace, které nechcete zpřístupnit veřejně — proprietární nástroje, integrace pouze pro enterprise nebo experimentální buildy — můžete odeslat tarball přímo na server Twenty.
-
-### Odeslat tarball
-
-Sestavte svou aplikaci a nasaďte ji na konkrétní server v jednom kroku:
-
-```bash filename="Terminal"
-npx twenty publish --server <server-url>
-```
-
-Jakýkoli pracovní prostor na tomto serveru pak může aplikaci instalovat a aktualizovat ze stránky nastavení **Applications**.
-
-### Správa verzí
-
-Chcete-li vydat aktualizaci:
-
-1. Zvyšte hodnotu pole `version` v souboru `package.json`
-2. Odešlete nový tarball pomocí `npx twenty publish --server <server-url>`
-3. Pracovní prostory na tomto serveru uvidí dostupnou aktualizaci ve svém nastavení
+Pro jiné systémy CI (GitLab CI, CircleCI atd.) platí stejné tři příkazy: `yarn install`, `yarn twenty build` a poté `npm publish` z `.twenty/output`.
 
 <Note>
-Interní aplikace jsou omezené na server, na který jsou odeslány. Nezobrazí se ve veřejném Marketplace a nelze je instalovat v pracovních prostorech na jiných serverech.
+**npm provenance** je volitelné, ale doporučené. Publikování s `--provenance` přidá k vašemu záznamu na npm odznak důvěryhodnosti a umožní uživatelům ověřit, že balíček byl sestaven z konkrétního commitu ve veřejné CI pipeline. Pokyny k nastavení najdete v [dokumentaci k npm provenance](https://docs.npmjs.com/generating-provenance-statements).
 </Note>
 
-## Kategorie aplikací
+## Instalace aplikací
 
-Twenty organizuje aplikace do tří kategorií podle způsobu distribuce:
+Jakmile je aplikace publikována (npm) nebo nasazena (tarball), mohou ji pracovní prostory nainstalovat prostřednictvím uživatelského rozhraní.
 
-| Kategorie       | Jak to funguje                                                                                                                     | Viditelné v Marketplace? |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| **Vývoj**       | Aplikace v místním vývojářském režimu spuštěné přes `yarn twenty dev`. Slouží k sestavování a testování.                           | Ne                       |
-| **Publikováno** | Aplikace publikované na npm s předponou `twenty-app-`. Uvedeny v Marketplace, aby je mohl kterýkoli pracovní prostor nainstalovat. | Ano                      |
-| **Interní**     | Aplikace nasazené pomocí tarballu na konkrétní server. Dostupné pouze pro pracovní prostory na tomto serveru.                      | Ne                       |
+Přejděte na stránku **Nastavení > Aplikace** v Twenty, kde lze procházet a instalovat jak aplikace z tržiště, tak aplikace nasazené jako tarball.
 
-<Tip>
-Začněte v režimu **Development** při sestavování své aplikace. Až bude připravena, zvolte **Published** (npm) pro širokou distribuci nebo **Internal** (tarball) pro soukromé nasazení.
-</Tip>
+{/* TODO: add screenshot of the UI when the app is registered */}
+
+Aplikace můžete nainstalovat také z příkazového řádku:
+
+```bash filename="Terminal"
+yarn twenty install
+```
+
+<Note>
+The server enforces semver versioning on install, mirroring the rules on deploy:
+
+* Installing the same version that is already installed in your workspace is rejected with an `APP_ALREADY_INSTALLED` error.
+* Installing a lower version than the one currently installed is rejected with a `CANNOT_DOWNGRADE_APPLICATION` error.
+
+To install a newer version, deploy or publish it first, then re-run `yarn twenty install`.
+</Note>

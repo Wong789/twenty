@@ -1,4 +1,5 @@
 import { Container } from '@/design-system/components';
+import { IllustrationMount, type IllustrationId } from '@/illustrations';
 import { theme } from '@/theme';
 import { styled } from '@linaria/react';
 import type { ReactNode } from 'react';
@@ -12,22 +13,22 @@ const FooterRoot = styled.footer`
 const FooterContainer = styled(Container)`
   display: flex;
   flex-direction: column;
-  height: 1280px;
+  height: 880px;
   position: relative;
   padding-bottom: ${theme.spacing(4)};
   padding-left: ${theme.spacing(4)};
   padding-right: ${theme.spacing(4)};
 
+  @media (min-width: ${theme.breakpoints.md}px) {
+    height: 920px;
+  }
+
   @media (min-width: ${theme.breakpoints.lg}px) {
+    height: 1080px;
     padding-bottom: ${theme.spacing(10)};
     padding-left: ${theme.spacing(10)};
     padding-right: ${theme.spacing(10)};
   }
-`;
-
-const FooterBackground = styled.div`
-  position: absolute;
-  z-index: 0;
 `;
 
 const FooterContent = styled.div`
@@ -44,20 +45,18 @@ const FooterContent = styled.div`
     padding-right: ${theme.spacing(20)};
     padding-top: ${theme.spacing(20)};
   }
-
-  @media (min-width: ${theme.breakpoints.lg}px) {
-    padding-left: ${theme.spacing(30)};
-    padding-right: ${theme.spacing(30)};
-  }
 `;
 
-type RootProps = { children: ReactNode };
+type RootProps = {
+  children: ReactNode;
+  illustration: IllustrationId;
+};
 
-export function Root({ children }: RootProps) {
+export function Root({ children, illustration }: RootProps) {
   return (
     <FooterRoot>
       <FooterContainer>
-        <FooterBackground aria-hidden />
+        <IllustrationMount illustration={illustration} />
         <FooterContent>
           <FooterShape fillColor={theme.colors.primary.background[100]} />
           {children}

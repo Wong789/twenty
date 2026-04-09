@@ -6,3 +6,4 @@ export { Eyebrow } from './Eyebrow/Eyebrow';
 export { Heading } from './Heading/Heading';
 export { IconButton } from './IconButton/IconButton';
 export { Image } from './Image/Image';
+export { StepperProgressRail } from './StepperProgressRail/StepperProgressRail';

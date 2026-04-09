@@ -132,7 +132,7 @@
         "cachedInputCostPerMillionTokens": 1.25,
         "contextWindowTokens": 128000,
         "maxOutputTokens": 16384,
-        "modalities": ["image"]
+        "modalities": ["image", "pdf"]
       },
       {
         "name": "gpt-5.3-codex",
@@ -179,7 +179,7 @@
         "cachedInputCostPerMillionTokens": 0.08,
         "contextWindowTokens": 128000,
         "maxOutputTokens": 16384,
-        "modalities": ["image"]
+        "modalities": ["image", "pdf"]
       },
       {
         "name": "gpt-5.1-codex-max",
@@ -202,7 +202,7 @@
         "cachedInputCostPerMillionTokens": 0.5,
         "contextWindowTokens": 1047576,
         "maxOutputTokens": 32768,
-        "modalities": ["image"]
+        "modalities": ["image", "pdf"]
       },
       {
         "name": "gpt-5.1-chat-latest",
@@ -243,7 +243,7 @@
         "cachedInputCostPerMillionTokens": 7.5,
         "contextWindowTokens": 200000,
         "maxOutputTokens": 100000,
-        "modalities": ["image"],
+        "modalities": ["image", "pdf"],
         "supportsReasoning": true
       },
       {
@@ -266,8 +266,19 @@
         "cachedInputCostPerMillionTokens": 0.5,
         "contextWindowTokens": 200000,
         "maxOutputTokens": 100000,
-        "modalities": ["image"],
+        "modalities": ["image", "pdf"],
         "supportsReasoning": true
+      },
+      {
+        "name": "gpt-5.3-chat-latest",
+        "label": "GPT-5.3 Chat (latest)",
+        "modelFamily": "GPT",
+        "inputCostPerMillionTokens": 1.75,
+        "outputCostPerMillionTokens": 14,
+        "cachedInputCostPerMillionTokens": 0.175,
+        "contextWindowTokens": 128000,
+        "maxOutputTokens": 16384,
+        "modalities": ["image"]
       },
       {
         "name": "gpt-5.4-nano",
@@ -356,7 +367,7 @@
         "cachedInputCostPerMillionTokens": 0.1,
         "contextWindowTokens": 1047576,
         "maxOutputTokens": 32768,
-        "modalities": ["image"]
+        "modalities": ["image", "pdf"]
       },
       {
         "name": "gpt-5-nano",
@@ -712,19 +723,6 @@
         "supportsReasoning": true
       },
       {
-        "name": "claude-3-7-sonnet-latest",
-        "label": "Claude Sonnet 3.7 (latest)",
-        "modelFamily": "CLAUDE",
-        "inputCostPerMillionTokens": 3,
-        "outputCostPerMillionTokens": 15,
-        "cachedInputCostPerMillionTokens": 0.3,
-        "cacheCreationCostPerMillionTokens": 3.75,
-        "contextWindowTokens": 200000,
-        "maxOutputTokens": 64000,
-        "modalities": ["image", "pdf"],
-        "supportsReasoning": true
-      },
-      {
         "name": "claude-haiku-4-5",
         "label": "Claude Haiku 4.5 (latest)",
         "modelFamily": "CLAUDE",
@@ -851,6 +849,16 @@
         "maxOutputTokens": 64000,
         "modalities": ["image", "video", "audio", "pdf"],
         "supportsReasoning": true
+      },
+      {
+        "name": "gemma-3-27b-it",
+        "label": "Gemma 3 27B",
+        "modelFamily": "GEMINI",
+        "inputCostPerMillionTokens": 0,
+        "outputCostPerMillionTokens": 0,
+        "contextWindowTokens": 131072,
+        "maxOutputTokens": 8192,
+        "modalities": ["image"]
       },
       {
         "name": "gemini-2.5-pro-preview-06-05",
@@ -1100,6 +1108,17 @@
         "modalities": ["image"]
       },
       {
+        "name": "mistral-small-2603",
+        "label": "Mistral Small 4",
+        "modelFamily": "MISTRAL",
+        "inputCostPerMillionTokens": 0.15,
+        "outputCostPerMillionTokens": 0.6,
+        "contextWindowTokens": 256000,
+        "maxOutputTokens": 256000,
+        "modalities": ["image"],
+        "supportsReasoning": true
+      },
+      {
         "name": "ministral-3b-latest",
         "label": "Ministral 3B (latest)",
         "modelFamily": "MISTRAL",
@@ -1273,11 +1292,12 @@
         "name": "mistral-small-latest",
         "label": "Mistral Small (latest)",
         "modelFamily": "MISTRAL",
-        "inputCostPerMillionTokens": 0.1,
-        "outputCostPerMillionTokens": 0.3,
-        "contextWindowTokens": 128000,
-        "maxOutputTokens": 16384,
-        "modalities": ["image"]
+        "inputCostPerMillionTokens": 0.15,
+        "outputCostPerMillionTokens": 0.6,
+        "contextWindowTokens": 256000,
+        "maxOutputTokens": 256000,
+        "modalities": ["image"],
+        "supportsReasoning": true
       },
       {
         "name": "open-mistral-7b",

@@ -51,7 +51,7 @@ export class ApiClient {
         if (error.response?.status === 401) {
           console.error(
             chalk.red(
-              'Authentication failed. Run `twenty remote add` to authenticate.',
+              'Authentication failed. Run `yarn twenty remote add` to authenticate.',
             ),
           );
         } else if (error.response?.status === 403) {
@@ -143,12 +143,6 @@ export class ApiClient {
   async resolveAuthToken(): Promise<string | undefined> {
     if (this.tokenOverride) {
       return this.tokenOverride;
-    }
-
-    const envToken = process.env.TWENTY_TOKEN;
-
-    if (envToken) {
-      return envToken;
     }
 
     const config = await this.configService.getConfig();
