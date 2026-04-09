@@ -7,20 +7,16 @@ import { isDefined } from 'twenty-shared/utils';
 import { useNavigationMenuItemsData } from './useNavigationMenuItemsData';
 
 export const useWorkspaceNavigationMenuItems = (): {
-  objectMetadataIdsInWorkspaceNav: Set<string>;
+  objectMetadataIdsWithObjectWorkspaceItem: Set<string>;
 } => {
   const { workspaceNavigationMenuItems: rawWorkspaceNavigationMenuItems } =
     useNavigationMenuItemsData();
   const objectMetadataItems = useAtomStateValue(objectMetadataItemsSelector);
   const views = useAtomStateValue(viewsSelector);
 
-  const objectMetadataIdsInWorkspaceNav = new Set(
+  const objectMetadataIdsWithObjectWorkspaceItem = new Set(
     rawWorkspaceNavigationMenuItems
-      .filter(
-        (item) =>
-          item.type === NavigationMenuItemType.OBJECT ||
-          item.type === NavigationMenuItemType.VIEW,
-      )
+      .filter((item) => item.type === NavigationMenuItemType.OBJECT)
       .map(
         (item) =>
           getObjectMetadataForNavigationMenuItem(
@@ -33,6 +29,6 @@ export const useWorkspaceNavigationMenuItems = (): {
   );
 
   return {
-    objectMetadataIdsInWorkspaceNav,
+    objectMetadataIdsWithObjectWorkspaceItem,
   };
 };
