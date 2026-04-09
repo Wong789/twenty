@@ -1,28 +1,25 @@
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
-import { type ChangeEvent, useContext, useRef } from 'react';
+import { useContext } from 'react';
+import { type EmailAttachment } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
-import { type WorkflowAttachment } from 'twenty-shared/workflow';
 import { IconUpload } from 'twenty-ui/display';
 import { ThemeContext, themeCssVariables } from 'twenty-ui/theme-constants';
 
 import { useUploadEmailAttachment } from '@/activities/emails/hooks/useUploadEmailAttachment';
 import { AttachmentChip } from '@/file/components/AttachmentChip';
+import { useFileUpload } from '@/file-upload/hooks/useFileUpload';
 import { InputLabel } from '@/ui/input/components/InputLabel';
 
 type EmailAttachmentsFieldProps = {
-  files: WorkflowAttachment[];
-  onChange: (files: WorkflowAttachment[]) => void;
+  files: EmailAttachment[];
+  onChange: (files: EmailAttachment[]) => void;
   label?: string;
 };
 
 const StyledContainer = styled.div`
   display: flex;
   flex-direction: column;
-`;
-
-const StyledFileInput = styled.input`
-  display: none;
 `;
 
 const StyledUploadArea = styled.div<{ hasFiles: boolean }>`
@@ -66,27 +63,11 @@ export const EmailAttachmentsField = ({
   onChange,
 }: EmailAttachmentsFieldProps) => {
   const { theme } = useContext(ThemeContext);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadEmailAttachment } = useUploadEmailAttachment();
+  const { openFileUpload } = useFileUpload();
   const { t } = useLingui();
 
-  const handleAddFileClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-
-    const isInsideChip = target.closest('[data-chip]') !== null;
-    const isInsideButton = target.closest('button') !== null;
-    const isSvgOrPath = target.tagName === 'svg' || target.tagName === 'path';
-
-    if (isInsideChip || isInsideButton || isSvgOrPath) {
-      return;
-    }
-
-    if (fileInputRef.current !== null) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const onUploadFiles = async (filesToUpload: File[]) => {
+  const handleUploadFiles = async (filesToUpload: File[]) => {
     const uploadedFiles = await Promise.all(
       filesToUpload.map((file) => uploadEmailAttachment(file)),
     );
@@ -98,16 +79,11 @@ export const EmailAttachmentsField = ({
     }
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = event.target.files;
-
-    if (isDefined(selectedFiles)) {
-      onUploadFiles(Array.from(selectedFiles));
-    }
-
-    if (fileInputRef.current !== null) {
-      fileInputRef.current.value = '';
-    }
+  const handleAddFileClick = () => {
+    openFileUpload({
+      multiple: true,
+      onUpload: handleUploadFiles,
+    });
   };
 
   const handleRemoveFile = (fileId: string) => {
@@ -117,13 +93,6 @@ export const EmailAttachmentsField = ({
   return (
     <StyledContainer>
       {label ? <InputLabel>{label}</InputLabel> : null}
-
-      <StyledFileInput
-        ref={fileInputRef}
-        type="file"
-        multiple
-        onChange={handleFileChange}
-      />
 
       <StyledUploadArea
         hasFiles={files.length > 0}

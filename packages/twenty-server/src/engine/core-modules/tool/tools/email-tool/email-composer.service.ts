@@ -4,21 +4,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { render, toPlainText } from '@react-email/render';
 import DOMPurify from 'dompurify';
 import { reactMarkupFromJSON } from 'twenty-emails';
-import { FileFolder } from 'twenty-shared/types';
+import { MAX_EMAIL_RECIPIENTS } from 'twenty-shared/constants';
+import { type EmailAttachment, FileFolder } from 'twenty-shared/types';
 import { isDefined, isValidUuid } from 'twenty-shared/utils';
-import { WorkflowAttachment } from 'twenty-shared/workflow';
 import { In, type Repository } from 'typeorm';
 import { z } from 'zod';
 
 import { FileEntity } from 'src/engine/core-modules/file/entities/file.entity';
 import { FileService } from 'src/engine/core-modules/file/services/file.service';
-import { MAX_EMAIL_RECIPIENTS } from 'src/engine/core-modules/tool/tools/email-tool/constants/email-tool.constants';
 import {
   EmailToolException,
   EmailToolExceptionCode,
 } from 'src/engine/core-modules/tool/tools/email-tool/exceptions/email-tool.exception';
 import { EmailComposerResult } from 'src/engine/core-modules/tool/tools/email-tool/types/email-composer-result.type';
-import { EmailToolInput } from 'src/engine/core-modules/tool/tools/email-tool/types/email-tool-input.type';
+import { type ComposeEmailParams } from 'src/engine/core-modules/tool/tools/email-tool/types/compose-email-params.type';
 import { parseCommaSeparatedEmails } from 'src/engine/core-modules/tool/tools/email-tool/utils/parse-comma-separated-emails.util';
 import { type ToolExecutionContext } from 'src/engine/core-modules/tool/types/tool-execution-context.type';
 import { ConnectedAccountEntity } from 'src/engine/metadata-modules/connected-account/entities/connected-account.entity';
@@ -105,7 +104,7 @@ export class EmailComposerService {
     );
   }
 
-  private normalizeRecipients(parameters: EmailToolInput): {
+  private normalizeRecipients(parameters: ComposeEmailParams): {
     to: string[];
     cc: string[];
     bcc: string[];
@@ -175,7 +174,7 @@ export class EmailComposerService {
   }
 
   private async getAttachments(
-    files: Array<WorkflowAttachment>,
+    files: Array<EmailAttachment>,
     workspaceId: string,
     fileFolder: FileFolder,
   ): Promise<MessageAttachment[]> {
@@ -211,6 +210,8 @@ export class EmailComposerService {
     const attachments: MessageAttachment[] = [];
 
     for (const fileMetadata of files) {
+      const fileEntity = fileEntityMap.get(fileMetadata.id);
+
       const { stream } = await this.fileService.getFileStreamById({
         fileId: fileMetadata.id,
         workspaceId,
@@ -222,7 +223,7 @@ export class EmailComposerService {
       attachments.push({
         filename: fileMetadata.name,
         content: buffer,
-        contentType: fileMetadata.type,
+        contentType: fileEntity?.mimeType ?? 'application/octet-stream',
       });
     }
 
@@ -274,7 +275,7 @@ export class EmailComposerService {
   }
 
   async composeEmail(
-    parameters: EmailToolInput,
+    parameters: ComposeEmailParams,
     context: ToolExecutionContext,
     options: { attachmentsFileFolder: FileFolder },
   ): Promise<EmailComposerResult> {

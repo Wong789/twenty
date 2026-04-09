@@ -1,7 +1,7 @@
 import { useFirstConnectedAccount } from '@/activities/emails/hooks/useFirstConnectedAccount';
 import { useResolveDefaultEmailRecipient } from '@/activities/emails/hooks/useResolveDefaultEmailRecipient';
 import { getPrimaryEmailFromRecord } from '@/activities/emails/utils/getPrimaryEmailFromRecord';
-import { MAX_EMAIL_RECIPIENTS } from '@/activities/emails/constants/EmailRecipientLimits';
+import { MAX_EMAIL_RECIPIENTS } from 'twenty-shared/constants';
 import { HeadlessEngineCommandWrapperEffect } from '@/command-menu-item/engine-command/components/HeadlessEngineCommandWrapperEffect';
 import { useHeadlessCommandContextApi } from '@/command-menu-item/engine-command/hooks/useHeadlessCommandContextApi';
 import { useFindManyRecords } from '@/object-record/hooks/useFindManyRecords';

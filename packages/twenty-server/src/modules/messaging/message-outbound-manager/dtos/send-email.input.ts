@@ -1,6 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
 
-// Must stay in sync with WorkflowAttachment from twenty-shared.
 @InputType()
 export class SendEmailAttachmentInput {
   @Field(() => String)
@@ -8,15 +7,6 @@ export class SendEmailAttachmentInput {
 
   @Field(() => String)
   name: string;
-
-  @Field(() => Number)
-  size: number;
-
-  @Field(() => String)
-  type: string;
-
-  @Field(() => String)
-  createdAt: string;
 }
 
 @InputType()

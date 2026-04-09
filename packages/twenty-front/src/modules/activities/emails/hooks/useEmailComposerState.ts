@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import { type WorkflowAttachment } from 'twenty-shared/workflow';
+import { MAX_EMAIL_RECIPIENTS } from 'twenty-shared/constants';
+import { type EmailAttachment } from 'twenty-shared/types';
 
-import { MAX_EMAIL_RECIPIENTS } from '@/activities/emails/constants/EmailRecipientLimits';
 import { useSendEmail } from '@/activities/emails/hooks/useSendEmail';
 
 type UseEmailComposerStateArgs = {
@@ -34,7 +34,7 @@ export const useEmailComposerState = ({
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState('');
   const [showCcBcc, setShowCcBcc] = useState(false);
-  const [files, setFiles] = useState<WorkflowAttachment[]>([]);
+  const [files, setFiles] = useState<EmailAttachment[]>([]);
 
   const { sendEmail, loading } = useSendEmail();
 

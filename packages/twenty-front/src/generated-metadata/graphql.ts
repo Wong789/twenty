@@ -5018,11 +5018,8 @@ export type SendChatMessageResult = {
 };
 
 export type SendEmailAttachmentInput = {
-  createdAt: Scalars['String'];
   id: Scalars['String'];
   name: Scalars['String'];
-  size: Scalars['Float'];
-  type: Scalars['String'];
 };
 
 export type SendEmailInput = {

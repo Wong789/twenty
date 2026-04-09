@@ -1,10 +1,7 @@
 import { useMutation } from '@apollo/client/react';
 import { useLingui } from '@lingui/react/macro';
-import {
-  extractFolderPathFilenameAndTypeOrThrow,
-  isDefined,
-} from 'twenty-shared/utils';
-import { type WorkflowAttachment } from 'twenty-shared/workflow';
+import { type EmailAttachment } from 'twenty-shared/types';
+import { isDefined } from 'twenty-shared/utils';
 
 import { MAX_ATTACHMENT_SIZE } from '@/advanced-text-editor/utils/maxAttachmentSize';
 import { UPLOAD_EMAIL_ATTACHMENT_FILE } from '@/file/graphql/mutations/uploadEmailAttachmentFile';
@@ -36,7 +33,7 @@ export const useUploadEmailAttachment = () => {
 
   const uploadEmailAttachment = async (
     file: File,
-  ): Promise<WorkflowAttachment | null> => {
+  ): Promise<EmailAttachment | null> => {
     try {
       if (file.size > MAX_ATTACHMENT_SIZE) {
         const fileName = file.name;
@@ -59,12 +56,9 @@ export const useUploadEmailAttachment = () => {
         throw new Error('File upload failed');
       }
 
-      const attachment: WorkflowAttachment = {
+      const attachment: EmailAttachment = {
         id: uploadedFile.id,
         name: file.name,
-        size: uploadedFile.size,
-        type: extractFolderPathFilenameAndTypeOrThrow(uploadedFile.path).type,
-        createdAt: uploadedFile.createdAt,
       };
 
       const fileName = file.name;

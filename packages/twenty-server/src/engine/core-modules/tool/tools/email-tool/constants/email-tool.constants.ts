@@ -1,1 +1,1 @@
-export const MAX_EMAIL_RECIPIENTS = 100;
+export { MAX_EMAIL_RECIPIENTS } from 'twenty-shared/constants';
