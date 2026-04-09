@@ -1,5 +1,5 @@
 import { type MessageChannel } from '@/accounts/types/MessageChannel';
-import { useMyConnectedAccounts } from '@/settings/accounts/hooks/useMyConnectedAccounts';
+import { useConnectedAccountHandleMap } from '@/settings/accounts/hooks/useConnectedAccountHandleMap';
 import { useMyMessageChannels } from '@/settings/accounts/hooks/useMyMessageChannels';
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
@@ -56,26 +56,23 @@ export const SettingsAccountsEmailForwardingSection = () => {
   const { t } = useLingui();
   const { copyToClipboard } = useCopyToClipboard();
   const { channels } = useMyMessageChannels();
-  const { accounts } = useMyConnectedAccounts();
+  const connectedAccountHandleMap = useConnectedAccountHandleMap();
 
-  const forwardingRows = useMemo<ForwardingChannelRow[]>(() => {
-    const accountHandleMap = new Map<string, string>();
-
-    for (const account of accounts) {
-      accountHandleMap.set(account.id, account.handle);
-    }
-
-    return channels
-      .filter(
-        (ch): ch is MessageChannel =>
-          ch.type === MessageChannelType.EMAIL_FORWARDING,
-      )
-      .map((ch) => ({
-        channelId: ch.id,
-        handle: accountHandleMap.get(ch.connectedAccountId) ?? ch.handle,
-        forwardingAddress: ch.handle,
-      }));
-  }, [channels, accounts]);
+  const forwardingRows = useMemo<ForwardingChannelRow[]>(
+    () =>
+      channels
+        .filter(
+          (ch): ch is MessageChannel =>
+            ch.type === MessageChannelType.EMAIL_FORWARDING,
+        )
+        .map((ch) => ({
+          channelId: ch.id,
+          handle:
+            connectedAccountHandleMap.get(ch.connectedAccountId) ?? ch.handle,
+          forwardingAddress: ch.handle,
+        })),
+    [channels, connectedAccountHandleMap],
+  );
 
   if (forwardingRows.length === 0) {
     return null;

@@ -4,15 +4,18 @@ import { SettingsAccountsMessageChannelDetails } from '@/settings/accounts/compo
 import { SettingsAccountsSelectedMessageChannelEffect } from '@/settings/accounts/components/SettingsAccountsSelectedMessageChannelEffect';
 import { SettingsNewAccountSection } from '@/settings/accounts/components/SettingsNewAccountSection';
 import { SETTINGS_ACCOUNT_MESSAGE_CHANNELS_TAB_LIST_COMPONENT_ID } from '@/settings/accounts/constants/SettingsAccountMessageChannelsTabListComponentId';
-import { useMyConnectedAccounts } from '@/settings/accounts/hooks/useMyConnectedAccounts';
+import { useConnectedAccountHandleMap } from '@/settings/accounts/hooks/useConnectedAccountHandleMap';
 import { useMyMessageChannels } from '@/settings/accounts/hooks/useMyMessageChannels';
 import { settingsAccountsSelectedMessageChannelState } from '@/settings/accounts/states/settingsAccountsSelectedMessageChannelState';
 import { TabList } from '@/ui/layout/tab-list/components/TabList';
 import { activeTabIdComponentState } from '@/ui/layout/tab-list/states/activeTabIdComponentState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
 import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
-import React, { useCallback, useMemo } from 'react';
-import { MessageChannelSyncStage, MessageChannelType } from 'twenty-shared/types';
+import { useCallback } from 'react';
+import {
+  MessageChannelSyncStage,
+  MessageChannelType,
+} from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 
@@ -30,17 +33,7 @@ export const SettingsAccountsMessageChannelsContainer = () => {
   );
 
   const { channels: allMessageChannels } = useMyMessageChannels();
-  const { accounts } = useMyConnectedAccounts();
-
-  const connectedAccountHandleMap = useMemo(() => {
-    const map = new Map<string, string>();
-
-    for (const account of accounts) {
-      map.set(account.id, account.handle);
-    }
-
-    return map;
-  }, [accounts]);
+  const connectedAccountHandleMap = useConnectedAccountHandleMap();
 
   const messageChannels = allMessageChannels.filter(
     (channel) =>
@@ -99,16 +92,16 @@ export const SettingsAccountsMessageChannelsContainer = () => {
           />
         </StyledMessageContainer>
       )}
-      {messageChannels.map((messageChannel) => (
-        <React.Fragment key={messageChannel.id}>
-          {(messageChannels.length === 1 ||
+      {messageChannels.map(
+        (messageChannel) =>
+          (messageChannels.length === 1 ||
             messageChannel.id === activeTabId) && (
             <SettingsAccountsMessageChannelDetails
+              key={messageChannel.id}
               messageChannel={messageChannel}
             />
-          )}
-        </React.Fragment>
-      ))}
+          ),
+      )}
     </>
   );
 };
