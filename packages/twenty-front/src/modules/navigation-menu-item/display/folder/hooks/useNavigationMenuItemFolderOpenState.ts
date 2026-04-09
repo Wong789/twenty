@@ -57,25 +57,18 @@ export const useNavigationMenuItemFolderOpenState = ({
     }
 
     if (!isOpen) {
-      const firstNonLinkItem = navigationMenuItems.find((item) => {
+      for (const item of navigationMenuItems) {
         if (item.type === NavigationMenuItemType.LINK) {
-          return false;
+          continue;
         }
-        const computedLink = getNavigationMenuItemComputedLink(
-          item,
-          objectMetadataItems,
-          views,
-        );
-        return isNonEmptyString(computedLink);
-      });
-      if (isDefined(firstNonLinkItem)) {
         const link = getNavigationMenuItemComputedLink(
-          firstNonLinkItem,
+          item,
           objectMetadataItems,
           views,
         );
         if (isNonEmptyString(link)) {
           navigate(link);
+          break;
         }
       }
     }
@@ -89,23 +82,35 @@ export const useNavigationMenuItemFolderOpenState = ({
       )
     : -1;
 
-  const isAtomRelevantToFolder =
-    isDefined(activeNavigationItem) &&
-    navigationMenuItems.some((item) => {
-      const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
-        item,
-        objectMetadataItems,
-        views,
-      );
-      return (
-        isDefined(objectMetadataItem) &&
-        objectMetadataItem.nameSingular ===
-          activeNavigationItem.objectNameSingular
-      );
-    });
+  const activeNavigationObjectNameSingular =
+    activeNavigationItem?.objectNameSingular;
+
+  const navigationMenuItemMatchesActiveObject = (
+    navigationMenuItem: NavigationMenuItem,
+  ): boolean => {
+    const objectMetadataItem = getObjectMetadataForNavigationMenuItem(
+      navigationMenuItem,
+      objectMetadataItems,
+      views,
+    );
+
+    if (!isDefined(objectMetadataItem)) {
+      return false;
+    }
+
+    return (
+      objectMetadataItem.nameSingular === activeNavigationObjectNameSingular
+    );
+  };
+
+  const isActiveNavigationItemObjectInFolder =
+    isDefined(activeNavigationObjectNameSingular) &&
+    navigationMenuItems.some(navigationMenuItemMatchesActiveObject);
 
   const recordMatchIndex = navigationMenuItems.findIndex((item) => {
-    if (item.type !== NavigationMenuItemType.RECORD) return false;
+    if (item.type !== NavigationMenuItemType.RECORD) {
+      return false;
+    }
     const computedLink = getNavigationMenuItemComputedLink(
       item,
       objectMetadataItems,
@@ -149,7 +154,7 @@ export const useNavigationMenuItemFolderOpenState = ({
     return false;
   });
 
-  const selectedNavigationMenuItemIndex = isAtomRelevantToFolder
+  const selectedNavigationMenuItemIndex = isActiveNavigationItemObjectInFolder
     ? explicitMatchIndex !== -1
       ? explicitMatchIndex
       : recordMatchIndex
