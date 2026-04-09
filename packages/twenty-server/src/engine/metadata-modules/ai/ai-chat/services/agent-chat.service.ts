@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { ExtendedUIMessage } from 'twenty-shared/ai';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import type { UIDataTypes, UIMessagePart, UITools } from 'ai';
 
+import { FileEntity } from 'src/engine/core-modules/file/entities/file.entity';
 import { AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message-part.entity';
 import {
   AgentMessageEntity,
@@ -47,6 +48,8 @@ export class AgentChatService {
     private readonly messageRepository: Repository<AgentMessageEntity>,
     @InjectRepository(AgentMessagePartEntity)
     private readonly messagePartRepository: Repository<AgentMessagePartEntity>,
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
     private readonly titleGenerationService: AgentTitleGenerationService,
     private readonly workspaceEventBroadcaster: WorkspaceEventBroadcaster,
   ) {}
@@ -181,11 +184,13 @@ export class AgentChatService {
     threadId,
     text,
     id,
+    fileIds,
     workspaceId,
   }: {
     threadId: string;
     text: string;
     id?: string;
+    fileIds?: string[];
     workspaceId: string;
   }): Promise<AgentMessageEntity> {
     const message = this.messageRepository.create({
@@ -200,15 +205,34 @@ export class AgentChatService {
 
     const savedMessage = await this.messageRepository.save(message);
 
-    const part = this.messagePartRepository.create({
-      messageId: savedMessage.id,
-      orderIndex: 0,
-      type: 'text',
-      textContent: text,
-      workspaceId,
-    });
+    const files =
+      fileIds && fileIds.length > 0
+        ? await this.fileRepository.find({
+            where: { id: In(fileIds), workspaceId },
+          })
+        : [];
 
-    await this.messagePartRepository.save(part);
+    const parts = [
+      this.messagePartRepository.create({
+        messageId: savedMessage.id,
+        orderIndex: 0,
+        type: 'text',
+        textContent: text,
+        workspaceId,
+      }),
+      ...files.map((file, index) =>
+        this.messagePartRepository.create({
+          messageId: savedMessage.id,
+          orderIndex: index + 1,
+          type: 'file',
+          fileId: file.id,
+          fileFilename: file.path.split('/').pop() ?? null,
+          workspaceId,
+        }),
+      ),
+    ];
+
+    await this.messagePartRepository.save(parts);
 
     return savedMessage;
   }
@@ -220,7 +244,7 @@ export class AgentChatService {
         status: AgentMessageStatus.QUEUED,
       },
       order: { createdAt: 'ASC' },
-      relations: ['parts'],
+      relations: ['parts', 'parts.file'],
     });
   }
 
