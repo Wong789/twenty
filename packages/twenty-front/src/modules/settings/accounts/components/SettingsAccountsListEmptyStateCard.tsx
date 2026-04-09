@@ -120,6 +120,7 @@ export const SettingsAccountsListEmptyStateCard = () => {
       {forwardingAddress && (
         <SettingsAccountsEmailForwardingModal
           forwardingAddress={forwardingAddress}
+          onClose={() => setForwardingAddress(null)}
         />
       )}
     </>

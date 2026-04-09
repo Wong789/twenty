@@ -61,6 +61,7 @@ export class InboundEmailImportService {
       this.logger.error(
         `Failed to download inbound email from S3 key ${s3Key}: ${message}`,
       );
+      await this.safeMove(s3Key, 'failed');
 
       return { kind: 'parse_failed', error: message };
     }

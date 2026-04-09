@@ -4,7 +4,6 @@ import {
   CalendarChannelSyncStage,
   ConnectedAccountProvider,
   MessageChannelSyncStage,
-  MessageChannelType,
   SettingsPath,
 } from 'twenty-shared/types';
 
@@ -61,7 +60,6 @@ export const SettingsAccountsRowDropdownMenu = ({
     !isEmailForwarding &&
     (account.messageChannels.some(
       (channel) =>
-        channel.type !== MessageChannelType.EMAIL_FORWARDING &&
         channel.syncStage === MessageChannelSyncStage.PENDING_CONFIGURATION,
     ) ||
       account.calendarChannels.some(

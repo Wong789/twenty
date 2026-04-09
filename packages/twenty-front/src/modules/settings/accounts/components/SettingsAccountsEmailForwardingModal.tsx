@@ -65,10 +65,12 @@ const StyledButtonContainer = styled.div`
 
 type SettingsAccountsEmailForwardingModalProps = {
   forwardingAddress: string;
+  onClose?: () => void;
 };
 
 export const SettingsAccountsEmailForwardingModal = ({
   forwardingAddress,
+  onClose,
 }: SettingsAccountsEmailForwardingModalProps) => {
   const { t } = useLingui();
   const { copyToClipboard } = useCopyToClipboard();
@@ -114,7 +116,10 @@ export const SettingsAccountsEmailForwardingModal = ({
             title={t`Done`}
             variant="primary"
             size="small"
-            onClick={() => closeModal(EMAIL_FORWARDING_MODAL_ID)}
+            onClick={() => {
+              closeModal(EMAIL_FORWARDING_MODAL_ID);
+              onClose?.();
+            }}
           />
         </StyledButtonContainer>
       </StyledModalContent>

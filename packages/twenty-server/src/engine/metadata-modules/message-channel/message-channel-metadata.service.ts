@@ -214,6 +214,25 @@ export class MessageChannelMetadataService {
       );
     }
 
+    const existingChannel = await this.repository.findOne({
+      where: {
+        workspaceId,
+        type: MessageChannelType.EMAIL_FORWARDING,
+        connectedAccountId: In(
+          await this.connectedAccountMetadataService
+            .getUserConnectedAccountIds({ userWorkspaceId, workspaceId })
+            .then((ids) => (ids.length > 0 ? ids : ['__none__'])),
+        ),
+      },
+    });
+
+    if (existingChannel) {
+      return {
+        messageChannel: existingChannel,
+        forwardingAddress: existingChannel.handle,
+      };
+    }
+
     const localPart =
       INBOUND_EMAIL_LOCAL_PART_PREFIX +
       randomBytes(INBOUND_EMAIL_LOCAL_PART_RANDOM_BYTES).toString('hex');

@@ -177,7 +177,7 @@ describe('InboundEmailImportService', () => {
     expect(storageService.moveToProcessed).toHaveBeenCalledWith(TEST_S3_KEY);
   });
 
-  it('should return "parse_failed" when download fails', async () => {
+  it('should return "parse_failed" and move to failed/ when download fails', async () => {
     storageService.getRawMessage.mockRejectedValue(
       new Error('S3 download error'),
     );
@@ -188,6 +188,7 @@ describe('InboundEmailImportService', () => {
       kind: 'parse_failed',
       error: 'S3 download error',
     });
+    expect(storageService.moveToFailed).toHaveBeenCalledWith(TEST_S3_KEY);
   });
 
   it('should return "parse_failed" when parsing fails', async () => {
