@@ -15,9 +15,7 @@ export class AddEmailForwardingChannelType1775729181000
     await queryRunner.query(
       `ALTER TABLE "core"."messageChannel" ALTER COLUMN "type" TYPE "core"."messageChannel_type_enum" USING "type"::"text"::"core"."messageChannel_type_enum"`,
     );
-    await queryRunner.query(
-      `DROP TYPE "core"."messageChannel_type_enum_old"`,
-    );
+    await queryRunner.query(`DROP TYPE "core"."messageChannel_type_enum_old"`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

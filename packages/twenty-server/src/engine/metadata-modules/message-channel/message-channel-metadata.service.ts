@@ -11,6 +11,7 @@ import {
   MessageChannelContactAutoCreationPolicy,
   MessageChannelPendingGroupEmailsAction,
   MessageChannelSyncStage,
+  MessageChannelSyncStatus,
   MessageChannelType,
   MessageChannelVisibility,
 } from 'twenty-shared/types';
@@ -219,15 +220,14 @@ export class MessageChannelMetadataService {
 
     const forwardingAddress = `${localPart}@${inboundEmailDomain}`;
 
-    const connectedAccount =
-      await this.connectedAccountMetadataService.create({
-        workspaceId,
-        handle: forwardingAddress,
-        provider: ConnectedAccountProvider.EMAIL_FORWARDING,
-        userWorkspaceId,
-        accessToken: null,
-        refreshToken: null,
-      });
+    const connectedAccount = await this.connectedAccountMetadataService.create({
+      workspaceId,
+      handle: forwardingAddress,
+      provider: ConnectedAccountProvider.EMAIL_FORWARDING,
+      userWorkspaceId,
+      accessToken: null,
+      refreshToken: null,
+    });
 
     const messageChannel = await this.create({
       workspaceId,
@@ -235,15 +235,19 @@ export class MessageChannelMetadataService {
       connectedAccountId: connectedAccount.id,
       type: MessageChannelType.EMAIL_FORWARDING,
       visibility: MessageChannelVisibility.SHARE_EVERYTHING,
-      syncStage: MessageChannelSyncStage.PENDING_CONFIGURATION,
+      // Forwarding channels are ready immediately — they don't go through the
+      // mailbox sync state machine. MESSAGE_LIST_FETCH_PENDING + ACTIVE tells
+      // the UI "this channel is working" while the S3 poll cron (which
+      // explicitly skips EMAIL_FORWARDING) won't touch it.
+      syncStage: MessageChannelSyncStage.MESSAGE_LIST_FETCH_PENDING,
+      syncStatus: MessageChannelSyncStatus.ACTIVE,
       isSyncEnabled: true,
       isContactAutoCreationEnabled: true,
       contactAutoCreationPolicy:
         MessageChannelContactAutoCreationPolicy.SENT_AND_RECEIVED,
       excludeGroupEmails: false,
       excludeNonProfessionalEmails: false,
-      pendingGroupEmailsAction:
-        MessageChannelPendingGroupEmailsAction.NONE,
+      pendingGroupEmailsAction: MessageChannelPendingGroupEmailsAction.NONE,
     });
 
     return { messageChannel, forwardingAddress };

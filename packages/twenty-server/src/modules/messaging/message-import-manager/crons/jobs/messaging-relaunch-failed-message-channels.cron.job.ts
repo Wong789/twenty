@@ -6,6 +6,7 @@ import { DataSource, Repository } from 'typeorm';
 import {
   MessageChannelSyncStage,
   MessageChannelSyncStatus,
+  MessageChannelType,
 } from 'twenty-shared/types';
 import { SentryCronMonitor } from 'src/engine/core-modules/cron/sentry-cron-monitor.decorator';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
@@ -53,7 +54,7 @@ export class MessagingRelaunchFailedMessageChannelsCronJob {
         const schemaName = getWorkspaceSchemaName(activeWorkspace.id);
 
         const failedMessageChannels = await this.coreDataSource.query(
-          `SELECT * FROM ${schemaName}."messageChannel" WHERE "syncStage" = '${MessageChannelSyncStage.FAILED}' AND "syncStatus" = '${MessageChannelSyncStatus.FAILED_UNKNOWN}'`,
+          `SELECT * FROM ${schemaName}."messageChannel" WHERE "syncStage" = '${MessageChannelSyncStage.FAILED}' AND "syncStatus" = '${MessageChannelSyncStatus.FAILED_UNKNOWN}' AND "type" != '${MessageChannelType.EMAIL_FORWARDING}'`,
         );
 
         for (const messageChannel of failedMessageChannels) {

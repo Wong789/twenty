@@ -46,7 +46,9 @@ const addressesFromParsedField = (
 
   return list
     .flatMap((entry) =>
-      entry.address ? [entry.address] : (entry.group ?? []).map((g) => g.address ?? ''),
+      entry.address
+        ? [entry.address]
+        : (entry.group ?? []).map((g) => g.address ?? ''),
     )
     .filter((address) => address.length > 0)
     .map((address) => address.toLowerCase());

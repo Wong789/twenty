@@ -97,9 +97,7 @@ export class InboundEmailStorageService {
         }),
       );
 
-      await client.send(
-        new DeleteObjectCommand({ Bucket, Key: key }),
-      );
+      await client.send(new DeleteObjectCommand({ Bucket, Key: key }));
     } catch (error) {
       this.logger.error(
         `Failed to move S3 key ${key} to ${destinationKey}: ${
@@ -110,7 +108,10 @@ export class InboundEmailStorageService {
     }
   }
 
-  private buildArchiveKey(sourceKey: string, destinationPrefix: string): string {
+  private buildArchiveKey(
+    sourceKey: string,
+    destinationPrefix: string,
+  ): string {
     const bareKey = sourceKey.startsWith(INBOUND_EMAIL_S3_PREFIXES.incoming)
       ? sourceKey.slice(INBOUND_EMAIL_S3_PREFIXES.incoming.length)
       : sourceKey;

@@ -5,6 +5,7 @@ import {
   CalendarChannelSyncStatus,
   MessageChannelSyncStage,
   MessageChannelSyncStatus,
+  MessageChannelType,
 } from 'twenty-shared/types';
 
 describe('computeSyncStatus', () => {
@@ -200,6 +201,32 @@ describe('computeSyncStatus', () => {
           syncStatus: CalendarChannelSyncStatus.ACTIVE,
           syncStage: CalendarChannelSyncStage.CALENDAR_EVENT_LIST_FETCH_PENDING,
         },
+      ),
+    ).toEqual(SyncStatus.SYNCED);
+  });
+
+  test('should return SYNCED for EMAIL_FORWARDING channel regardless of sync stage or status', () => {
+    expect(
+      computeSyncStatus(
+        {
+          syncStatus: MessageChannelSyncStatus.NOT_SYNCED,
+          syncStage: MessageChannelSyncStage.MESSAGE_LIST_FETCH_PENDING,
+          type: MessageChannelType.EMAIL_FORWARDING,
+        },
+        undefined,
+      ),
+    ).toEqual(SyncStatus.SYNCED);
+  });
+
+  test('should return SYNCED for EMAIL_FORWARDING channel even with PENDING_CONFIGURATION stage', () => {
+    expect(
+      computeSyncStatus(
+        {
+          syncStatus: MessageChannelSyncStatus.NOT_SYNCED,
+          syncStage: MessageChannelSyncStage.PENDING_CONFIGURATION,
+          type: MessageChannelType.EMAIL_FORWARDING,
+        },
+        undefined,
       ),
     ).toEqual(SyncStatus.SYNCED);
   });

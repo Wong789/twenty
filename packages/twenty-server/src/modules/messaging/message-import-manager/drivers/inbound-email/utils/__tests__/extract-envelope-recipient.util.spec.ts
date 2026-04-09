@@ -45,9 +45,7 @@ describe('extractEnvelopeRecipient', () => {
 
   it('should extract from Delivered-To header', () => {
     const parsed = buildParsedEmail({
-      headers: [
-        header('Delivered-To', 'ch_def456@in.twenty.com'),
-      ],
+      headers: [header('Delivered-To', 'ch_def456@in.twenty.com')],
     });
 
     expect(extractEnvelopeRecipient(parsed, INBOUND_DOMAIN)).toBe(
@@ -57,9 +55,7 @@ describe('extractEnvelopeRecipient', () => {
 
   it('should extract from X-Original-To header', () => {
     const parsed = buildParsedEmail({
-      headers: [
-        header('X-Original-To', 'ch_ghi789@in.twenty.com'),
-      ],
+      headers: [header('X-Original-To', 'ch_ghi789@in.twenty.com')],
     });
 
     expect(extractEnvelopeRecipient(parsed, INBOUND_DOMAIN)).toBe(
@@ -91,9 +87,7 @@ describe('extractEnvelopeRecipient', () => {
   it('should return null when no address matches the inbound domain', () => {
     const parsed = buildParsedEmail({
       to: [{ address: 'user@example.com', name: '' }],
-      headers: [
-        header('Delivered-To', 'user@other-domain.com'),
-      ],
+      headers: [header('Delivered-To', 'user@other-domain.com')],
     });
 
     expect(extractEnvelopeRecipient(parsed, INBOUND_DOMAIN)).toBeNull();
@@ -101,9 +95,7 @@ describe('extractEnvelopeRecipient', () => {
 
   it('should be case-insensitive on domain match', () => {
     const parsed = buildParsedEmail({
-      headers: [
-        header('Delivered-To', 'ch_upper@IN.TWENTY.COM'),
-      ],
+      headers: [header('Delivered-To', 'ch_upper@IN.TWENTY.COM')],
     });
 
     expect(extractEnvelopeRecipient(parsed, INBOUND_DOMAIN)).toBe(

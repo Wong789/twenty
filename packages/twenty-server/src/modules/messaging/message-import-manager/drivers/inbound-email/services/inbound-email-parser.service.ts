@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import PostalMime, { type Email as ParsedEmail, type Address } from 'postal-mime';
+import PostalMime, {
+  type Email as ParsedEmail,
+  type Address,
+} from 'postal-mime';
 import { MessageDirection } from 'src/modules/messaging/common/enums/message-direction.enum';
 import { MessageParticipantRole } from 'twenty-shared/types';
 
@@ -53,8 +56,7 @@ export class InboundEmailParserService {
       // object that produced this message and survives retries.
       externalId: `inbound-email:${s3Key}`,
       messageThreadExternalId: this.extractThreadId(parsed),
-      headerMessageId:
-        parsed.messageId?.trim() || `inbound-${s3Key}`,
+      headerMessageId: parsed.messageId?.trim() || `inbound-${s3Key}`,
       subject: sanitizeString(parsed.subject || ''),
       text: sanitizeString(parsed.text || ''),
       receivedAt: parsed.date ? new Date(parsed.date) : new Date(),

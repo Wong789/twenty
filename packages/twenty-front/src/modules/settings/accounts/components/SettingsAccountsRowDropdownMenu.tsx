@@ -4,6 +4,7 @@ import {
   CalendarChannelSyncStage,
   ConnectedAccountProvider,
   MessageChannelSyncStage,
+  MessageChannelType,
   SettingsPath,
 } from 'twenty-shared/types';
 
@@ -52,15 +53,21 @@ export const SettingsAccountsRowDropdownMenu = ({
   );
   const { triggerProviderReconnect } = useTriggerProviderReconnect();
 
+  const isEmailForwarding =
+    account.provider === ConnectedAccountProvider.EMAIL_FORWARDING;
+
+  // Forwarding channels are immediately active and never need setup.
   const hasPendingConfiguration =
-    account.messageChannels.some(
+    !isEmailForwarding &&
+    (account.messageChannels.some(
       (channel) =>
+        channel.type !== MessageChannelType.EMAIL_FORWARDING &&
         channel.syncStage === MessageChannelSyncStage.PENDING_CONFIGURATION,
     ) ||
-    account.calendarChannels.some(
-      (channel) =>
-        channel.syncStage === CalendarChannelSyncStage.PENDING_CONFIGURATION,
-    );
+      account.calendarChannels.some(
+        (channel) =>
+          channel.syncStage === CalendarChannelSyncStage.PENDING_CONFIGURATION,
+      ));
 
   const deleteAccount = async () => {
     await deleteConnectedAccountMutation({
@@ -113,15 +120,17 @@ export const SettingsAccountsRowDropdownMenu = ({
                   closeDropdown(dropdownId);
                 }}
               />
-              <MenuItem
-                LeftIcon={IconCalendarEvent}
-                text={t`Calendar settings`}
-                onClick={() => {
-                  navigate(SettingsPath.AccountsCalendars);
-                  closeDropdown(dropdownId);
-                }}
-              />
-              {account.authFailedAt && (
+              {!isEmailForwarding && (
+                <MenuItem
+                  LeftIcon={IconCalendarEvent}
+                  text={t`Calendar settings`}
+                  onClick={() => {
+                    navigate(SettingsPath.AccountsCalendars);
+                    closeDropdown(dropdownId);
+                  }}
+                />
+              )}
+              {!isEmailForwarding && account.authFailedAt && (
                 <MenuItem
                   LeftIcon={IconRefresh}
                   text={t`Reconnect`}

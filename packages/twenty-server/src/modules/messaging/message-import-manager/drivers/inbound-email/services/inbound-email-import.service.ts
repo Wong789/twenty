@@ -75,15 +75,16 @@ export class InboundEmailImportService {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
 
-      this.logger.error(
-        `Failed to parse inbound email ${s3Key}: ${message}`,
-      );
+      this.logger.error(`Failed to parse inbound email ${s3Key}: ${message}`);
       await this.safeMove(s3Key, 'failed');
 
       return { kind: 'parse_failed', error: message };
     }
 
-    const recipient = extractEnvelopeRecipient(parsedInbound.parsed, inboundDomain);
+    const recipient = extractEnvelopeRecipient(
+      parsedInbound.parsed,
+      inboundDomain,
+    );
 
     if (!recipient) {
       this.logger.warn(

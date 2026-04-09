@@ -48,7 +48,8 @@ export class MessagingInboundEmailPollCronJob {
       const batchSize = this.twentyConfigService.get(
         'INBOUND_EMAIL_POLL_BATCH_SIZE',
       );
-      const keys = await this.inboundEmailStorageService.listIncoming(batchSize);
+      const keys =
+        await this.inboundEmailStorageService.listIncoming(batchSize);
 
       if (keys.length === 0) {
         return;
