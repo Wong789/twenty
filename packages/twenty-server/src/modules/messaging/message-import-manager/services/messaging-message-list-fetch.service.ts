@@ -100,6 +100,14 @@ export class MessagingMessageListFetchService {
           return;
         }
 
+        if (!isDefined(freshMessageChannel.connectedAccount)) {
+          this.logger.error(
+            `WorkspaceId: ${workspaceId}, MessageChannelId: ${messageChannel.id} - Connected account not found for message channel`,
+          );
+
+          return;
+        }
+
         const { accessToken, refreshToken } =
           await this.messagingAccountAuthenticationService.validateAndRefreshConnectedAccountAuthentication(
             {
