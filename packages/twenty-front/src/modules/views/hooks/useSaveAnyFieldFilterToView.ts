@@ -1,3 +1,5 @@
+import { metadataStoreState } from '@/metadata-store/states/metadataStoreState';
+import { type FlatView } from '@/metadata-store/types/FlatView';
 import { anyFieldFilterValueComponentState } from '@/object-record/record-filter/states/anyFieldFilterValueComponentState';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { usePerformViewAPIUpdate } from '@/views/hooks/internal/usePerformViewAPIUpdate';
@@ -38,6 +40,26 @@ export const useSaveAnyFieldFilterToView = () => {
           ...currentView,
           anyFieldFilterValue: currentAnyFieldFilterValue,
         }),
+      });
+
+      // Optimistically update the metadata store so the UI reflects
+      // the saved state immediately, without waiting for the SSE round-trip.
+      const viewsEntry = store.get(metadataStoreState.atomFamily('views'));
+      const currentFlatViews = (
+        viewsEntry.status === 'draft-pending'
+          ? viewsEntry.draft
+          : viewsEntry.current
+      ) as FlatView[];
+
+      const updatedViews = currentFlatViews.map((view) =>
+        view.id === currentView.id
+          ? { ...view, anyFieldFilterValue: currentAnyFieldFilterValue }
+          : view,
+      );
+
+      store.set(metadataStoreState.atomFamily('views'), {
+        ...viewsEntry,
+        current: updatedViews,
       });
     }
   }, [

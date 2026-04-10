@@ -1,3 +1,5 @@
+import { metadataStoreState } from '@/metadata-store/states/metadataStoreState';
+import { type FlatViewSort } from '@/metadata-store/types/FlatViewSort';
 import { currentRecordSortsComponentState } from '@/object-record/record-sort/states/currentRecordSortsComponentState';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { usePerformViewSortAPIPersist } from '@/views/hooks/internal/usePerformViewSortAPIPersist';
@@ -91,6 +93,34 @@ export const useSaveRecordSortsToViewSorts = () => {
     if (deleteResult.status === 'failed') {
       return;
     }
+
+    // Optimistically update the metadata store so the UI reflects
+    // the saved state immediately, without waiting for the SSE round-trip.
+    const viewSortsEntry = store.get(
+      metadataStoreState.atomFamily('viewSorts'),
+    );
+    const currentFlatViewSorts = (
+      viewSortsEntry.status === 'draft-pending'
+        ? viewSortsEntry.draft
+        : viewSortsEntry.current
+    ) as FlatViewSort[];
+
+    const otherViewSorts = currentFlatViewSorts.filter(
+      (sort) => sort.viewId !== currentView.id,
+    );
+
+    const updatedViewSorts = [
+      ...otherViewSorts,
+      ...newViewSorts.map((sort) => ({
+        ...sort,
+        viewId: currentView.id,
+      })),
+    ];
+
+    store.set(metadataStoreState.atomFamily('viewSorts'), {
+      ...viewSortsEntry,
+      current: updatedViewSorts,
+    });
   }, [
     canPersistChanges,
     currentView,

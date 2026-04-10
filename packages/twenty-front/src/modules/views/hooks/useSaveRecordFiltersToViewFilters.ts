@@ -1,4 +1,6 @@
 import { contextStoreCurrentViewIdComponentState } from '@/context-store/states/contextStoreCurrentViewIdComponentState';
+import { metadataStoreState } from '@/metadata-store/states/metadataStoreState';
+import { type FlatViewFilter } from '@/metadata-store/types/FlatViewFilter';
 import { currentRecordFiltersComponentState } from '@/object-record/record-filter/states/currentRecordFiltersComponentState';
 import { useAtomComponentStateCallbackState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateCallbackState';
 import { useAtomComponentStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentStateValue';
@@ -121,6 +123,34 @@ export const useSaveRecordFiltersToViewFilters = () => {
     if (deleteResult.status === 'failed') {
       return;
     }
+
+    // Optimistically update the metadata store so the UI reflects
+    // the saved state immediately, without waiting for the SSE round-trip.
+    const viewFiltersEntry = store.get(
+      metadataStoreState.atomFamily('viewFilters'),
+    );
+    const currentFlatViewFilters = (
+      viewFiltersEntry.status === 'draft-pending'
+        ? viewFiltersEntry.draft
+        : viewFiltersEntry.current
+    ) as FlatViewFilter[];
+
+    const otherViewFilters = currentFlatViewFilters.filter(
+      (filter) => filter.viewId !== currentView.id,
+    );
+
+    const updatedViewFilters = [
+      ...otherViewFilters,
+      ...newViewFilters.map((filter) => ({
+        ...filter,
+        viewId: currentView.id,
+      })),
+    ];
+
+    store.set(metadataStoreState.atomFamily('viewFilters'), {
+      ...viewFiltersEntry,
+      current: updatedViewFilters,
+    });
   }, [
     store,
     canPersistChanges,
