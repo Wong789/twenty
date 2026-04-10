@@ -86,7 +86,7 @@ export class InboundEmailStorageService {
       await client.send(
         new CopyObjectCommand({
           Bucket,
-          CopySource: `${Bucket}/${encodeURIComponent(key)}`,
+          CopySource: `${Bucket}/${key}`,
           Key: destinationKey,
         }),
       );
