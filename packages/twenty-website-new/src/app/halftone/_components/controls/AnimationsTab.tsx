@@ -109,7 +109,7 @@ export function AnimationsTab({
               {animation.autoRotateEnabled ? (
                 <>
                   <SliderControl
-                    max={1.5}
+                    max={4}
                     min={0.05}
                     onChange={(event) =>
                       onAnimationSettingsChange({

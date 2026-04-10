@@ -705,10 +705,6 @@ type SliderControlProps = {
   valueLabel: string;
 };
 
-const NORMALIZED_SLIDER_MIN = 1;
-const NORMALIZED_SLIDER_MAX = 100;
-const NORMALIZED_SLIDER_RANGE = NORMALIZED_SLIDER_MAX - NORMALIZED_SLIDER_MIN;
-
 function getStepPrecision(step: number | undefined) {
   if (!step || Number.isInteger(step)) {
     return 0;
@@ -726,7 +722,13 @@ function getStepPrecision(step: number | undefined) {
 }
 
 function formatEditableValue(value: number, step: number | undefined) {
-  return String(Math.round(value));
+  const precision = getStepPrecision(step);
+
+  if (precision === 0) {
+    return String(Math.round(value));
+  }
+
+  return String(Number(value.toFixed(precision)));
 }
 
 function clampAndSnapValue(
@@ -747,48 +749,6 @@ function clampAndSnapValue(
   return Number(Math.min(Math.max(snappedValue, min), max).toFixed(precision));
 }
 
-function getEffectiveSliderStep(step: number | undefined) {
-  return step && step > 0 ? step : 1;
-}
-
-function toNormalizedSliderValue(value: number, min: number, max: number) {
-  const range = max - min;
-
-  if (range <= 0) {
-    return NORMALIZED_SLIDER_MIN;
-  }
-
-  return (
-    NORMALIZED_SLIDER_MIN + ((value - min) / range) * NORMALIZED_SLIDER_RANGE
-  );
-}
-
-function fromNormalizedSliderValue(value: number, min: number, max: number) {
-  const range = max - min;
-
-  if (range <= 0) {
-    return min;
-  }
-
-  return (
-    min + ((value - NORMALIZED_SLIDER_MIN) / NORMALIZED_SLIDER_RANGE) * range
-  );
-}
-
-function getNormalizedSliderStep(
-  min: number,
-  max: number,
-  step: number | undefined,
-) {
-  const range = max - min;
-
-  if (range <= 0) {
-    return undefined;
-  }
-
-  return (getEffectiveSliderStep(step) / range) * NORMALIZED_SLIDER_RANGE;
-}
-
 export function SliderControl({
   children,
   max,
@@ -800,10 +760,7 @@ export function SliderControl({
 }: SliderControlProps) {
   const [draftValue, setDraftValue] = useState<string | null>(null);
   const valueInputReference = useRef<HTMLInputElement>(null);
-  const normalizedValue = toNormalizedSliderValue(value, min, max);
-  const normalizedStep = getNormalizedSliderStep(min, max, step);
-  const fillPercent =
-    ((normalizedValue - NORMALIZED_SLIDER_MIN) / NORMALIZED_SLIDER_RANGE) * 100;
+  const fillPercent = ((value - min) / (max - min)) * 100;
   const isEditing = draftValue !== null;
 
   useEffect(() => {
@@ -820,28 +777,17 @@ export function SliderControl({
       return;
     }
 
-    const nextNormalizedValue = Number.parseFloat(draftValue);
+    const nextValue = Number.parseFloat(draftValue);
     setDraftValue(null);
 
-    if (!Number.isFinite(nextNormalizedValue)) {
+    if (!Number.isFinite(nextValue)) {
       return;
     }
 
-    const clampedNormalizedValue = clampAndSnapValue(
-      nextNormalizedValue,
-      NORMALIZED_SLIDER_MIN,
-      NORMALIZED_SLIDER_MAX,
-      1,
-    );
-    const nextValue = clampAndSnapValue(
-      fromNormalizedSliderValue(clampedNormalizedValue, min, max),
-      min,
-      max,
-      getEffectiveSliderStep(step),
-    );
+    const normalizedValue = clampAndSnapValue(nextValue, min, max, step);
 
     onChange({
-      target: { value: String(nextValue) },
+      target: { value: String(normalizedValue) },
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
@@ -849,34 +795,19 @@ export function SliderControl({
     <SliderLabel>
       <span>{children}</span>
       <SliderInput
-        max={NORMALIZED_SLIDER_MAX}
-        min={NORMALIZED_SLIDER_MIN}
-        onChange={(event) => {
-          const nextValue = clampAndSnapValue(
-            fromNormalizedSliderValue(Number(event.target.value), min, max),
-            min,
-            max,
-            getEffectiveSliderStep(step),
-          );
-
-          onChange({
-            ...event,
-            target: {
-              ...event.target,
-              value: String(nextValue),
-            },
-          } as React.ChangeEvent<HTMLInputElement>);
-        }}
-        step={normalizedStep}
+        max={max}
+        min={min}
+        onChange={onChange}
+        step={step}
         style={{ '--fill': `${fillPercent}%` } as React.CSSProperties}
         type="range"
-        value={normalizedValue}
+        value={value}
       />
       {isEditing ? (
         <EditableControlValueInput
-          inputMode="numeric"
-          max={NORMALIZED_SLIDER_MAX}
-          min={NORMALIZED_SLIDER_MIN}
+          inputMode="decimal"
+          max={max}
+          min={min}
           onBlur={commitDraftValue}
           onChange={(event) => setDraftValue(event.target.value)}
           onKeyDown={(event) => {
@@ -892,7 +823,7 @@ export function SliderControl({
             }
           }}
           ref={valueInputReference}
-          step={1}
+          step={step}
           type="number"
           value={draftValue}
         />
@@ -901,18 +832,15 @@ export function SliderControl({
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setDraftValue(formatEditableValue(normalizedValue, normalizedStep));
+            setDraftValue(formatEditableValue(value, step));
           }}
           onMouseDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
           }}
-          title={valueLabel}
           type="button"
         >
-          <ControlValue>
-            {formatEditableValue(normalizedValue, normalizedStep)}
-          </ControlValue>
+          <ControlValue>{valueLabel}</ControlValue>
         </EditableControlValueButton>
       )}
     </SliderLabel>

@@ -186,7 +186,27 @@ export function DesignTab({
         </ControlGrid>
       </Section>
 
-      {isImageMode ? null : (
+      {isImageMode ? (
+        <Section>
+          <SectionTitle>Image</SectionTitle>
+          <ControlGrid>
+            <SliderControl
+              max={2.5}
+              min={0.4}
+              onChange={(event) =>
+                onHalftoneChange({
+                  imageContrast: Number(event.target.value),
+                })
+              }
+              step={0.01}
+              value={settings.halftone.imageContrast}
+              valueLabel={formatDecimal(settings.halftone.imageContrast, 2)}
+            >
+              Contrast
+            </SliderControl>
+          </ControlGrid>
+        </Section>
+      ) : (
         <>
           <Section>
             <SectionTitle>Lighting</SectionTitle>

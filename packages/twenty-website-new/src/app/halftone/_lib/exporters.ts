@@ -56,6 +56,7 @@ const imagePassthroughFragmentShader = /* glsl */ `
   uniform vec2 imageSize;
   uniform vec2 viewportSize;
   uniform float zoom;
+  uniform float contrast;
 
   varying vec2 vUv;
 
@@ -80,8 +81,9 @@ const imagePassthroughFragmentShader = /* glsl */ `
                    * step(0.0, uv.y) * step(uv.y, 1.0);
 
     vec4 color = texture2D(tImage, clamp(uv, 0.0, 1.0));
+    vec3 contrastColor = clamp((color.rgb - 0.5) * contrast + 0.5, 0.0, 1.0);
 
-    gl_FragColor = vec4(color.rgb, inBounds);
+    gl_FragColor = vec4(contrastColor, inBounds);
   }
 `;
 
@@ -1753,6 +1755,7 @@ async function mountHalftoneCanvas(options) {
       imageSize: { value: new THREE.Vector2(image.width, image.height) },
       viewportSize: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
       zoom: { value: 1 },
+      contrast: { value: settings.halftone.imageContrast },
     },
     vertexShader: passThroughVertexShader,
     fragmentShader: imagePassthroughFragmentShader,

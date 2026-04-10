@@ -30,6 +30,7 @@ export interface HalftoneEffectSettings {
   scale: number;
   power: number;
   width: number;
+  imageContrast: number;
   dashColor: string;
 }
 
@@ -188,6 +189,7 @@ export const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftoneEffectSettings = {
   scale: 24.72,
   power: -0.07,
   width: 0.46,
+  imageContrast: 1,
   dashColor: '#4A38F5',
 };
 
@@ -196,6 +198,7 @@ export const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftoneEffectSettings = {
   scale: 24.72,
   power: -0.07,
   width: 0.46,
+  imageContrast: 1,
   dashColor: '#4A38F5',
 };
 
@@ -246,6 +249,7 @@ function normalizeHalftoneEffectSettings(
     scale: settings?.scale ?? defaults.scale,
     power: settings?.power ?? defaults.power,
     width: settings?.width ?? defaults.width,
+    imageContrast: settings?.imageContrast ?? defaults.imageContrast,
     dashColor: settings?.dashColor ?? defaults.dashColor,
   };
 }
@@ -280,7 +284,7 @@ export const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
     dragFlowEnabled: false,
     lightSweepEnabled: false,
     rotateEnabled: false,
-    autoSpeed: 0.3,
+    autoSpeed: 4,
     autoWobble: 0.3,
     breatheAmount: 0.04,
     breatheSpeed: 0.8,

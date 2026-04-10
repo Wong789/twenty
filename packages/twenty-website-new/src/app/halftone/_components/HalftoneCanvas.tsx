@@ -59,6 +59,7 @@ const imagePassthroughFragmentShader = /* glsl */ `
   uniform vec2 imageSize;
   uniform vec2 viewportSize;
   uniform float zoom;
+  uniform float contrast;
 
   varying vec2 vUv;
 
@@ -83,8 +84,9 @@ const imagePassthroughFragmentShader = /* glsl */ `
                    * step(0.0, uv.y) * step(uv.y, 1.0);
 
     vec4 color = texture2D(tImage, clamp(uv, 0.0, 1.0));
+    vec3 contrastColor = clamp((color.rgb - 0.5) * contrast + 0.5, 0.0, 1.0);
 
-    gl_FragColor = vec4(color.rgb, inBounds);
+    gl_FragColor = vec4(contrastColor, inBounds);
   }
 `;
 
@@ -472,6 +474,8 @@ function updateHalftone(
       : 0;
   resources.halftoneMaterial.uniforms.waveSpeed.value =
     settings.animation.waveSpeed;
+  resources.imageMaterial.uniforms.contrast.value =
+    settings.halftone.imageContrast;
 }
 
 function syncResources(
@@ -806,6 +810,7 @@ export function HalftoneCanvas({
           value: new THREE.Vector2(getRenderWidth(), getRenderHeight()),
         },
         zoom: { value: getImagePreviewZoom(previewDistance) },
+        contrast: { value: settings.halftone.imageContrast },
       },
       vertexShader: passThroughVertexShader,
       fragmentShader: imagePassthroughFragmentShader,
@@ -987,19 +992,23 @@ export function HalftoneCanvas({
         );
       }
 
-      const cropBounds = includeBackground
-        ? {
-            minX: 0,
-            minY: 0,
-            maxX: snapshotWidth - 1,
-            maxY: snapshotHeight - 1,
-          }
-        : (getAlphaCropBounds(flippedBuffer, snapshotWidth, snapshotHeight) ?? {
-            minX: 0,
-            minY: 0,
-            maxX: snapshotWidth - 1,
-            maxY: snapshotHeight - 1,
-          });
+      const fullSnapshotBounds = {
+        minX: 0,
+        minY: 0,
+        maxX: snapshotWidth - 1,
+        maxY: snapshotHeight - 1,
+      };
+      const alphaCropBounds = getAlphaCropBounds(
+        flippedBuffer,
+        snapshotWidth,
+        snapshotHeight,
+      );
+      const cropBounds =
+        activeSettings.sourceMode === 'image'
+          ? (alphaCropBounds ?? fullSnapshotBounds)
+          : includeBackground
+            ? fullSnapshotBounds
+            : (alphaCropBounds ?? fullSnapshotBounds);
       const croppedWidth = cropBounds.maxX - cropBounds.minX + 1;
       const croppedHeight = cropBounds.maxY - cropBounds.minY + 1;
       const croppedBuffer = new Uint8ClampedArray(
