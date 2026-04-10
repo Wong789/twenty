@@ -130,6 +130,11 @@ const StyledEditor = styled.div`
     font-size: 0.9rem;
     padding: 2px 4px;
   }
+
+  & .bn-file-panel {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
 `;
 
 export const BlockEditor = ({
