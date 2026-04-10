@@ -43,7 +43,7 @@ export class RouteTriggerRestApiExceptionFilter implements ExceptionFilter {
         return this.httpExceptionHandlerService.handleError(
           exception as CustomException,
           response,
-          500,
+          422,
         );
       case RouteTriggerExceptionCode.ROUTE_ALREADY_EXIST:
       case RouteTriggerExceptionCode.ROUTE_PATH_ALREADY_EXIST:
