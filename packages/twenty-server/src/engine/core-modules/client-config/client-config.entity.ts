@@ -30,7 +30,7 @@ registerEnumType(AiModelRole, {
 });
 
 @ObjectType()
-export class NativeModelCapabilities {
+export class AgentCapabilities {
   @Field(() => Boolean, { nullable: true })
   webSearch?: boolean;
 
@@ -62,8 +62,8 @@ export class ClientAIModelConfig {
   @Field(() => Number, { nullable: true })
   outputCostPerMillionTokens?: number;
 
-  @Field(() => NativeModelCapabilities, { nullable: true })
-  nativeCapabilities?: NativeModelCapabilities;
+  @Field(() => AgentCapabilities, { nullable: true })
+  capabilities?: AgentCapabilities;
 
   @Field(() => Boolean, { nullable: true })
   isDeprecated?: boolean;

@@ -1334,10 +1334,10 @@ export interface PublicWorkspaceData {
     __typename: 'PublicWorkspaceData'
 }
 
-export interface NativeModelCapabilities {
+export interface AgentCapabilities {
     webSearch?: Scalars['Boolean']
     twitterSearch?: Scalars['Boolean']
-    __typename: 'NativeModelCapabilities'
+    __typename: 'AgentCapabilities'
 }
 
 export interface ClientAIModelConfig {
@@ -1348,7 +1348,7 @@ export interface ClientAIModelConfig {
     sdkPackage?: Scalars['String']
     inputCostPerMillionTokens?: Scalars['Float']
     outputCostPerMillionTokens?: Scalars['Float']
-    nativeCapabilities?: NativeModelCapabilities
+    capabilities?: AgentCapabilities
     isDeprecated?: Scalars['Boolean']
     isRecommended?: Scalars['Boolean']
     providerName?: Scalars['String']
@@ -4509,7 +4509,7 @@ export interface PublicWorkspaceDataGenqlSelection{
     __scalar?: boolean | number
 }
 
-export interface NativeModelCapabilitiesGenqlSelection{
+export interface AgentCapabilitiesGenqlSelection{
     webSearch?: boolean | number
     twitterSearch?: boolean | number
     __typename?: boolean | number
@@ -4524,7 +4524,7 @@ export interface ClientAIModelConfigGenqlSelection{
     sdkPackage?: boolean | number
     inputCostPerMillionTokens?: boolean | number
     outputCostPerMillionTokens?: boolean | number
-    nativeCapabilities?: NativeModelCapabilitiesGenqlSelection
+    capabilities?: AgentCapabilitiesGenqlSelection
     isDeprecated?: boolean | number
     isRecommended?: boolean | number
     providerName?: boolean | number
@@ -7624,10 +7624,10 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     
 
 
-    const NativeModelCapabilities_possibleTypes: string[] = ['NativeModelCapabilities']
-    export const isNativeModelCapabilities = (obj?: { __typename?: any } | null): obj is NativeModelCapabilities => {
-      if (!obj?.__typename) throw new Error('__typename is missing in "isNativeModelCapabilities"')
-      return NativeModelCapabilities_possibleTypes.includes(obj.__typename)
+    const AgentCapabilities_possibleTypes: string[] = ['AgentCapabilities']
+    export const isAgentCapabilities = (obj?: { __typename?: any } | null): obj is AgentCapabilities => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isAgentCapabilities"')
+      return AgentCapabilities_possibleTypes.includes(obj.__typename)
     }
     
 

@@ -3275,7 +3275,7 @@ export default {
                 1
             ]
         },
-        "NativeModelCapabilities": {
+        "AgentCapabilities": {
             "webSearch": [
                 6
             ],
@@ -3308,7 +3308,7 @@ export default {
             "outputCostPerMillionTokens": [
                 11
             ],
-            "nativeCapabilities": [
+            "capabilities": [
                 165
             ],
             "isDeprecated": [

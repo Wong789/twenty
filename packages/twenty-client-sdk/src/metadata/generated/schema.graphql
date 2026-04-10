@@ -1625,7 +1625,7 @@ type PublicWorkspaceData {
   workspaceUrls: WorkspaceUrls!
 }
 
-type NativeModelCapabilities {
+type AgentCapabilities {
   webSearch: Boolean
   twitterSearch: Boolean
 }
@@ -1638,7 +1638,7 @@ type ClientAIModelConfig {
   sdkPackage: String
   inputCostPerMillionTokens: Float
   outputCostPerMillionTokens: Float
-  nativeCapabilities: NativeModelCapabilities
+  capabilities: AgentCapabilities
   isDeprecated: Boolean
   isRecommended: Boolean
   providerName: String

@@ -112,6 +112,12 @@ export type Agent = {
   updatedAt: Scalars['DateTime'];
 };
 
+export type AgentCapabilities = {
+  __typename?: 'AgentCapabilities';
+  twitterSearch?: Maybe<Scalars['Boolean']>;
+  webSearch?: Maybe<Scalars['Boolean']>;
+};
+
 export type AgentChatEvent = {
   __typename?: 'AgentChatEvent';
   event: Scalars['JSON'];
@@ -867,6 +873,7 @@ export type CheckUserExist = {
 
 export type ClientAiModelConfig = {
   __typename?: 'ClientAIModelConfig';
+  capabilities?: Maybe<AgentCapabilities>;
   contextWindowTokens?: Maybe<Scalars['Float']>;
   dataResidency?: Maybe<Scalars['String']>;
   inputCostPerMillionTokens?: Maybe<Scalars['Float']>;
@@ -877,7 +884,6 @@ export type ClientAiModelConfig = {
   modelFamily?: Maybe<ModelFamily>;
   modelFamilyLabel?: Maybe<Scalars['String']>;
   modelId: Scalars['String'];
-  nativeCapabilities?: Maybe<NativeModelCapabilities>;
   outputCostPerMillionTokens?: Maybe<Scalars['Float']>;
   providerLabel?: Maybe<Scalars['String']>;
   providerName?: Maybe<Scalars['String']>;
@@ -3839,12 +3845,6 @@ export type MutationVerifyEmailingDomainArgs = {
 
 export type MutationVerifyTwoFactorAuthenticationMethodForAuthenticatedUserArgs = {
   otp: Scalars['String'];
-};
-
-export type NativeModelCapabilities = {
-  __typename?: 'NativeModelCapabilities';
-  twitterSearch?: Maybe<Scalars['Boolean']>;
-  webSearch?: Maybe<Scalars['Boolean']>;
 };
 
 export type NavigationMenuItem = {

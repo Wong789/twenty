@@ -17,7 +17,7 @@ import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/main
 import {
   type ClientAIModelConfig,
   type ClientConfig,
-  type NativeModelCapabilities,
+  type AgentCapabilities,
 } from 'src/engine/core-modules/client-config/client-config.entity';
 import { DomainServerConfigService } from 'src/engine/core-modules/domain/domain-server-config/services/domain-server-config.service';
 import { PUBLIC_FEATURE_FLAGS } from 'src/engine/core-modules/feature-flag/constants/public-feature-flag.const';
@@ -38,9 +38,9 @@ export class ClientConfigService {
     private maintenanceModeService: MaintenanceModeService,
   ) {}
 
-  private deriveNativeCapabilities(
+  private deriveAgentCapabilities(
     sdkPackage?: AiSdkPackage,
-  ): NativeModelCapabilities | undefined {
+  ): AgentCapabilities | undefined {
     const hasNativeWebSearch =
       sdkPackage === AI_SDK_OPENAI ||
       sdkPackage === AI_SDK_ANTHROPIC ||
@@ -104,7 +104,7 @@ export class ClientConfigService {
           sdkPackage: registeredModel.sdkPackage,
           providerName,
           providerLabel: getProviderLabel(providerName),
-          nativeCapabilities: this.deriveNativeCapabilities(
+          capabilities: this.deriveAgentCapabilities(
             registeredModel.sdkPackage,
           ),
           inputCostPerMillionTokens: modelConfig?.inputCostPerMillionTokens,

@@ -34,13 +34,13 @@ export const SettingsAgentModelCapabilities = ({
   const aiModels = useAtomStateValue(aiModelsState);
 
   const selectedModel = aiModels.find((m) => m.modelId === selectedModelId);
-  const nativeCapabilities = selectedModel?.nativeCapabilities;
+  const capabilities = selectedModel?.capabilities;
 
-  if (!isDefined(nativeCapabilities)) {
+  if (!isDefined(capabilities)) {
     return null;
   }
 
-  if (!nativeCapabilities.webSearch && !nativeCapabilities.twitterSearch) {
+  if (!capabilities.webSearch && !capabilities.twitterSearch) {
     return null;
   }
 
@@ -61,8 +61,8 @@ export const SettingsAgentModelCapabilities = ({
     });
   };
 
-  const capabilities = [
-    ...(nativeCapabilities.webSearch
+  const capabilityItems = [
+    ...(capabilities.webSearch
       ? [
           {
             key: 'webSearch' as const,
@@ -72,7 +72,7 @@ export const SettingsAgentModelCapabilities = ({
           },
         ]
       : []),
-    ...(nativeCapabilities.twitterSearch
+    ...(capabilities.twitterSearch
       ? [
           {
             key: 'twitterSearch' as const,
@@ -88,7 +88,7 @@ export const SettingsAgentModelCapabilities = ({
     <Section>
       <InputLabel>{t`Capabilities`}</InputLabel>
       <div>
-        {capabilities.map((capability) => (
+        {capabilityItems.map((capability) => (
           <MenuItemToggle
             key={capability.key}
             LeftIcon={capability.Icon}
