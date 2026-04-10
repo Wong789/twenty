@@ -127,7 +127,6 @@ export class WorkspaceRolesPermissionsCacheService extends WorkspaceCacheProvide
       for (const objectMetadata of workspaceObjectMetadataCollection) {
         const {
           id: objectMetadataId,
-          isSystem,
           universalIdentifier,
         } = objectMetadata;
 
@@ -160,7 +159,7 @@ export class WorkspaceRolesPermissionsCacheService extends WorkspaceCacheProvide
           const getPermissionValue = (
             overrideValue: boolean | undefined,
             defaultValue: boolean,
-          ) => (isSystem ? true : (overrideValue ?? defaultValue));
+          ) => overrideValue ?? defaultValue;
 
           canRead = getPermissionValue(
             objectRecordPermissionsOverride?.canReadObjectRecords,
@@ -237,7 +236,6 @@ export class WorkspaceRolesPermissionsCacheService extends WorkspaceCacheProvide
       },
       select: [
         'id',
-        'isSystem',
         'universalIdentifier',
         'labelIdentifierFieldMetadataId',
       ],
