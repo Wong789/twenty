@@ -250,8 +250,9 @@ export const SelectInput = styled.select`
   cursor: pointer;
   font-family: ${theme.font.family.sans};
   font-size: 11px;
+  height: 24px;
   outline: none;
-  padding: 7px 34px 7px 10px;
+  padding: 0 34px 0 10px;
   transition: border-color 0.15s ease;
   width: 100%;
 
@@ -576,10 +577,10 @@ export const UploadButton = styled.button`
   display: flex;
   flex-shrink: 0;
   font-size: 13px;
-  height: 32px;
+  height: 24px;
   justify-content: center;
   transition: all 0.15s ease;
-  width: 32px;
+  width: 24px;
 
   &:hover {
     background: rgba(255, 255, 255, 0.12);

@@ -1,5 +1,6 @@
 export type HalftoneTabId = 'design' | 'animations' | 'export';
 export type HalftoneSourceMode = 'shape' | 'image';
+export type HalftoneMaterialSurface = 'solid' | 'glass';
 export type HalftoneRotateAxis =
   | 'x'
   | 'y'
@@ -21,8 +22,13 @@ export interface HalftoneLightingSettings {
 }
 
 export interface HalftoneMaterialSettings {
+  surface: HalftoneMaterialSurface;
+  color: string;
   roughness: number;
   metalness: number;
+  thickness: number;
+  refraction: number;
+  environmentPower: number;
 }
 
 export interface HalftoneEffectSettings {
@@ -202,6 +208,26 @@ export const DEFAULT_IMAGE_HALFTONE_SETTINGS: HalftoneEffectSettings = {
   dashColor: '#4A38F5',
 };
 
+export const DEFAULT_SOLID_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
+  surface: 'solid',
+  color: '#d4d0c8',
+  roughness: 0.42,
+  metalness: 0.16,
+  thickness: 150,
+  refraction: 2,
+  environmentPower: 5,
+};
+
+export const DEFAULT_GLASS_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
+  surface: 'glass',
+  color: '#7d7d7d',
+  roughness: 0,
+  metalness: 0,
+  thickness: 15.58,
+  refraction: 2,
+  environmentPower: 5,
+};
+
 export const LEGACY_HALFTONE_SETTING_KEYS = [
   'numRows',
   'contrast',
@@ -255,37 +281,72 @@ function normalizeHalftoneEffectSettings(
   };
 }
 
+function normalizeMaterialSettings(
+  settings?: Partial<HalftoneMaterialSettings>,
+): HalftoneMaterialSettings {
+  const surface = settings?.surface === 'glass' ? 'glass' : 'solid';
+  const defaults =
+    surface === 'glass'
+      ? DEFAULT_GLASS_MATERIAL_SETTINGS
+      : DEFAULT_SOLID_MATERIAL_SETTINGS;
+
+  return {
+    surface,
+    color:
+      typeof settings?.color === 'string' ? settings.color : defaults.color,
+    roughness:
+      typeof settings?.roughness === 'number'
+        ? settings.roughness
+        : defaults.roughness,
+    metalness:
+      typeof settings?.metalness === 'number'
+        ? settings.metalness
+        : defaults.metalness,
+    thickness:
+      typeof settings?.thickness === 'number'
+        ? settings.thickness
+        : defaults.thickness,
+    refraction:
+      typeof settings?.refraction === 'number'
+        ? settings.refraction
+        : defaults.refraction,
+    environmentPower:
+      typeof settings?.environmentPower === 'number'
+        ? settings.environmentPower
+        : defaults.environmentPower,
+  };
+}
+
 export const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
   sourceMode: 'shape' as HalftoneSourceMode,
   shapeKey: 'torusKnot',
   lighting: {
-    intensity: 1.5,
-    fillIntensity: 0.15,
-    ambientIntensity: 0.08,
-    angleDegrees: 45,
+    intensity: 3,
+    fillIntensity: 0,
+    ambientIntensity: 0.3,
+    angleDegrees: 53,
     height: 2,
   },
   material: {
-    roughness: 0.42,
-    metalness: 0.16,
+    ...DEFAULT_SOLID_MATERIAL_SETTINGS,
   },
   halftone: DEFAULT_SHAPE_HALFTONE_SETTINGS,
   background: {
     transparent: true,
-    color: '#ffffff',
+    color: '#000000',
   },
   animation: {
     autoRotateEnabled: true,
     breatheEnabled: false,
     cameraParallaxEnabled: false,
     followHoverEnabled: false,
-    followDragEnabled: false,
+    followDragEnabled: true,
     floatEnabled: false,
     hoverLightEnabled: false,
     dragFlowEnabled: false,
     lightSweepEnabled: false,
     rotateEnabled: false,
-    autoSpeed: 4,
+    autoSpeed: 0.2,
     autoWobble: 0.3,
     breatheAmount: 0.04,
     breatheSpeed: 0.8,
@@ -300,7 +361,7 @@ export const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
     dragMomentum: true,
     rotateAxis: 'y',
     rotatePreset: 'axis',
-    rotateSpeed: 0.2,
+    rotateSpeed: 0.1,
     rotatePingPong: false,
     floatAmplitude: 0.16,
     floatSpeed: 0.8,
@@ -324,30 +385,99 @@ export const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
   },
 };
 
+const LEGACY_GLASS_LIGHTING_SETTINGS: HalftoneLightingSettings = {
+  intensity: 1.5,
+  fillIntensity: 0.15,
+  ambientIntensity: 0.08,
+  angleDegrees: 45,
+  height: 2,
+};
+
+const LEGACY_GLASS_MATERIAL_SETTINGS: HalftoneMaterialSettings = {
+  surface: 'glass',
+  color: '#7d7d7d',
+  roughness: 0.1,
+  metalness: 0.1,
+  thickness: 150,
+  refraction: 2,
+  environmentPower: 5,
+};
+
+const DEFAULT_GLASS_LIGHTING_SETTINGS: HalftoneLightingSettings = {
+  intensity: 3,
+  fillIntensity: 0,
+  ambientIntensity: 0.3,
+  angleDegrees: 53,
+  height: 2,
+};
+
+function lightingMatches(
+  value: Partial<HalftoneLightingSettings> | undefined,
+  target: HalftoneLightingSettings,
+) {
+  return (
+    value?.intensity === target.intensity &&
+    value?.fillIntensity === target.fillIntensity &&
+    value?.ambientIntensity === target.ambientIntensity &&
+    value?.angleDegrees === target.angleDegrees &&
+    value?.height === target.height
+  );
+}
+
+function materialMatches(
+  value: Partial<HalftoneMaterialSettings> | undefined,
+  target: HalftoneMaterialSettings,
+) {
+  return (
+    value?.surface === target.surface &&
+    value?.color === target.color &&
+    value?.roughness === target.roughness &&
+    value?.metalness === target.metalness &&
+    value?.thickness === target.thickness &&
+    value?.refraction === target.refraction &&
+    value?.environmentPower === target.environmentPower
+  );
+}
+
 export function normalizeHalftoneStudioSettings(
   settings?: Partial<HalftoneStudioSettings>,
 ): HalftoneStudioSettings {
   const sourceMode =
     settings?.sourceMode ?? DEFAULT_HALFTONE_SETTINGS.sourceMode;
+  const mergedMaterial = normalizeMaterialSettings(settings?.material);
+  const material =
+    mergedMaterial.surface === 'glass' &&
+    materialMatches(settings?.material, LEGACY_GLASS_MATERIAL_SETTINGS)
+      ? { ...DEFAULT_GLASS_MATERIAL_SETTINGS }
+      : mergedMaterial;
+  const useGlassLightingDefaults =
+    material.surface === 'glass' &&
+    lightingMatches(settings?.lighting, LEGACY_GLASS_LIGHTING_SETTINGS);
+  const lightingDefaults = useGlassLightingDefaults
+    ? DEFAULT_GLASS_LIGHTING_SETTINGS
+    : DEFAULT_HALFTONE_SETTINGS.lighting;
+  const backgroundDefaults =
+    material.surface === 'glass' &&
+    settings?.background?.color === '#ffffff' &&
+    settings?.background?.transparent === true
+      ? { ...DEFAULT_HALFTONE_SETTINGS.background, color: '#000000' }
+      : DEFAULT_HALFTONE_SETTINGS.background;
 
   return {
     ...DEFAULT_HALFTONE_SETTINGS,
     ...settings,
     sourceMode,
     lighting: {
-      ...DEFAULT_HALFTONE_SETTINGS.lighting,
+      ...lightingDefaults,
       ...settings?.lighting,
     },
-    material: {
-      ...DEFAULT_HALFTONE_SETTINGS.material,
-      ...settings?.material,
-    },
+    material,
     halftone: normalizeHalftoneEffectSettings(
       getDefaultHalftoneSettings(sourceMode),
       settings?.halftone,
     ),
     background: {
-      ...DEFAULT_HALFTONE_SETTINGS.background,
+      ...backgroundDefaults,
       ...settings?.background,
     },
     animation: {
@@ -362,7 +492,10 @@ export function createInitialHalftoneStudioState(): HalftoneStudioState {
     activeTab: 'design',
     geometrySpecs: [...DEFAULT_GEOMETRY_SPECS],
     importedFiles: {},
-    settings: normalizeHalftoneStudioSettings(DEFAULT_HALFTONE_SETTINGS),
+    settings: normalizeHalftoneStudioSettings({
+      ...DEFAULT_HALFTONE_SETTINGS,
+      material: DEFAULT_GLASS_MATERIAL_SETTINGS,
+    }),
     showHint: true,
     statusMessage: '',
     statusIsError: false,

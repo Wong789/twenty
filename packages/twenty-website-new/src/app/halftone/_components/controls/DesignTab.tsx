@@ -1,10 +1,12 @@
 'use client';
 
 import { formatAngle, formatDecimal } from '@/app/halftone/_lib/formatters';
-import type {
-  HalftoneBackgroundSettings,
-  HalftoneSourceMode,
-  HalftoneStudioSettings,
+import {
+  DEFAULT_GLASS_MATERIAL_SETTINGS,
+  DEFAULT_SOLID_MATERIAL_SETTINGS,
+  type HalftoneBackgroundSettings,
+  type HalftoneSourceMode,
+  type HalftoneStudioSettings,
 } from '@/app/halftone/_lib/state';
 import { styled } from '@linaria/react';
 import {
@@ -12,6 +14,7 @@ import {
   ColorControlRow,
   ColorField,
   ControlGrid,
+  SelectControl,
   Section,
   SectionTitle,
   SectionToggleHeader,
@@ -280,6 +283,22 @@ export function DesignTab({
           <Section>
             <SectionTitle>Material</SectionTitle>
             <ControlGrid>
+              <SelectControl
+                onChange={(event) =>
+                  onMaterialChange(
+                    event.target.value === 'glass'
+                      ? DEFAULT_GLASS_MATERIAL_SETTINGS
+                      : DEFAULT_SOLID_MATERIAL_SETTINGS,
+                  )
+                }
+                options={[
+                  { label: 'Solid', value: 'solid' },
+                  { label: 'Glass', value: 'glass' },
+                ]}
+                value={settings.material.surface}
+              >
+                Surface
+              </SelectControl>
               <SliderControl
                 max={1}
                 min={0}
@@ -304,6 +323,55 @@ export function DesignTab({
               >
                 Metalness
               </SliderControl>
+              {settings.material.surface === 'glass' ? (
+                <>
+                  <SliderControl
+                    max={20}
+                    min={1.1}
+                    onChange={(event) =>
+                      onMaterialChange({
+                        thickness: Number(event.target.value),
+                      })
+                    }
+                    step={0.1}
+                    value={settings.material.thickness}
+                    valueLabel={formatDecimal(settings.material.thickness, 0)}
+                  >
+                    Thickness
+                  </SliderControl>
+                  <SliderControl
+                    max={3}
+                    min={1.1}
+                    onChange={(event) =>
+                      onMaterialChange({
+                        refraction: Number(event.target.value),
+                      })
+                    }
+                    step={0.01}
+                    value={settings.material.refraction}
+                    valueLabel={formatDecimal(settings.material.refraction)}
+                  >
+                    Refraction
+                  </SliderControl>
+                  <SliderControl
+                    max={5}
+                    min={0}
+                    onChange={(event) =>
+                      onMaterialChange({
+                        environmentPower: Number(event.target.value),
+                      })
+                    }
+                    step={0.01}
+                    value={settings.material.environmentPower}
+                    valueLabel={formatDecimal(
+                      settings.material.environmentPower,
+                      2,
+                    )}
+                  >
+                    Power
+                  </SliderControl>
+                </>
+              ) : null}
             </ControlGrid>
           </Section>
         </>
