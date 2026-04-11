@@ -262,6 +262,8 @@ export function getMeshFootprintScale({
   return getFootprintScaleFromRects(currentRect, referenceRect);
 }
 
+// Keep the exported runtime string aligned with the typed helpers above.
+// `footprint.test.ts` executes both implementations against the same inputs.
 export const HALFTONE_FOOTPRINT_RUNTIME_SOURCE = String.raw`
 const REFERENCE_PREVIEW_DISTANCE = ${REFERENCE_PREVIEW_DISTANCE};
 const MIN_FOOTPRINT_SCALE = ${MIN_FOOTPRINT_SCALE};

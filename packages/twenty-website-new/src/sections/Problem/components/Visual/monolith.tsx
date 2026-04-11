@@ -283,6 +283,7 @@ type InteractionState = {
 type MountHalftoneCanvasOptions = {
   container: HTMLDivElement;
   imageUrl: string;
+  signal: AbortSignal;
 };
 
 type MonolithProps = {
@@ -437,19 +438,46 @@ function getImageFootprintScale(options: {
   return getFootprintScaleFromRects(currentRect, referenceRect);
 }
 
-function loadImage(imageUrl: string) {
+function createAbortError() {
+  return new DOMException('Aborted', 'AbortError');
+}
+
+function loadImage(imageUrl: string, signal: AbortSignal) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(createAbortError());
+      return;
+    }
+
     const image = new Image();
     image.decoding = 'async';
-    image.onload = () => resolve(image);
-    image.onerror = () =>
+
+    const cleanup = () => {
+      image.onload = null;
+      image.onerror = null;
+      signal.removeEventListener('abort', handleAbort);
+    };
+    const handleAbort = () => {
+      cleanup();
+      image.src = '';
+      reject(createAbortError());
+    };
+
+    image.onload = () => {
+      cleanup();
+      resolve(image);
+    };
+    image.onerror = () => {
+      cleanup();
       reject(new Error(`Failed to load image: ${imageUrl}`));
+    };
+    signal.addEventListener('abort', handleAbort, { once: true });
     image.src = imageUrl;
   });
 }
 
 async function mountHalftoneCanvas(options: MountHalftoneCanvasOptions) {
-  const { container, imageUrl } = options;
+  const { container, imageUrl, signal } = options;
   const tuning = DEFAULT_TUNING;
 
   const getWidth = () => Math.max(container.clientWidth, 1);
@@ -461,7 +489,11 @@ async function mountHalftoneCanvas(options: MountHalftoneCanvasOptions) {
       1,
     );
 
-  const image = await loadImage(imageUrl);
+  const image = await loadImage(imageUrl, signal);
+
+  if (signal.aborted) {
+    return undefined;
+  }
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -799,15 +831,20 @@ export default function Monolith({
       return;
     }
 
+    const abortController = new AbortController();
     const unmountPromise = mountHalftoneCanvas({
       container,
       imageUrl,
+      signal: abortController.signal,
     }).catch((error) => {
-      console.error(error);
+      if (error.name !== 'AbortError') {
+        console.error(error);
+      }
       return undefined;
     });
 
     return () => {
+      abortController.abort();
       void unmountPromise.then((dispose) => dispose?.());
     };
   }, [imageUrl]);

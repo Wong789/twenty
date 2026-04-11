@@ -1074,11 +1074,9 @@ export function HalftoneCanvas({
         snapshotHeight,
       );
       const cropBounds =
-        activeSettings.sourceMode === 'image'
-          ? (alphaCropBounds ?? fullSnapshotBounds)
-          : includeBackground
-            ? fullSnapshotBounds
-            : (alphaCropBounds ?? fullSnapshotBounds);
+        includeBackground
+          ? fullSnapshotBounds
+          : (alphaCropBounds ?? fullSnapshotBounds);
       const croppedWidth = cropBounds.maxX - cropBounds.minX + 1;
       const croppedHeight = cropBounds.maxY - cropBounds.minY + 1;
       const croppedBuffer = new Uint8ClampedArray(
@@ -1410,10 +1408,10 @@ export function HalftoneCanvas({
 
       const interaction = interactionReference.current;
       const activeSettings = settingsReference.current;
+      const delta = clock.getDelta();
       const elapsedTime =
         (initialPoseReference.current?.timeElapsed ?? 0) +
-        clock.getElapsedTime();
-      const delta = 1 / 60;
+        clock.elapsedTime;
       const baseDistance = previewDistanceReference.current;
       const logicalWidth = getVirtualWidth();
       const logicalHeight = getVirtualHeight();

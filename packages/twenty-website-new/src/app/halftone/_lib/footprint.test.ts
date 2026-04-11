@@ -1,5 +1,6 @@
 import { parseExportedPreset } from '@/app/halftone/_lib/exporters';
 import {
+  HALFTONE_FOOTPRINT_RUNTIME_SOURCE,
   getContainedImageRect,
   getImageFootprintScale,
   getMeshFootprintScale,
@@ -69,6 +70,58 @@ describe('halftone footprint helpers', () => {
         viewportWidth: 800,
       }),
     ).toBeCloseTo(0.5, 1);
+  });
+
+  it('keeps the exported runtime helpers aligned with the typed helpers', () => {
+    const runtime = new Function(
+      'THREE',
+      `${HALFTONE_FOOTPRINT_RUNTIME_SOURCE}
+return { getContainedImageRect, getImageFootprintScale, getMeshFootprintScale };`,
+    )(THREE) as {
+      getContainedImageRect: typeof getContainedImageRect;
+      getImageFootprintScale: typeof getImageFootprintScale;
+      getMeshFootprintScale: typeof getMeshFootprintScale;
+    };
+
+    const imageArgs = {
+      imageHeight: 1000,
+      imageWidth: 1600,
+      previewDistance: 6,
+      viewportHeight: 720,
+      viewportWidth: 1280,
+    };
+
+    expect(runtime.getContainedImageRect({ ...imageArgs, zoom: 1 })).toEqual(
+      getContainedImageRect({ ...imageArgs, zoom: 1 }),
+    );
+    expect(runtime.getImageFootprintScale(imageArgs)).toBeCloseTo(
+      getImageFootprintScale(imageArgs),
+      6,
+    );
+
+    const camera = new THREE.PerspectiveCamera(45, 1280 / 720, 0.1, 100);
+    const lookAtTarget = new THREE.Vector3(0, 0, 0);
+    camera.position.set(0, 0, 8);
+    camera.lookAt(lookAtTarget);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld(true);
+
+    const meshArgs = {
+      camera,
+      localBounds: new THREE.Box3(
+        new THREE.Vector3(-0.5, -0.5, -0.5),
+        new THREE.Vector3(0.5, 0.5, 0.5),
+      ),
+      lookAtTarget,
+      meshMatrixWorld: new THREE.Matrix4(),
+      viewportHeight: 720,
+      viewportWidth: 1280,
+    };
+
+    expect(runtime.getMeshFootprintScale(meshArgs)).toBeCloseTo(
+      getMeshFootprintScale(meshArgs),
+      6,
+    );
   });
 });
 

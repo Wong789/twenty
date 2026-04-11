@@ -134,43 +134,10 @@ const passThroughVertexShader = /* glsl */ `
   }
 `;
 
-const blurFragmentShader = /* glsl */ `
-  precision highp float;
-
-  uniform sampler2D tInput;
-  uniform vec2 dir;
-  uniform vec2 res;
-
-  varying vec2 vUv;
-
-  void main() {
-    vec4 sum = vec4(0.0);
-    vec2 px = dir / res;
-
-    float w[5];
-    w[0] = 0.227027;
-    w[1] = 0.1945946;
-    w[2] = 0.1216216;
-    w[3] = 0.054054;
-    w[4] = 0.016216;
-
-    sum += texture2D(tInput, vUv) * w[0];
-
-    for (int i = 1; i < 5; i++) {
-      float fi = float(i) * 3.0;
-      sum += texture2D(tInput, vUv + px * fi) * w[i];
-      sum += texture2D(tInput, vUv - px * fi) * w[i];
-    }
-
-    gl_FragColor = sum;
-  }
-`;
-
 const halftoneFragmentShader = /* glsl */ `
   precision highp float;
 
   uniform sampler2D tScene;
-  uniform sampler2D tGlow;
   uniform vec2 effectResolution;
   uniform vec2 logicalResolution;
   uniform float tile;
@@ -868,43 +835,14 @@ function HelpedHalftoneCanvas({
       getVirtualWidth(),
       getVirtualHeight(),
     );
-    const blurTargetA = createRenderTarget(
-      getVirtualWidth(),
-      getVirtualHeight(),
-    );
-    const blurTargetB = createRenderTarget(
-      getVirtualWidth(),
-      getVirtualHeight(),
-    );
     const fullScreenGeometry = new THREE.PlaneGeometry(2, 2);
     const orthographicCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
-    const blurHorizontalMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        tInput: { value: null },
-        dir: { value: new THREE.Vector2(1, 0) },
-        res: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
-      },
-      vertexShader: passThroughVertexShader,
-      fragmentShader: blurFragmentShader,
-    });
-
-    const blurVerticalMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        tInput: { value: null },
-        dir: { value: new THREE.Vector2(0, 1) },
-        res: { value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()) },
-      },
-      vertexShader: passThroughVertexShader,
-      fragmentShader: blurFragmentShader,
-    });
 
     const halftoneMaterial = new THREE.ShaderMaterial({
       fragmentShader: halftoneFragmentShader,
       transparent: true,
       uniforms: {
         tScene: { value: sceneTarget.texture },
-        tGlow: { value: blurTargetB.texture },
         effectResolution: {
           value: new THREE.Vector2(getVirtualWidth(), getVirtualHeight()),
         },
@@ -934,16 +872,6 @@ function HelpedHalftoneCanvas({
       vertexShader: passThroughVertexShader,
     });
 
-    const blurHorizontalScene = new THREE.Scene();
-    blurHorizontalScene.add(
-      new THREE.Mesh(fullScreenGeometry, blurHorizontalMaterial),
-    );
-
-    const blurVerticalScene = new THREE.Scene();
-    blurVerticalScene.add(
-      new THREE.Mesh(fullScreenGeometry, blurVerticalMaterial),
-    );
-
     const postScene = new THREE.Scene();
     postScene.add(new THREE.Mesh(fullScreenGeometry, halftoneMaterial));
 
@@ -953,8 +881,6 @@ function HelpedHalftoneCanvas({
       effectWidth: number,
       effectHeight: number,
     ) => {
-      blurHorizontalMaterial.uniforms.res.value.set(effectWidth, effectHeight);
-      blurVerticalMaterial.uniforms.res.value.set(effectWidth, effectHeight);
       halftoneMaterial.uniforms.effectResolution.value.set(
         effectWidth,
         effectHeight,
@@ -1008,8 +934,6 @@ function HelpedHalftoneCanvas({
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       sceneTarget.setSize(virtualWidth, virtualHeight);
-      blurTargetA.setSize(virtualWidth, virtualHeight);
-      blurTargetB.setSize(virtualWidth, virtualHeight);
       updateViewportUniforms(
         virtualWidth,
         virtualHeight,
@@ -1125,8 +1049,8 @@ function HelpedHalftoneCanvas({
     const renderFrame = () => {
       animationFrameId = window.requestAnimationFrame(renderFrame);
 
-      const delta = 1 / 60;
-      const elapsedTime = initialPose.timeElapsed + clock.getElapsedTime();
+      const delta = clock.getDelta();
+      const elapsedTime = initialPose.timeElapsed + clock.elapsedTime;
       halftoneMaterial.uniforms.time.value = elapsedTime;
 
       let baseRotationX = 0;
@@ -1366,22 +1290,6 @@ function HelpedHalftoneCanvas({
       renderer.setRenderTarget(sceneTarget);
       renderer.render(scene3d, camera);
 
-      blurHorizontalMaterial.uniforms.tInput.value = sceneTarget.texture;
-      renderer.setRenderTarget(blurTargetA);
-      renderer.render(blurHorizontalScene, orthographicCamera);
-
-      blurVerticalMaterial.uniforms.tInput.value = blurTargetA.texture;
-      renderer.setRenderTarget(blurTargetB);
-      renderer.render(blurVerticalScene, orthographicCamera);
-
-      blurHorizontalMaterial.uniforms.tInput.value = blurTargetB.texture;
-      renderer.setRenderTarget(blurTargetA);
-      renderer.render(blurHorizontalScene, orthographicCamera);
-
-      blurVerticalMaterial.uniforms.tInput.value = blurTargetA.texture;
-      renderer.setRenderTarget(blurTargetB);
-      renderer.render(blurVerticalScene, orthographicCamera);
-
       renderer.setRenderTarget(null);
       renderer.clear();
       renderer.render(postScene, orthographicCamera);
@@ -1399,14 +1307,10 @@ function HelpedHalftoneCanvas({
       window.removeEventListener('pointercancel', handlePointerUp);
       window.removeEventListener('pointermove', handleWindowPointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
-      blurHorizontalMaterial.dispose();
-      blurVerticalMaterial.dispose();
       halftoneMaterial.dispose();
       fullScreenGeometry.dispose();
       material.dispose();
       sceneTarget.dispose();
-      blurTargetA.dispose();
-      blurTargetB.dispose();
       environmentTexture.dispose();
       renderer.dispose();
 
@@ -1415,6 +1319,12 @@ function HelpedHalftoneCanvas({
       }
     };
   }, [geometry, initialPose, previewDistance, settings]);
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
 
   return <StyledVisualMount aria-hidden ref={mountReference} />;
 }
@@ -1438,7 +1348,6 @@ export function HelpedHalftoneModel({
 
   useEffect(() => {
     let cancelled = false;
-    let loadedGeometry: THREE.BufferGeometry | null = null;
 
     void loadGeometry(modelUrl, label)
       .then((nextGeometry) => {
@@ -1447,7 +1356,6 @@ export function HelpedHalftoneModel({
           return;
         }
 
-        loadedGeometry = nextGeometry;
         setGeometry(nextGeometry);
       })
       .catch((error) => {
@@ -1456,10 +1364,6 @@ export function HelpedHalftoneModel({
 
     return () => {
       cancelled = true;
-
-      if (loadedGeometry) {
-        loadedGeometry.dispose();
-      }
     };
   }, [label, modelUrl]);
 

@@ -1,6 +1,9 @@
 'use client';
 
-import { IconLayoutSidebarRightCollapse } from '@tabler/icons-react';
+import {
+  IconLayoutSidebarRightCollapse,
+  IconShare,
+} from '@tabler/icons-react';
 import { styled } from '@linaria/react';
 import type {
   HalftoneBackgroundSettings,
@@ -70,7 +73,13 @@ const TabsGroup = styled.div`
 
 const TABLER_STROKE = 1.7;
 
-const PanelToggleTabButton = styled.button<{ $collapsed: boolean }>`
+const PanelActions = styled.div`
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+`;
+
+const PanelActionButton = styled.button`
   align-items: center;
   background: transparent;
   border: none;
@@ -81,18 +90,11 @@ const PanelToggleTabButton = styled.button<{ $collapsed: boolean }>`
   font-family: inherit;
   height: 28px;
   justify-content: center;
-  margin-left: auto;
   padding: 0;
   transition:
     background-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.18s ease;
+    color 0.15s ease;
   width: 28px;
-
-  & > svg {
-    transform: ${(props) => (props.$collapsed ? 'scaleX(-1)' : 'none')};
-    transition: transform 0.18s ease;
-  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
@@ -102,6 +104,13 @@ const PanelToggleTabButton = styled.button<{ $collapsed: boolean }>`
   &:focus-visible {
     outline: 1px solid rgba(255, 255, 255, 0.35);
     outline-offset: 1px;
+  }
+`;
+
+const PanelToggleTabButton = styled(PanelActionButton)<{ $collapsed: boolean }>`
+  & > svg {
+    transform: ${(props) => (props.$collapsed ? 'scaleX(-1)' : 'none')};
+    transition: transform 0.18s ease;
   }
 `;
 
@@ -153,20 +162,30 @@ export function ControlsPanel({
             ))}
           </TabsGroup>
         ) : null}
-        <PanelToggleTabButton
-          $collapsed={!visible}
-          aria-expanded={visible}
-          aria-label={visible ? 'Hide right panel' : 'Show right panel'}
-          onClick={onToggleVisibility}
-          title={visible ? 'Hide right panel' : 'Show right panel'}
-          type="button"
-        >
-          <IconLayoutSidebarRightCollapse
-            aria-hidden
-            size={16}
-            stroke={TABLER_STROKE}
-          />
-        </PanelToggleTabButton>
+        <PanelActions>
+          <PanelActionButton
+            aria-label="Copy share link"
+            onClick={onCopyShareLink}
+            title="Copy share link"
+            type="button"
+          >
+            <IconShare aria-hidden size={16} stroke={TABLER_STROKE} />
+          </PanelActionButton>
+          <PanelToggleTabButton
+            $collapsed={!visible}
+            aria-expanded={visible}
+            aria-label={visible ? 'Hide right panel' : 'Show right panel'}
+            onClick={onToggleVisibility}
+            title={visible ? 'Hide right panel' : 'Show right panel'}
+            type="button"
+          >
+            <IconLayoutSidebarRightCollapse
+              aria-hidden
+              size={16}
+              stroke={TABLER_STROKE}
+            />
+          </PanelToggleTabButton>
+        </PanelActions>
       </TabsBar>
 
       {visible && activeTab === 'design' ? (
@@ -200,7 +219,6 @@ export function ControlsPanel({
           exportBackground={exportBackground}
           exportName={exportName}
           imageFileName={imageFileName}
-          onCopyShareLink={onCopyShareLink}
           onExportHalftoneImage={onExportHalftoneImage}
           onExportBackgroundChange={onExportBackgroundChange}
           onExportHtml={onExportHtml}

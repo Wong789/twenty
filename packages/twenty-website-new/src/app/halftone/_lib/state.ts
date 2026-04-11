@@ -230,6 +230,7 @@ export function isRoundedBandHalftoneSettings(
     typeof candidate.scale === 'number' &&
     typeof candidate.power === 'number' &&
     typeof candidate.width === 'number' &&
+    typeof candidate.imageContrast === 'number' &&
     typeof candidate.dashColor === 'string'
   );
 }
@@ -299,7 +300,7 @@ export const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
     dragMomentum: true,
     rotateAxis: 'y',
     rotatePreset: 'axis',
-    rotateSpeed: 1,
+    rotateSpeed: 0.2,
     rotatePingPong: false,
     floatAmplitude: 0.16,
     floatSpeed: 0.8,

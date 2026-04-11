@@ -317,6 +317,13 @@ type ViewportRect = {
   y: number;
 };
 
+type FootprintScaleScratch = {
+  corners: THREE.Vector3[];
+  currentOffset: THREE.Vector3;
+  referenceCamera: THREE.PerspectiveCamera;
+  referenceOffset: THREE.Vector3;
+};
+
 type DiamondInteractionState = {
   autoElapsed: number;
   dragging: boolean;
@@ -368,31 +375,42 @@ function getRectArea(rect: ViewportRect | null) {
   return Math.max(rect.width, 0) * Math.max(rect.height, 0);
 }
 
-function createBox3Corners(bounds: THREE.Box3) {
+function createFootprintScaleScratch(): FootprintScaleScratch {
+  return {
+    corners: Array.from({ length: 8 }, () => new THREE.Vector3()),
+    currentOffset: new THREE.Vector3(),
+    referenceCamera: new THREE.PerspectiveCamera(),
+    referenceOffset: new THREE.Vector3(),
+  };
+}
+
+function writeBox3Corners(bounds: THREE.Box3, corners: THREE.Vector3[]) {
   const { min, max } = bounds;
 
-  return [
-    new THREE.Vector3(min.x, min.y, min.z),
-    new THREE.Vector3(min.x, min.y, max.z),
-    new THREE.Vector3(min.x, max.y, min.z),
-    new THREE.Vector3(min.x, max.y, max.z),
-    new THREE.Vector3(max.x, min.y, min.z),
-    new THREE.Vector3(max.x, min.y, max.z),
-    new THREE.Vector3(max.x, max.y, min.z),
-    new THREE.Vector3(max.x, max.y, max.z),
-  ];
+  corners[0].set(min.x, min.y, min.z);
+  corners[1].set(min.x, min.y, max.z);
+  corners[2].set(min.x, max.y, min.z);
+  corners[3].set(min.x, max.y, max.z);
+  corners[4].set(max.x, min.y, min.z);
+  corners[5].set(max.x, min.y, max.z);
+  corners[6].set(max.x, max.y, min.z);
+  corners[7].set(max.x, max.y, max.z);
+
+  return corners;
 }
 
 function projectBox3ToViewport({
   camera,
   localBounds,
   meshMatrixWorld,
+  scratch,
   viewportHeight,
   viewportWidth,
 }: {
   camera: THREE.PerspectiveCamera;
   localBounds: THREE.Box3;
   meshMatrixWorld: THREE.Matrix4;
+  scratch: FootprintScaleScratch;
   viewportHeight: number;
   viewportWidth: number;
 }) {
@@ -410,7 +428,7 @@ function projectBox3ToViewport({
   let maxY = Number.NEGATIVE_INFINITY;
   let hasProjectedCorner = false;
 
-  for (const corner of createBox3Corners(localBounds)) {
+  for (const corner of writeBox3Corners(localBounds, scratch.corners)) {
     corner.applyMatrix4(meshMatrixWorld).project(camera);
 
     if (
@@ -470,6 +488,7 @@ function getObjectFootprintScale({
   localBounds,
   lookAtTarget,
   meshMatrixWorld,
+  scratch,
   viewportHeight,
   viewportWidth,
 }: {
@@ -477,6 +496,7 @@ function getObjectFootprintScale({
   localBounds: THREE.Box3;
   lookAtTarget: THREE.Vector3;
   meshMatrixWorld: THREE.Matrix4;
+  scratch: FootprintScaleScratch;
   viewportHeight: number;
   viewportWidth: number;
 }) {
@@ -484,16 +504,21 @@ function getObjectFootprintScale({
     camera,
     localBounds,
     meshMatrixWorld,
+    scratch,
     viewportHeight,
     viewportWidth,
   });
 
-  const referenceCamera = camera.clone();
-  const currentOffset = referenceCamera.position.clone().sub(lookAtTarget);
-  const referenceOffset =
-    currentOffset.lengthSq() > 0
-      ? currentOffset.setLength(REFERENCE_PREVIEW_DISTANCE)
-      : new THREE.Vector3(0, 0, REFERENCE_PREVIEW_DISTANCE);
+  const { currentOffset, referenceCamera, referenceOffset } = scratch;
+
+  referenceCamera.copy(camera);
+  currentOffset.copy(referenceCamera.position).sub(lookAtTarget);
+
+  if (currentOffset.lengthSq() > 0) {
+    referenceOffset.copy(currentOffset).setLength(REFERENCE_PREVIEW_DISTANCE);
+  } else {
+    referenceOffset.set(0, 0, REFERENCE_PREVIEW_DISTANCE);
+  }
 
   referenceCamera.position.copy(lookAtTarget).add(referenceOffset);
   referenceCamera.lookAt(lookAtTarget);
@@ -504,6 +529,7 @@ function getObjectFootprintScale({
     camera: referenceCamera,
     localBounds,
     meshMatrixWorld,
+    scratch,
     viewportHeight,
     viewportWidth,
   });
@@ -823,6 +849,7 @@ export function ModelHalftoneIllustration({
     };
 
     const interaction = createInteractionState(settings);
+    const footprintScratch = createFootprintScaleScratch();
     const lookAtTarget = new THREE.Vector3(0, 0, 0);
 
     const syncSize = () => {
@@ -958,8 +985,8 @@ export function ModelHalftoneIllustration({
 
       animationFrameId = window.requestAnimationFrame(renderFrame);
 
-      const delta = 1 / 60;
-      const elapsedTime = INITIAL_POSE.timeElapsed + clock.getElapsedTime();
+      const delta = clock.getDelta();
+      const elapsedTime = INITIAL_POSE.timeElapsed + clock.elapsedTime;
       halftoneMaterial.uniforms.time.value = elapsedTime;
       halftoneMaterial.uniforms.interactionUv.value.set(
         interaction.mouseX,
@@ -1105,6 +1132,7 @@ export function ModelHalftoneIllustration({
             localBounds: modelLocalBounds,
             lookAtTarget,
             meshMatrixWorld: modelRoot.matrixWorld,
+            scratch: footprintScratch,
             viewportHeight: getVirtualHeight(),
             viewportWidth: getVirtualWidth(),
           },
@@ -1161,7 +1189,10 @@ export function ModelHalftoneIllustration({
           settings.material,
         );
         nextModelRoot.updateMatrixWorld(true);
-        modelLocalBounds = new THREE.Box3().setFromObject(nextModelRoot);
+        const worldBounds = new THREE.Box3().setFromObject(nextModelRoot);
+        modelLocalBounds = worldBounds.applyMatrix4(
+          nextModelRoot.matrixWorld.clone().invert(),
+        );
         modelRoot = nextModelRoot;
         pivot.add(nextModelRoot);
       },

@@ -963,8 +963,8 @@ export function ModelHalftoneIllustration({
 
       animationFrameId = window.requestAnimationFrame(renderFrame);
 
-      const delta = 1 / 60;
-      const elapsedTime = INITIAL_POSE.timeElapsed + clock.getElapsedTime();
+      const delta = clock.getDelta();
+      const elapsedTime = INITIAL_POSE.timeElapsed + clock.elapsedTime;
       halftoneMaterial.uniforms.time.value = elapsedTime;
       halftoneMaterial.uniforms.interactionUv.value.set(
         interaction.mouseX,
@@ -1166,7 +1166,10 @@ export function ModelHalftoneIllustration({
           settings.material,
         );
         nextModelRoot.updateMatrixWorld(true);
-        modelLocalBounds = new THREE.Box3().setFromObject(nextModelRoot);
+        const worldBounds = new THREE.Box3().setFromObject(nextModelRoot);
+        modelLocalBounds = worldBounds.applyMatrix4(
+          nextModelRoot.matrixWorld.clone().invert(),
+        );
         modelRoot = nextModelRoot;
         pivot.add(nextModelRoot);
       },

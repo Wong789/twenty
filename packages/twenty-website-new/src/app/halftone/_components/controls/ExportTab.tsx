@@ -37,7 +37,6 @@ type ExportTabProps = {
   exportBackground: boolean;
   exportName: string;
   imageFileName: string | null;
-  onCopyShareLink: () => void;
   onExportHalftoneImage: (width: number, height: number) => void;
   onExportBackgroundChange: (value: boolean) => void;
   onExportHtml: () => void;
@@ -53,7 +52,6 @@ export function ExportTab({
   exportBackground,
   exportName,
   imageFileName,
-  onCopyShareLink,
   onExportHalftoneImage,
   onExportBackgroundChange,
   onExportHtml,
@@ -87,24 +85,6 @@ export function ExportTab({
   return (
     <TabContent>
       <Section $first>
-        <SectionTitle>
-          {sectionLabel(
-            'Share Link',
-            'Copies a URL that encodes the current design and animation settings so anyone can open the same look.',
-          )}
-        </SectionTitle>
-
-        <ExportButton onClick={onCopyShareLink} type="button">
-          Copy Link
-        </ExportButton>
-
-        <ExportNote>
-          The link captures every Design and Animation setting. Uploaded images
-          and models are not included — recipients see the default shape.
-        </ExportNote>
-      </Section>
-
-      <Section>
         <SectionTitle>
           {sectionLabel(
             'Export Name',

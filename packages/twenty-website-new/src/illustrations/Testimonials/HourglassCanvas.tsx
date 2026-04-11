@@ -593,9 +593,9 @@ export function HourglassCanvas({
     const renderFrame = () => {
       animationFrameId = window.requestAnimationFrame(renderFrame);
 
-      const delta = 1 / 60;
+      const delta = clock.getDelta();
       const elapsedTime =
-        (initialPose?.timeElapsed ?? 0) + clock.getElapsedTime();
+        (initialPose?.timeElapsed ?? 0) + clock.elapsedTime;
       halftoneMaterial.uniforms.time.value = elapsedTime;
 
       let baseRotationX = 0;
