@@ -6,6 +6,7 @@ export type UserLookup = {
     email: string;
     firstName?: string | null;
     lastName?: string | null;
+    createdAt: string;
   };
   workspaces: WorkspaceInfo[];
 };

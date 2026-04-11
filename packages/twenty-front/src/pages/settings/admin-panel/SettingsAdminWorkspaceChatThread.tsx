@@ -6,6 +6,7 @@ import { SettingsPath } from 'twenty-shared/types';
 import { getSettingsPath } from 'twenty-shared/utils';
 
 import { AgentMessageRole } from '@/ai/constants/AgentMessageRole';
+import { LazyMarkdownRenderer } from '@/ai/components/LazyMarkdownRenderer';
 import { AI_ADMIN_PATH } from '@/settings/admin-panel/ai/constants/AiAdminPath';
 import { GET_ADMIN_CHAT_THREAD_MESSAGES } from '@/settings/admin-panel/graphql/queries/getAdminChatThreadMessages';
 import { type AdminChatThread } from '@/settings/admin-panel/types/AdminChatThread';
@@ -60,7 +61,7 @@ const StyledMessageContent = styled.div<{ isUser?: boolean }>`
   overflow-wrap: break-word;
   padding: ${({ isUser }) =>
     isUser ? `0 ${themeCssVariables.spacing[2]}` : '0'};
-  white-space: pre-wrap;
+  white-space: ${({ isUser }) => (isUser ? 'pre-wrap' : 'normal')};
   width: ${({ isUser }) => (isUser ? 'fit-content' : '100%')};
 `;
 
@@ -177,7 +178,11 @@ export const SettingsAdminWorkspaceChatThread = () => {
                       <StyledRoleLabel>{message.role}</StyledRoleLabel>
                       {textParts && (
                         <StyledMessageContent isUser={isUser}>
-                          {textParts}
+                          {isUser ? (
+                            textParts
+                          ) : (
+                            <LazyMarkdownRenderer text={textParts} />
+                          )}
                         </StyledMessageContent>
                       )}
                       {toolParts.map((part, index) => (

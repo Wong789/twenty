@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import * as z from 'zod';
 
 import { type AdminChatMessageDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-chat-message.dto';
+import { type AdminPanelRecentUserDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-panel-recent-user.dto';
+import { type AdminPanelTopWorkspaceDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-panel-top-workspace.dto';
 import { type AdminWorkspaceChatThreadDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-workspace-chat-thread.dto';
 import { type ConfigVariableDTO } from 'src/engine/core-modules/admin-panel/dtos/config-variable.dto';
 import { type ConfigVariablesGroupDataDTO } from 'src/engine/core-modules/admin-panel/dtos/config-variables-group.dto';
@@ -93,11 +95,14 @@ export class AdminPanelService {
         email: targetUser.email,
         firstName: targetUser.firstName,
         lastName: targetUser.lastName,
+        createdAt: targetUser.createdAt,
       },
       workspaces: targetUser.userWorkspaces.map((userWorkspace) => ({
         id: userWorkspace.workspace.id,
         name: userWorkspace.workspace.displayName ?? '',
         totalUsers: userWorkspace.workspace.workspaceUsers.length,
+        activationStatus: userWorkspace.workspace.activationStatus,
+        createdAt: userWorkspace.workspace.createdAt,
         logo: isDefined(userWorkspace.workspace.logoFileId)
           ? this.fileUrlService.signFileByIdUrl({
               fileId: userWorkspace.workspace.logoFileId,
@@ -118,6 +123,7 @@ export class AdminPanelService {
             email: workspaceUser.user.email,
             firstName: workspaceUser.user.firstName,
             lastName: workspaceUser.user.lastName,
+            createdAt: workspaceUser.user.createdAt,
           })),
         featureFlags: allFeatureFlagKeys.map((key) => ({
           key,
@@ -161,6 +167,8 @@ export class AdminPanelService {
       id: workspace.id,
       name: workspace.displayName ?? '',
       totalUsers: workspaceUsers.length,
+      activationStatus: workspace.activationStatus,
+      createdAt: workspace.createdAt,
       logo: isDefined(workspace.logoFileId)
         ? this.fileUrlService.signFileByIdUrl({
             fileId: workspace.logoFileId,
@@ -181,11 +189,11 @@ export class AdminPanelService {
           email: wu.user.email,
           firstName: wu.user.firstName,
           lastName: wu.user.lastName,
+          createdAt: wu.user.createdAt,
         })),
       featureFlags: allFeatureFlagKeys.map((key) => ({
         key,
-        value:
-          featureFlags.find((flag) => flag.key === key)?.value ?? false,
+        value: featureFlags.find((flag) => flag.key === key)?.value ?? false,
       })) as FeatureFlagEntity[],
     };
 
@@ -197,9 +205,95 @@ export class AdminPanelService {
         email: firstUser?.email ?? '',
         firstName: firstUser?.firstName,
         lastName: firstUser?.lastName,
+        createdAt: firstUser?.createdAt ?? new Date(),
       },
       workspaces: [workspaceInfo],
     };
+  }
+
+  async getRecentUsers(
+    searchTerm?: string,
+  ): Promise<AdminPanelRecentUserDTO[]> {
+    let whereClause = 'u."deletedAt" IS NULL';
+    const params: unknown[] = [];
+
+    if (searchTerm && searchTerm.trim().length > 0) {
+      const term = `%${searchTerm.trim()}%`;
+
+      whereClause += ` AND (u.email ILIKE $1 OR CONCAT(u."firstName", ' ', u."lastName") ILIKE $1 OR u.id::text ILIKE $1)`;
+      params.push(term);
+    }
+
+    const results = await this.userRepository.manager.query(
+      `SELECT u.id, u.email, u."firstName", u."lastName", u."createdAt",
+              w."displayName" AS "workspaceName", w.id AS "workspaceId"
+       FROM core."user" u
+       LEFT JOIN core."userWorkspace" uw ON uw."userId" = u.id AND uw."deletedAt" IS NULL
+       LEFT JOIN core.workspace w ON w.id = uw."workspaceId" AND w."deletedAt" IS NULL
+       WHERE ${whereClause}
+       ORDER BY u."createdAt" DESC
+       LIMIT 10`,
+      params,
+    );
+
+    return results.map(
+      (row: {
+        id: string;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        createdAt: Date;
+        workspaceName: string | null;
+        workspaceId: string | null;
+      }) => ({
+        id: row.id,
+        email: row.email,
+        firstName: row.firstName || null,
+        lastName: row.lastName || null,
+        createdAt: row.createdAt,
+        workspaceName: row.workspaceName ?? null,
+        workspaceId: row.workspaceId ?? null,
+      }),
+    );
+  }
+
+  async getTopWorkspaces(
+    searchTerm?: string,
+  ): Promise<AdminPanelTopWorkspaceDTO[]> {
+    let whereClause = 'w."deletedAt" IS NULL';
+    const params: unknown[] = [];
+
+    if (searchTerm && searchTerm.trim().length > 0) {
+      const term = `%${searchTerm.trim()}%`;
+
+      whereClause += ` AND (w."displayName" ILIKE $1 OR w.subdomain ILIKE $1 OR w.id::text ILIKE $1)`;
+      params.push(term);
+    }
+
+    const results = await this.workspaceRepository.manager.query(
+      `SELECT w.id, w."displayName" AS name, w.subdomain, COUNT(uw.id)::int AS "totalUsers"
+       FROM core.workspace w
+       LEFT JOIN core."userWorkspace" uw ON uw."workspaceId" = w.id AND uw."deletedAt" IS NULL
+       WHERE ${whereClause}
+       GROUP BY w.id
+       ORDER BY "totalUsers" DESC
+       LIMIT 10`,
+      params,
+    );
+
+    return results.map(
+      (row: {
+        id: string;
+        name: string;
+        subdomain: string;
+        totalUsers: number;
+      }) => ({
+        id: row.id,
+        name: row.name ?? '',
+        subdomain: row.subdomain ?? '',
+        totalUsers: row.totalUsers,
+      }),
+    );
   }
 
   private async assertWorkspaceAllowsImpersonation(
@@ -215,9 +309,7 @@ export class AdminPanelService {
     }
 
     if (!workspace.allowImpersonation) {
-      throw new UserInputError(
-        'This workspace has not enabled support access',
-      );
+      throw new UserInputError('This workspace has not enabled support access');
     }
   }
 
@@ -246,7 +338,10 @@ export class AdminPanelService {
   async getChatThreadMessages(
     workspaceId: string,
     threadId: string,
-  ): Promise<{ thread: AdminWorkspaceChatThreadDTO; messages: AdminChatMessageDTO[] }> {
+  ): Promise<{
+    thread: AdminWorkspaceChatThreadDTO;
+    messages: AdminChatMessageDTO[];
+  }> {
     await this.assertWorkspaceAllowsImpersonation(workspaceId);
 
     const thread = await this.agentChatThreadRepository.findOne({
@@ -258,7 +353,7 @@ export class AdminPanelService {
     }
 
     const messages = await this.agentMessageRepository.find({
-      where: { threadId, workspaceId },
+      where: { threadId },
       relations: { parts: true },
       order: { createdAt: 'ASC' },
     });

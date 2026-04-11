@@ -8,6 +8,7 @@ export const WORKSPACE_LOOKUP_ADMIN_PANEL = gql`
         email
         firstName
         lastName
+        createdAt
       }
       workspaces {
         id
@@ -15,6 +16,8 @@ export const WORKSPACE_LOOKUP_ADMIN_PANEL = gql`
         allowImpersonation
         logo
         totalUsers
+        activationStatus
+        createdAt
         workspaceUrls {
           customUrl
           subdomainUrl

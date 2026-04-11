@@ -425,6 +425,14 @@ const SettingsAdminNewAiModel = lazy(() =>
   ),
 );
 
+const SettingsAdminUserDetail = lazy(() =>
+  import('~/pages/settings/admin-panel/SettingsAdminUserDetail').then(
+    (module) => ({
+      default: module.SettingsAdminUserDetail,
+    }),
+  ),
+);
+
 const SettingsAdminWorkspaceDetail = lazy(() =>
   import('~/pages/settings/admin-panel/SettingsAdminWorkspaceDetail').then(
     (module) => ({
@@ -434,11 +442,11 @@ const SettingsAdminWorkspaceDetail = lazy(() =>
 );
 
 const SettingsAdminWorkspaceChatThread = lazy(() =>
-  import(
-    '~/pages/settings/admin-panel/SettingsAdminWorkspaceChatThread'
-  ).then((module) => ({
-    default: module.SettingsAdminWorkspaceChatThread,
-  })),
+  import('~/pages/settings/admin-panel/SettingsAdminWorkspaceChatThread').then(
+    (module) => ({
+      default: module.SettingsAdminWorkspaceChatThread,
+    }),
+  ),
 );
 
 const SettingsUpdates = lazy(() =>
@@ -785,6 +793,10 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
           <Route
             path={SettingsPath.AdminPanelAiProviderDetail}
             element={<SettingsAdminAiProviderDetail />}
+          />
+          <Route
+            path={SettingsPath.AdminPanelUserDetail}
+            element={<SettingsAdminUserDetail />}
           />
           <Route
             path={SettingsPath.AdminPanelWorkspaceDetail}

@@ -11,6 +11,8 @@ import { AdminPanelHealthService } from 'src/engine/core-modules/admin-panel/adm
 import { AdminPanelQueueService } from 'src/engine/core-modules/admin-panel/admin-panel-queue.service';
 import { AdminPanelService } from 'src/engine/core-modules/admin-panel/admin-panel.service';
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
+import { AdminPanelRecentUserDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-panel-recent-user.dto';
+import { AdminPanelTopWorkspaceDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-panel-top-workspace.dto';
 import { AdminWorkspaceChatThreadDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-workspace-chat-thread.dto';
 import { AdminChatThreadMessagesDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-chat-thread-messages.dto';
 import { ApplicationRegistrationEntity } from 'src/engine/core-modules/application/application-registration/application-registration.entity';
@@ -98,6 +100,32 @@ export class AdminPanelResolver {
     @Args() userLookupInput: UserLookupInput,
   ): Promise<UserLookup> {
     return await this.adminService.userLookup(userLookupInput.userIdentifier);
+  }
+
+  @UseGuards(ServerLevelImpersonateGuard)
+  @Query(() => [AdminPanelRecentUserDTO])
+  async adminPanelRecentUsers(
+    @Args('searchTerm', {
+      type: () => String,
+      nullable: true,
+      defaultValue: '',
+    })
+    searchTerm: string,
+  ): Promise<AdminPanelRecentUserDTO[]> {
+    return this.adminService.getRecentUsers(searchTerm);
+  }
+
+  @UseGuards(ServerLevelImpersonateGuard)
+  @Query(() => [AdminPanelTopWorkspaceDTO])
+  async adminPanelTopWorkspaces(
+    @Args('searchTerm', {
+      type: () => String,
+      nullable: true,
+      defaultValue: '',
+    })
+    searchTerm: string,
+  ): Promise<AdminPanelTopWorkspaceDTO[]> {
+    return this.adminService.getTopWorkspaces(searchTerm);
   }
 
   @UseGuards(AdminPanelGuard)

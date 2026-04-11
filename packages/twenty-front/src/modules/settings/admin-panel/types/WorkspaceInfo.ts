@@ -6,6 +6,8 @@ export type WorkspaceInfo = {
   name: string;
   logo?: string | null;
   totalUsers: number;
+  activationStatus: string;
+  createdAt: string;
   workspaceUrls: WorkspaceUrls;
   users: {
     id: string;

@@ -1,21 +1,29 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useQuery } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { t } from '@lingui/core/macro';
 import { SettingsPath } from 'twenty-shared/types';
 import { getSettingsPath, isDefined } from 'twenty-shared/utils';
 
+import { currentUserState } from '@/auth/states/currentUserState';
+import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
+import { canManageFeatureFlagsState } from '@/client-config/states/canManageFeatureFlagsState';
 import { AI_ADMIN_PATH } from '@/settings/admin-panel/ai/constants/AiAdminPath';
 import { SettingsAdminWorkspaceContent } from '@/settings/admin-panel/components/SettingsAdminWorkspaceContent';
 import { GET_ADMIN_WORKSPACE_CHAT_THREADS } from '@/settings/admin-panel/graphql/queries/getAdminWorkspaceChatThreads';
 import { WORKSPACE_LOOKUP_ADMIN_PANEL } from '@/settings/admin-panel/graphql/queries/workspaceLookupAdminPanel';
+import { useFeatureFlagState } from '@/settings/admin-panel/hooks/useFeatureFlagState';
+import { useImpersonationAuth } from '@/settings/admin-panel/hooks/useImpersonationAuth';
+import { useImpersonationRedirect } from '@/settings/admin-panel/hooks/useImpersonationRedirect';
 import { userLookupResultState } from '@/settings/admin-panel/states/userLookupResultState';
 import { type AdminChatThread } from '@/settings/admin-panel/types/AdminChatThread';
 import { type UserLookup } from '@/settings/admin-panel/types/UserLookup';
 import { SettingsPageContainer } from '@/settings/components/SettingsPageContainer';
 import { SettingsSkeletonLoader } from '@/settings/components/SettingsSkeletonLoader';
+import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { Table } from '@/ui/layout/table/components/Table';
+import { TableBody } from '@/ui/layout/table/components/TableBody';
 import { TableCell } from '@/ui/layout/table/components/TableCell';
 import { TableHeader } from '@/ui/layout/table/components/TableHeader';
 import { TableRow } from '@/ui/layout/table/components/TableRow';
@@ -24,15 +32,30 @@ import { activeTabIdComponentState } from '@/ui/layout/tab-list/states/activeTab
 import { SubMenuTopBarContainer } from '@/ui/layout/page/components/SubMenuTopBarContainer';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
 import { useAtomComponentState } from '@/ui/utilities/state/jotai/hooks/useAtomComponentState';
-import { Card } from 'twenty-ui/layout';
-import { H2Title, IconMessage, IconSettings2 } from 'twenty-ui/display';
-import { Section } from 'twenty-ui/layout';
+import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import {
+  H2Title,
+  IconEyeShare,
+  IconFlag,
+  IconMessage,
+  IconSettings2,
+  IconUsers,
+} from 'twenty-ui/display';
+import { Button, Toggle } from 'twenty-ui/input';
+import { Card, Section } from 'twenty-ui/layout';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
+import {
+  type FeatureFlagKey,
+  ImpersonateDocument,
+  UpdateWorkspaceFeatureFlagDocument,
+} from '~/generated-metadata/graphql';
 
 const WORKSPACE_DETAIL_TABS_ID = 'settings-admin-workspace-detail-tabs';
 
 const WORKSPACE_DETAIL_TAB_IDS = {
   INFO: 'info',
+  MEMBERS: 'members',
+  FEATURE_FLAGS: 'feature-flags',
   CHATS: 'chats',
 };
 
@@ -45,7 +68,21 @@ export const SettingsAdminWorkspaceDetail = () => {
     WORKSPACE_DETAIL_TABS_ID,
   );
 
+  const currentUser = useAtomStateValue(currentUserState);
+  const currentWorkspace = useAtomStateValue(currentWorkspaceState);
+  const canManageFeatureFlags = useAtomStateValue(canManageFeatureFlagsState);
+  const { enqueueErrorSnackBar } = useSnackBar();
+  const [updateFeatureFlag] = useMutation(UpdateWorkspaceFeatureFlagDocument);
+  const { updateFeatureFlagState } = useFeatureFlagState();
+  const { executeImpersonationAuth } = useImpersonationAuth();
+  const { executeImpersonationRedirect } = useImpersonationRedirect();
+  const [impersonate] = useMutation(ImpersonateDocument);
+  const [impersonatingUserId, setImpersonatingUserId] = useState<string | null>(
+    null,
+  );
+
   const [, setUserLookupResult] = useAtomState(userLookupResultState);
+  const userLookupResult = useAtomStateValue(userLookupResultState);
 
   const { data: workspaceData, loading: isLoadingWorkspace } = useQuery<{
     workspaceLookupAdminPanel: UserLookup;
@@ -59,8 +96,7 @@ export const SettingsAdminWorkspaceDetail = () => {
     },
   });
 
-  const workspace =
-    workspaceData?.workspaceLookupAdminPanel?.workspaces?.[0];
+  const workspace = workspaceData?.workspaceLookupAdminPanel?.workspaces?.[0];
 
   const effectiveTabId = activeTabId || WORKSPACE_DETAIL_TAB_IDS.INFO;
 
@@ -76,6 +112,68 @@ export const SettingsAdminWorkspaceDetail = () => {
 
   const threads = threadsData?.getAdminWorkspaceChatThreads ?? [];
 
+  const handleImpersonate = async (userId: string) => {
+    if (!workspaceId) return;
+
+    setImpersonatingUserId(userId);
+
+    await impersonate({
+      variables: { userId, workspaceId },
+      onCompleted: async (data) => {
+        const { loginToken, workspace: impersonatedWorkspace } =
+          data.impersonate;
+        const isCurrentWorkspace =
+          impersonatedWorkspace.id === currentWorkspace?.id;
+
+        if (isCurrentWorkspace) {
+          await executeImpersonationAuth(loginToken.token);
+          return;
+        }
+
+        return executeImpersonationRedirect(
+          impersonatedWorkspace.workspaceUrls,
+          loginToken.token,
+          '_blank',
+        );
+      },
+      onError: (error) => {
+        enqueueErrorSnackBar({
+          message: `Failed to impersonate user. ${error.message}`,
+        });
+      },
+    }).finally(() => {
+      setImpersonatingUserId(null);
+    });
+  };
+
+  const handleFeatureFlagUpdate = async (
+    featureFlag: FeatureFlagKey,
+    value: boolean,
+  ) => {
+    if (!workspaceId) return;
+
+    const previousValue = userLookupResult?.workspaces
+      .find((ws) => ws.id === workspaceId)
+      ?.featureFlags.find((flag) => flag.key === featureFlag)?.value;
+
+    updateFeatureFlagState(workspaceId, featureFlag, value);
+    await updateFeatureFlag({
+      variables: {
+        workspaceId,
+        featureFlag,
+        value,
+      },
+      onError: (error) => {
+        if (isDefined(previousValue)) {
+          updateFeatureFlagState(workspaceId, featureFlag, previousValue);
+        }
+        enqueueErrorSnackBar({
+          message: `Failed to update feature flag. ${error.message}`,
+        });
+      },
+    });
+  };
+
   const tabs = useMemo(() => {
     const result = [
       {
@@ -84,6 +182,22 @@ export const SettingsAdminWorkspaceDetail = () => {
         Icon: IconSettings2,
       },
     ];
+
+    if (currentUser?.canImpersonate) {
+      result.push({
+        id: WORKSPACE_DETAIL_TAB_IDS.MEMBERS,
+        title: t`Members`,
+        Icon: IconUsers,
+      });
+    }
+
+    if (canManageFeatureFlags) {
+      result.push({
+        id: WORKSPACE_DETAIL_TAB_IDS.FEATURE_FLAGS,
+        title: t`Feature Flags`,
+        Icon: IconFlag,
+      });
+    }
 
     if (workspace?.allowImpersonation) {
       result.push({
@@ -94,7 +208,11 @@ export const SettingsAdminWorkspaceDetail = () => {
     }
 
     return result;
-  }, [workspace?.allowImpersonation]);
+  }, [
+    workspace?.allowImpersonation,
+    canManageFeatureFlags,
+    currentUser?.canImpersonate,
+  ]);
 
   const workspaceName = workspace?.name || workspaceId || '';
 
@@ -132,6 +250,98 @@ export const SettingsAdminWorkspaceDetail = () => {
         {effectiveTabId === WORKSPACE_DETAIL_TAB_IDS.INFO && workspace && (
           <SettingsAdminWorkspaceContent activeWorkspace={workspace} />
         )}
+
+        {effectiveTabId === WORKSPACE_DETAIL_TAB_IDS.MEMBERS && workspace && (
+          <Section>
+            <H2Title title={t`Members`} description={t`Workspace members`} />
+            <Table>
+              <TableBody>
+                <TableRow gridTemplateColumns="1fr 2fr 100px">
+                  <TableHeader>{t`Name`}</TableHeader>
+                  <TableHeader>{t`Email`}</TableHeader>
+                  <TableHeader align="right">{t`Actions`}</TableHeader>
+                </TableRow>
+                {workspace.users?.map((user) => {
+                  const userId = user.id;
+
+                  if (!isDefined(userId)) return null;
+
+                  return (
+                    <TableRow
+                      key={userId}
+                      gridTemplateColumns="1fr 2fr 100px"
+                      to={getSettingsPath(SettingsPath.AdminPanelUserDetail, {
+                        userId,
+                      })}
+                    >
+                      <TableCell color={themeCssVariables.font.color.primary}>
+                        {`${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+                          '\u2014'}
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell align="right">
+                        {workspace.allowImpersonation && (
+                          <Button
+                            Icon={IconEyeShare}
+                            variant="secondary"
+                            size="small"
+                            title={t`Impersonate`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleImpersonate(userId);
+                            }}
+                            disabled={impersonatingUserId === userId}
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Section>
+        )}
+
+        {effectiveTabId === WORKSPACE_DETAIL_TAB_IDS.FEATURE_FLAGS &&
+          workspace && (
+            <Section>
+              <H2Title
+                title={t`Feature Flags`}
+                description={t`Manage feature flags for this workspace`}
+              />
+              <Table>
+                <TableBody>
+                  <TableRow
+                    gridAutoColumns="1fr 100px"
+                    mobileGridAutoColumns="1fr 80px"
+                  >
+                    <TableHeader>{t`Feature Flag`}</TableHeader>
+                    <TableHeader align="right">{t`Status`}</TableHeader>
+                  </TableRow>
+                  {workspace.featureFlags?.map((flag) => (
+                    <TableRow
+                      gridAutoColumns="1fr 100px"
+                      mobileGridAutoColumns="1fr 80px"
+                      key={flag.key}
+                    >
+                      <TableCell>{flag.key}</TableCell>
+                      <TableCell align="right">
+                        {isDefined(flag.key) && (
+                          <Toggle
+                            value={flag.value}
+                            onChange={(newValue) =>
+                              handleFeatureFlagUpdate(flag.key!, newValue)
+                            }
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Section>
+          )}
 
         {effectiveTabId === WORKSPACE_DETAIL_TAB_IDS.CHATS && (
           <Section>
