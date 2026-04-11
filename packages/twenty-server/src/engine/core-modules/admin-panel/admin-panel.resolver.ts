@@ -11,6 +11,8 @@ import { AdminPanelHealthService } from 'src/engine/core-modules/admin-panel/adm
 import { AdminPanelQueueService } from 'src/engine/core-modules/admin-panel/admin-panel-queue.service';
 import { AdminPanelService } from 'src/engine/core-modules/admin-panel/admin-panel.service';
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
+import { AdminWorkspaceChatThreadDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-workspace-chat-thread.dto';
+import { AdminChatThreadMessagesDTO } from 'src/engine/core-modules/admin-panel/dtos/admin-chat-thread-messages.dto';
 import { ApplicationRegistrationEntity } from 'src/engine/core-modules/application/application-registration/application-registration.entity';
 import { ApplicationRegistrationService } from 'src/engine/core-modules/application/application-registration/application-registration.service';
 import { AdminAIModelsDTO } from 'src/engine/core-modules/client-config/client-config.entity';
@@ -613,5 +615,30 @@ export class AdminPanelResolver {
     await this.maintenanceModeService.clearMaintenanceMode();
 
     return true;
+  }
+
+  @UseGuards(AdminPanelGuard)
+  @Query(() => UserLookup)
+  async workspaceLookupAdminPanel(
+    @Args('workspaceId', { type: () => String }) workspaceId: string,
+  ): Promise<UserLookup> {
+    return this.adminService.workspaceLookup(workspaceId);
+  }
+
+  @UseGuards(AdminPanelGuard)
+  @Query(() => [AdminWorkspaceChatThreadDTO])
+  async getAdminWorkspaceChatThreads(
+    @Args('workspaceId', { type: () => String }) workspaceId: string,
+  ): Promise<AdminWorkspaceChatThreadDTO[]> {
+    return this.adminService.getWorkspaceChatThreads(workspaceId);
+  }
+
+  @UseGuards(AdminPanelGuard)
+  @Query(() => AdminChatThreadMessagesDTO)
+  async getAdminChatThreadMessages(
+    @Args('workspaceId', { type: () => String }) workspaceId: string,
+    @Args('threadId', { type: () => String }) threadId: string,
+  ): Promise<AdminChatThreadMessagesDTO> {
+    return this.adminService.getChatThreadMessages(workspaceId, threadId);
   }
 }

@@ -24,15 +24,26 @@ import { RedisClientModule } from 'src/engine/core-modules/redis-client/redis-cl
 import { SecureHttpClientModule } from 'src/engine/core-modules/secure-http-client/secure-http-client.module';
 import { TelemetryModule } from 'src/engine/core-modules/telemetry/telemetry.module';
 import { UsageModule } from 'src/engine/core-modules/usage/usage.module';
+import { FeatureFlagEntity } from 'src/engine/core-modules/feature-flag/feature-flag.entity';
 import { UserEntity } from 'src/engine/core-modules/user/user.entity';
 import { UserVarsModule } from 'src/engine/core-modules/user/user-vars/user-vars.module';
+import { UserWorkspaceEntity } from 'src/engine/core-modules/user-workspace/user-workspace.entity';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
+import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
+import { AgentMessageEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 import { KeyValuePairModule } from 'src/engine/core-modules/key-value-pair/key-value-pair.module';
 import { PermissionsModule } from 'src/engine/metadata-modules/permissions/permissions.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, WorkspaceEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      WorkspaceEntity,
+      UserWorkspaceEntity,
+      FeatureFlagEntity,
+      AgentChatThreadEntity,
+      AgentMessageEntity,
+    ]),
     AuthModule,
     FileModule,
     WorkspaceDomainsModule,
