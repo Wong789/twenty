@@ -109,7 +109,8 @@ export class ApplicationApi {
         universalIdentifier: string;
         oAuthClientId: string;
       };
-      clientSecret: string;
+      accessToken: string;
+      refreshToken: string;
     }>
   > {
     try {
@@ -121,7 +122,8 @@ export class ApplicationApi {
               universalIdentifier
               oAuthClientId
             }
-            clientSecret
+            accessToken
+            refreshToken
           }
         }
       `;
@@ -150,6 +152,51 @@ export class ApplicationApi {
       return {
         success: true,
         data: response.data.data.createApplicationRegistration,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+  }
+
+  async rotateApplicationRegistrationClientSecret(
+    id: string,
+  ): Promise<ApiResponse<{ clientSecret: string }>> {
+    try {
+      const mutation = `
+        mutation RotateApplicationRegistrationClientSecret($id: String!) {
+          rotateApplicationRegistrationClientSecret(id: $id) {
+            clientSecret
+          }
+        }
+      `;
+
+      const response = await this.client.post(
+        '/metadata',
+        {
+          query: mutation,
+          variables: { id },
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+        },
+      );
+
+      if (response.data.errors) {
+        return {
+          success: false,
+          error: response.data.errors[0],
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data.data.rotateApplicationRegistrationClientSecret,
       };
     } catch (error) {
       return {

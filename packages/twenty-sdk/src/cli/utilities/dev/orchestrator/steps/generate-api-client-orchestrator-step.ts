@@ -1,3 +1,4 @@
+import { ensureValidAppAccessTokenOrRefresh } from '@/cli/utilities/auth/resolve-app-access-token';
 import { type ClientService } from '@/cli/utilities/client/client-service';
 import { type ConfigService } from '@/cli/utilities/config/config-service';
 import { type OrchestratorState } from '@/cli/utilities/dev/orchestrator/dev-mode-orchestrator-state';
@@ -32,11 +33,13 @@ export class GenerateApiClientOrchestratorStep {
     this.notify();
 
     try {
-      const config = await this.configService.getConfig();
+      const appAccessToken = await ensureValidAppAccessTokenOrRefresh(
+        this.configService,
+      );
 
       await this.clientService.generateCoreClient({
         appPath: input.appPath,
-        authToken: config.accessToken,
+        appAccessToken,
       });
 
       step.status = 'done';
