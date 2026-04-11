@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { useMutation, useQuery } from '@apollo/client/react';
 import { t } from '@lingui/core/macro';
@@ -373,17 +373,13 @@ export const SettingsAdminWorkspaceDetail = () => {
                   <TableRow
                     key={thread.id}
                     gridTemplateColumns="1fr 120px 120px"
-                    onClick={() =>
-                      navigate(
-                        getSettingsPath(
-                          SettingsPath.AdminPanelWorkspaceChatThread,
-                          {
-                            workspaceId: workspaceId ?? '',
-                            threadId: thread.id,
-                          },
-                        ),
-                      )
-                    }
+                    to={getSettingsPath(
+                      SettingsPath.AdminPanelWorkspaceChatThread,
+                      {
+                        workspaceId: workspaceId ?? '',
+                        threadId: thread.id,
+                      },
+                    )}
                   >
                     <TableCell color={themeCssVariables.font.color.primary}>
                       {thread.title || t`Untitled`}

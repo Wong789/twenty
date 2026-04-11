@@ -5,10 +5,15 @@ import { AdminPanelService } from 'src/engine/core-modules/admin-panel/admin-pan
 import { AuditService } from 'src/engine/core-modules/audit/services/audit.service';
 import { LoginTokenService } from 'src/engine/core-modules/auth/token/services/login-token.service';
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
+import { FeatureFlagEntity } from 'src/engine/core-modules/feature-flag/feature-flag.entity';
 import { FileUrlService } from 'src/engine/core-modules/file/file-url/file-url.service';
 import { SecureHttpClientService } from 'src/engine/core-modules/secure-http-client/secure-http-client.service';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { UserEntity } from 'src/engine/core-modules/user/user.entity';
+import { UserWorkspaceEntity } from 'src/engine/core-modules/user-workspace/user-workspace.entity';
+import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
+import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
+import { AgentMessageEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message.entity';
 
 const UserFindOneMock = jest.fn();
 const LoginTokenServiceGenerateLoginTokenMock = jest.fn();
@@ -52,6 +57,26 @@ describe('AdminPanelService', () => {
           useValue: {
             findOne: UserFindOneMock,
           },
+        },
+        {
+          provide: getRepositoryToken(WorkspaceEntity),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(UserWorkspaceEntity),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(FeatureFlagEntity),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(AgentChatThreadEntity),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(AgentMessageEntity),
+          useValue: {},
         },
         {
           provide: LoginTokenService,

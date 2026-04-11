@@ -147,8 +147,7 @@ export class AgentChatService {
 
     const insertResult = await this.messageRepository.insert(messageValues);
 
-    const savedMessageId = (id ??
-      insertResult.identifiers[0].id) as string;
+    const savedMessageId = (id ?? insertResult.identifiers[0].id) as string;
 
     if (uiMessage.parts && uiMessage.parts.length > 0) {
       const dbParts = mapUIMessagePartsToDBParts(
@@ -220,8 +219,7 @@ export class AgentChatService {
 
     const insertResult = await this.messageRepository.insert(messageValues);
 
-    const savedMessageId = (id ??
-      insertResult.identifiers[0].id) as string;
+    const savedMessageId = (id ?? insertResult.identifiers[0].id) as string;
 
     const files =
       fileIds && fileIds.length > 0
