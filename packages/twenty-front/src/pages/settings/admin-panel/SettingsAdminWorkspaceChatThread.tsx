@@ -132,10 +132,7 @@ export const SettingsAdminWorkspaceChatThread = () => {
     >
       <SettingsPageContainer>
         <Section>
-          <H2Title
-            title={threadTitle}
-            description={t`Chat conversation`}
-          />
+          <H2Title title={threadTitle} description={t`Chat conversation`} />
 
           {messages.length === 0 ? (
             <Card rounded>
@@ -151,16 +148,13 @@ export const SettingsAdminWorkspaceChatThread = () => {
           ) : (
             <StyledMessagesContainer>
               {messages
-                .filter(
-                  (message) => message.role !== AgentMessageRole.SYSTEM,
-                )
+                .filter((message) => message.role !== AgentMessageRole.SYSTEM)
                 .map((message) => {
                   const isUser = message.role === AgentMessageRole.USER;
                   const textParts = message.parts
                     .filter(
                       (part) =>
-                        part.type === 'text' &&
-                        part.textContent !== null,
+                        part.type === 'text' && part.textContent !== null,
                     )
                     .map((part) => part.textContent)
                     .join('\n');

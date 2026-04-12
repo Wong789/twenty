@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { useMutation, useQuery } from '@apollo/client/react';
 import { t } from '@lingui/core/macro';
@@ -54,7 +53,6 @@ type UsageBreakdownItem = {
 };
 
 export const SettingsAdminAI = () => {
-  const navigate = useNavigate();
   const { enqueueErrorSnackBar } = useSnackBar();
   const { refetch: refetchClientConfig } = useClientConfig();
   const { formatUsageValue } = useUsageValueFormatter();
@@ -323,14 +321,9 @@ export const SettingsAdminAI = () => {
                 <TableRow
                   key={item.key}
                   gridTemplateColumns={USAGE_TABLE_GRID_TEMPLATE_COLUMNS}
-                  onClick={() =>
-                    navigate(
-                      getSettingsPath(
-                        SettingsPath.AdminPanelWorkspaceDetail,
-                        { workspaceId: item.key },
-                      ),
-                    )
-                  }
+                  to={getSettingsPath(SettingsPath.AdminPanelWorkspaceDetail, {
+                    workspaceId: item.key,
+                  })}
                 >
                   <TableCell color={themeCssVariables.font.color.primary}>
                     {item.label ?? item.key}

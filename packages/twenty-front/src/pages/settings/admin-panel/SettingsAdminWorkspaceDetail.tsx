@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -19,6 +19,7 @@ import { useImpersonationRedirect } from '@/settings/admin-panel/hooks/useImpers
 import { userLookupResultState } from '@/settings/admin-panel/states/userLookupResultState';
 import { type AdminChatThread } from '@/settings/admin-panel/types/AdminChatThread';
 import { type UserLookup } from '@/settings/admin-panel/types/UserLookup';
+import { type WorkspaceInfo } from '@/settings/admin-panel/types/WorkspaceInfo';
 import { SettingsPageContainer } from '@/settings/components/SettingsPageContainer';
 import { SettingsSkeletonLoader } from '@/settings/components/SettingsSkeletonLoader';
 import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
@@ -61,7 +62,6 @@ const WORKSPACE_DETAIL_TAB_IDS = {
 
 export const SettingsAdminWorkspaceDetail = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
-  const navigate = useNavigate();
 
   const [activeTabId] = useAtomComponentState(
     activeTabIdComponentState,
@@ -89,14 +89,16 @@ export const SettingsAdminWorkspaceDetail = () => {
   }>(WORKSPACE_LOOKUP_ADMIN_PANEL, {
     variables: { workspaceId },
     skip: !workspaceId,
-    onCompleted: (data) => {
-      if (isDefined(data?.workspaceLookupAdminPanel)) {
-        setUserLookupResult(data.workspaceLookupAdminPanel);
-      }
-    },
   });
 
-  const workspace = workspaceData?.workspaceLookupAdminPanel?.workspaces?.[0];
+  useEffect(() => {
+    if (isDefined(workspaceData?.workspaceLookupAdminPanel)) {
+      setUserLookupResult(workspaceData.workspaceLookupAdminPanel);
+    }
+  }, [workspaceData, setUserLookupResult]);
+
+  const workspace = workspaceData?.workspaceLookupAdminPanel
+    ?.workspaces?.[0] as WorkspaceInfo | undefined;
 
   const effectiveTabId = activeTabId || WORKSPACE_DETAIL_TAB_IDS.INFO;
 

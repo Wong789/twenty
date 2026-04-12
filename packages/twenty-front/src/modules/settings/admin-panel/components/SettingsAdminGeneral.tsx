@@ -111,7 +111,7 @@ export const SettingsAdminGeneral = () => {
                   <TableRow gridTemplateColumns="1fr 2fr 1fr">
                     <TableHeader>{t`Name`}</TableHeader>
                     <TableHeader>{t`Email`}</TableHeader>
-                    <TableHeader>{t`Workspace`}</TableHeader>
+                    <TableHeader align="right">{t`Workspace`}</TableHeader>
                   </TableRow>
                   {recentUsers.map((user) => (
                     <TableRow
@@ -126,7 +126,9 @@ export const SettingsAdminGeneral = () => {
                           '\u2014'}
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.workspaceName || '\u2014'}</TableCell>
+                      <TableCell align="right">
+                        {user.workspaceName || '\u2014'}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
