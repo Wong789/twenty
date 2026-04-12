@@ -62,7 +62,15 @@ export const useImpersonationSession = () => {
       return;
     }
 
-    const session: StoredImpersonationSession = JSON.parse(raw);
+    let session: StoredImpersonationSession;
+
+    try {
+      session = JSON.parse(raw);
+    } catch {
+      sessionStorage.removeItem(IMPERSONATION_SESSION_KEY);
+      await signOut();
+      return;
+    }
 
     sessionStorage.removeItem(IMPERSONATION_SESSION_KEY);
 
