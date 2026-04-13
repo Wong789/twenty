@@ -1,7 +1,6 @@
 import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutPersistedComponentState } from '@/page-layout/states/pageLayoutPersistedComponentState';
-import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { getWidgetConfigurationViewId } from '@/page-layout/utils/getWidgetConfigurationViewId';
 import { usePerformViewAPIPersist } from '@/views/hooks/internal/usePerformViewAPIPersist';
 import { useStore } from 'jotai';
@@ -37,7 +36,7 @@ export const useCreatePendingFieldsWidgetViews = () => {
       const newFieldsWidgets = draft.tabs
         .flatMap((tab) => tab.widgets)
         .filter(
-          (widget): widget is PageLayoutWidget =>
+          (widget) =>
             widget.type === WidgetType.FIELDS &&
             !persistedWidgetIds.has(widget.id),
         );

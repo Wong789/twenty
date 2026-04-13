@@ -49,6 +49,8 @@ export const useCopyFieldsWidgetDraftState = (
       );
       const editorModeDraft = store.get(fieldsWidgetEditorModeDraftState);
 
+      let hasCopiedData = false;
+
       if (sourceWidgetId in groupsDraft) {
         const sourceGroups = groupsDraft[sourceWidgetId];
         const clonedGroups = sourceGroups.map((group) => ({
@@ -63,6 +65,7 @@ export const useCopyFieldsWidgetDraftState = (
           ...prev,
           [targetWidgetId]: clonedGroups,
         }));
+        hasCopiedData = true;
       }
 
       if (sourceWidgetId in ungroupedFieldsDraft) {
@@ -75,6 +78,7 @@ export const useCopyFieldsWidgetDraftState = (
           ...prev,
           [targetWidgetId]: clonedUngrouped,
         }));
+        hasCopiedData = true;
       }
 
       if (sourceWidgetId in editorModeDraft) {
@@ -82,12 +86,15 @@ export const useCopyFieldsWidgetDraftState = (
           ...prev,
           [targetWidgetId]: editorModeDraft[sourceWidgetId],
         }));
+        hasCopiedData = true;
       }
 
-      store.set(hasInitializedFieldsWidgetGroupsDraftState, (prev) => ({
-        ...prev,
-        [targetWidgetId]: true,
-      }));
+      if (hasCopiedData) {
+        store.set(hasInitializedFieldsWidgetGroupsDraftState, (prev) => ({
+          ...prev,
+          [targetWidgetId]: true,
+        }));
+      }
     },
     [
       fieldsWidgetEditorModeDraftState,

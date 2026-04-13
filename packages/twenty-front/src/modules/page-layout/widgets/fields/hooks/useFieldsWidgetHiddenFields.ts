@@ -4,6 +4,7 @@ import {
   type FieldsWidgetGroupField,
 } from '@/page-layout/widgets/fields/types/FieldsWidgetGroup';
 import { getHiddenFieldsFromGroups } from '@/page-layout/widgets/fields/utils/getHiddenFieldsFromGroups';
+import { mapViewFieldsToFieldsWidgetGroupFields } from '@/page-layout/widgets/fields/utils/mapViewFieldsToFieldsWidgetGroupFields';
 import { useViewById } from '@/views/hooks/useViewById';
 import { useMemo } from 'react';
 import { isDefined, isNonEmptyArray } from 'twenty-shared/utils';
@@ -61,28 +62,10 @@ export const useFieldsWidgetHiddenFields = ({
     }
 
     if (isDefined(view) && view.viewFields.length > 0) {
-      let globalIndex = 0;
-
-      return [...view.viewFields]
-        .sort((a, b) => a.position - b.position)
-        .filter((viewField) => !viewField.isVisible)
-        .map((viewField) => {
-          const fieldMetadataItem = objectMetadataItem.fields.find(
-            (f) => f.id === viewField.fieldMetadataId,
-          );
-
-          if (!isDefined(fieldMetadataItem)) {
-            return null;
-          }
-
-          return {
-            fieldMetadataItem,
-            position: viewField.position,
-            isVisible: false,
-            globalIndex: globalIndex++,
-          };
-        })
-        .filter(isDefined);
+      return mapViewFieldsToFieldsWidgetGroupFields({
+        viewFields: view.viewFields,
+        objectMetadataFields: objectMetadataItem.fields,
+      }).filter((field) => !field.isVisible);
     }
 
     return [];

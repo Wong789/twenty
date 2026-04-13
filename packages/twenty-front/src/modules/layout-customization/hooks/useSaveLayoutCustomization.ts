@@ -110,13 +110,10 @@ export const useSaveLayoutCustomization = () => {
         await createPendingFieldsWidgetViews(pageLayoutId);
 
         if (isPageLayoutStructureDirty) {
-          const updateInput = convertPageLayoutDraftToUpdateInput(
-            draft,
-            {
-              shouldFilterDynamicRelationWidgets:
-                !isRecordPageLayoutEditingEnabled,
-            },
-          );
+          const updateInput = convertPageLayoutDraftToUpdateInput(draft, {
+            shouldFilterDynamicRelationWidgets:
+              !isRecordPageLayoutEditingEnabled,
+          });
           const result = await updatePageLayoutWithTabsAndWidgets(
             pageLayoutId,
             updateInput,

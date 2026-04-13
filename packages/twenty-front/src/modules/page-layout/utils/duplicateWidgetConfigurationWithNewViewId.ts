@@ -5,10 +5,7 @@ import { WidgetConfigurationType } from '~/generated-metadata/graphql';
 export const duplicateWidgetConfigurationWithNewViewId = (
   configuration: PageLayoutWidget['configuration'],
 ): PageLayoutWidget['configuration'] => {
-  if (
-    configuration.configurationType === WidgetConfigurationType.FIELDS &&
-    'viewId' in configuration
-  ) {
+  if (configuration.configurationType === WidgetConfigurationType.FIELDS) {
     return {
       ...configuration,
       viewId: uuidv4(),

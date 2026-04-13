@@ -5,7 +5,7 @@ import {
   type FieldsWidgetGroup,
   type FieldsWidgetGroupField,
 } from '@/page-layout/widgets/fields/types/FieldsWidgetGroup';
-import { buildDefaultFieldsWidgetGroups } from '@/page-layout/widgets/fields/utils/buildDefaultFieldsWidgetGroups';
+import { mapViewFieldsToFieldsWidgetGroupFields } from '@/page-layout/widgets/fields/utils/mapViewFieldsToFieldsWidgetGroupFields';
 import { useViewById } from '@/views/hooks/useViewById';
 import { useMemo } from 'react';
 import {
@@ -106,7 +106,7 @@ export const useFieldsWidgetEditorGroupsData = ({
         const fields: FieldsWidgetGroupField[] = groupFields
           .map((viewField) => {
             const fieldMetadataItem = objectMetadataItem.fields.find(
-              (f) => f.id === viewField.fieldMetadataId,
+              (field) => field.id === viewField.fieldMetadataId,
             );
 
             if (!isDefined(fieldMetadataItem)) {
@@ -137,7 +137,7 @@ export const useFieldsWidgetEditorGroupsData = ({
       const lastGroup = groups[groups.length - 1];
       const lastFieldPosition =
         lastGroup.fields.length > 0
-          ? Math.max(...lastGroup.fields.map((f) => f.position)) + 1
+          ? Math.max(...lastGroup.fields.map((field) => field.position)) + 1
           : 0;
 
       const missingFields = buildMissingFields({
@@ -154,38 +154,23 @@ export const useFieldsWidgetEditorGroupsData = ({
     }
 
     if (isDefined(view) && view.viewFields.length > 0) {
-      let globalIndex = 0;
-      const existingFieldMetadataIds = new Set<string>();
+      const fields = mapViewFieldsToFieldsWidgetGroupFields({
+        viewFields: view.viewFields,
+        objectMetadataFields: objectMetadataItem.fields,
+      });
 
-      const fields = [...view.viewFields]
-        .sort((a, b) => a.position - b.position)
-        .map((viewField) => {
-          const fieldMetadataItem = objectMetadataItem.fields.find(
-            (f) => f.id === viewField.fieldMetadataId,
-          );
-
-          if (!isDefined(fieldMetadataItem)) {
-            return null;
-          }
-
-          existingFieldMetadataIds.add(viewField.fieldMetadataId);
-
-          return {
-            fieldMetadataItem,
-            position: viewField.position,
-            isVisible: viewField.isVisible,
-            globalIndex: globalIndex++,
-            viewFieldId: viewField.id,
-          };
-        })
-        .filter(isDefined);
+      const existingFieldMetadataIds = new Set(
+        fields.map((field) => field.fieldMetadataItem.id),
+      );
 
       const lastFieldPosition =
-        fields.length > 0 ? Math.max(...fields.map((f) => f.position)) + 1 : 0;
+        fields.length > 0
+          ? Math.max(...fields.map((field) => field.position)) + 1
+          : 0;
 
       const missingFields = buildMissingFields({
         existingFieldMetadataIds,
-        startGlobalIndex: globalIndex,
+        startGlobalIndex: fields.length,
         startPosition: lastFieldPosition,
       });
 
@@ -200,27 +185,13 @@ export const useFieldsWidgetEditorGroupsData = ({
       }
     }
 
-    return {
-      groups: buildDefaultFieldsWidgetGroups({
-        fields: objectMetadataItem.fields,
-        objectNameSingular,
-        labelIdentifierFieldMetadataItemId:
-          labelIdentifierFieldMetadataItem?.id,
-      }),
-      ungroupedFields: [],
-      editorMode: 'grouped' as const,
-    };
-  }, [
-    objectMetadataItem,
-    objectNameSingular,
-    view,
-    labelIdentifierFieldMetadataItem,
-  ]);
+    return { groups: [], ungroupedFields: [], editorMode: 'ungrouped' };
+  }, [objectMetadataItem, view, labelIdentifierFieldMetadataItem]);
 
   return {
     ...result,
     isFromView:
       isDefined(view) &&
-      (isDefined(view.viewFieldGroups) || view.viewFields.length > 0),
+      (isNonEmptyArray(view.viewFieldGroups) || view.viewFields.length > 0),
   };
 };
