@@ -2,8 +2,13 @@ import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import crypto from 'crypto';
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
+import { build } from 'esbuild';
 import { Command } from 'nest-commander';
+import { NODE_ESM_CJS_BANNER } from 'twenty-shared/application';
 import { FileFolder, type Sources } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { In, Repository } from 'typeorm';
@@ -239,9 +244,17 @@ export class MigrateWorkflowCodeStepsCommand extends ActiveOrSuspendedWorkspaces
   ): Promise<{ builtContent: string; sourceContent: string }> {
     const workspacePrefix = `workspace-${workspaceId}`;
 
-    const builtSources = await this.fileStorageService.readFolderLegacy(
-      `${workspacePrefix}/${OLD_BUILT_FOLDER}/${serverlessFunctionId}/${version}`,
-    );
+    let builtSources: Sources | null = null;
+
+    try {
+      builtSources = await this.fileStorageService.readFolderLegacy(
+        `${workspacePrefix}/${OLD_BUILT_FOLDER}/${serverlessFunctionId}/${version}`,
+      );
+    } catch {
+      this.logger.warn(
+        `Built folder not found for serverless function ${serverlessFunctionId}/${version} in workspace ${workspaceId}, will build from source`,
+      );
+    }
 
     const sourceSources = await this.fileStorageService.readFolderLegacy(
       `${workspacePrefix}/${OLD_SOURCE_FOLDER}/${serverlessFunctionId}/${version}`,
@@ -251,16 +264,52 @@ export class MigrateWorkflowCodeStepsCommand extends ActiveOrSuspendedWorkspaces
     const sourceRoot =
       (sourceSources.src as Sources) ?? (sourceSources as Sources);
 
-    const builtContent = builtSources['index.mjs'] as string;
     const sourceContent = sourceRoot['index.ts'] as string;
 
-    if (!isDefined(builtContent) || !isDefined(sourceContent)) {
+    if (!isDefined(sourceContent)) {
       throw new Error(
-        `Missing index.mjs or index.ts for serverless function ${serverlessFunctionId}/${version} in workspace ${workspaceId}`,
+        `Missing index.ts for serverless function ${serverlessFunctionId}/${version} in workspace ${workspaceId}`,
       );
     }
 
+    let builtContent = builtSources?.['index.mjs'] as string | undefined;
+
+    if (!isDefined(builtContent)) {
+      this.logger.log(
+        `Building serverless function ${serverlessFunctionId}/${version} from source in workspace ${workspaceId}`,
+      );
+      builtContent = await this.buildSourceToMjs(sourceContent);
+    }
+
     return { builtContent, sourceContent };
+  }
+
+  private async buildSourceToMjs(sourceContent: string): Promise<string> {
+    const tempDir = await mkdtemp(join(tmpdir(), 'twenty-migrate-'));
+
+    try {
+      const srcDir = join(tempDir, 'src');
+      const outFile = join(tempDir, 'index.mjs');
+
+      await mkdir(srcDir, { recursive: true });
+      await writeFile(join(srcDir, 'index.ts'), sourceContent);
+
+      await build({
+        entryPoints: [join(srcDir, 'index.ts')],
+        outfile: outFile,
+        platform: 'node',
+        format: 'esm',
+        target: 'es2017',
+        bundle: true,
+        sourcemap: true,
+        packages: 'external',
+        banner: NODE_ESM_CJS_BANNER,
+      });
+
+      return await readFile(outFile, 'utf-8');
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   }
 
   private async uploadFunctionFiles(
