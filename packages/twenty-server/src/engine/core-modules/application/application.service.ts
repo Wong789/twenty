@@ -452,6 +452,13 @@ export class ApplicationService {
       );
     }
 
+    // Nullify file FK references before deleting files to avoid
+    // RESTRICT constraint violation (application references file via packageJsonFileId/yarnLockFileId)
+    await this.applicationRepository.update(
+      { universalIdentifier, workspaceId },
+      { packageJsonFileId: null, yarnLockFileId: null },
+    );
+
     await this.fileStorageService.deleteApplicationFiles({
       workspaceId,
       applicationUniversalIdentifier: universalIdentifier,
