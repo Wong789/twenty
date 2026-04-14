@@ -1,6 +1,9 @@
 import { styled } from '@linaria/react';
 import { Suspense, lazy } from 'react';
 
+import { LayoutRenderingProvider } from '@/ui/layout/contexts/LayoutRenderingContext';
+import { PageLayoutType } from '~/generated-metadata/graphql';
+
 const FrontComponentRenderer = lazy(() =>
   import('@/front-components/components/FrontComponentRenderer').then(
     (module) => ({ default: module.FrontComponentRenderer }),
@@ -22,11 +25,19 @@ export const SettingsApplicationCustomTab = ({
 }: SettingsApplicationCustomTabProps) => {
   return (
     <StyledContainer>
-      <Suspense fallback={null}>
-        <FrontComponentRenderer
-          frontComponentId={settingsCustomTabFrontComponentId}
-        />
-      </Suspense>
+      <LayoutRenderingProvider
+        value={{
+          targetRecordIdentifier: undefined,
+          layoutType: PageLayoutType.DASHBOARD,
+          isInSidePanel: false,
+        }}
+      >
+        <Suspense fallback={null}>
+          <FrontComponentRenderer
+            frontComponentId={settingsCustomTabFrontComponentId}
+          />
+        </Suspense>
+      </LayoutRenderingProvider>
     </StyledContainer>
   );
 };
