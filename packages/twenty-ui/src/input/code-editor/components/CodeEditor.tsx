@@ -1,4 +1,5 @@
 import { styled } from '@linaria/react';
+import '@ui/input/code-editor/constants/configureMonacoLoader';
 import Editor, { type EditorProps, type Monaco } from '@monaco-editor/react';
 import { Loader } from '@ui/feedback/loader/components/Loader';
 import { ResizeHandle } from '@ui/layout/resize-handle/components/ResizeHandle';
