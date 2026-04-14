@@ -31,6 +31,7 @@ export const useCustomResolver = <
   objectName: string,
   activityTargetableObject: ActivityTargetableObject,
   pageSize: number,
+  skip = false,
 ): {
   data: CustomResolverQueryResult<T> | undefined;
   firstQueryLoading: boolean;
@@ -66,6 +67,7 @@ export const useCustomResolver = <
   } = useQuery<CustomResolverQueryResult<T>>(query, {
     client: apolloCoreClient,
     variables: queryVariables,
+    skip,
   });
 
   useSnackBarOnQueryError(error);

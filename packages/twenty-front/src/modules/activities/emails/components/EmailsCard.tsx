@@ -22,6 +22,12 @@ import {
   type TimelineThreadsWithTotal,
 } from '~/generated/graphql';
 
+const SUPPORTED_EMAIL_OBJECT_NAMES = [
+  CoreObjectNameSingular.Person,
+  CoreObjectNameSingular.Company,
+  CoreObjectNameSingular.Opportunity,
+] as const;
+
 const StyledContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -52,15 +58,20 @@ const StyledEmailCount = styled.span`
 export const EmailsCard = () => {
   const targetRecord = useTargetRecord();
 
+  const isSupportedObject = SUPPORTED_EMAIL_OBJECT_NAMES.includes(
+    targetRecord.targetObjectNameSingular as (typeof SUPPORTED_EMAIL_OBJECT_NAMES)[number],
+  );
+
   const [query, queryName] =
     targetRecord.targetObjectNameSingular === CoreObjectNameSingular.Person
       ? [getTimelineThreadsFromPersonId, 'getTimelineThreadsFromPersonId']
-      : targetRecord.targetObjectNameSingular === CoreObjectNameSingular.Company
-        ? [getTimelineThreadsFromCompanyId, 'getTimelineThreadsFromCompanyId']
-        : [
+      : targetRecord.targetObjectNameSingular ===
+          CoreObjectNameSingular.Opportunity
+        ? [
             getTimelineThreadsFromOpportunityId,
             'getTimelineThreadsFromOpportunityId',
-          ];
+          ]
+        : [getTimelineThreadsFromCompanyId, 'getTimelineThreadsFromCompanyId'];
 
   const { data, firstQueryLoading, isFetchingMore, fetchMoreRecords } =
     useCustomResolver<TimelineThreadsWithTotal>(
@@ -69,6 +80,7 @@ export const EmailsCard = () => {
       'timelineThreads',
       targetRecord,
       TIMELINE_THREADS_DEFAULT_PAGE_SIZE,
+      !isSupportedObject,
     );
 
   const { totalNumberOfThreads, timelineThreads } = data?.[queryName] ?? {};
@@ -82,6 +94,14 @@ export const EmailsCard = () => {
       await fetchMoreRecords();
     }
   };
+
+  if (!isSupportedObject) {
+    return (
+      <StyledContainer>
+        <EmptyInboxPlaceholder />
+      </StyledContainer>
+    );
+  }
 
   if (firstQueryLoading) {
     return <SkeletonLoader />;

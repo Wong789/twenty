@@ -29,6 +29,12 @@ import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { type TimelineCalendarEventsWithTotal } from '~/generated/graphql';
 import { dateLocaleState } from '~/localization/states/dateLocaleState';
 
+const SUPPORTED_CALENDAR_OBJECT_NAMES = [
+  CoreObjectNameSingular.Person,
+  CoreObjectNameSingular.Company,
+  CoreObjectNameSingular.Opportunity,
+] as const;
+
 const StyledContainer = styled.div`
   box-sizing: border-box;
   display: flex;
@@ -52,20 +58,25 @@ export const CalendarEventsCard = () => {
   const targetRecord = useTargetRecord();
   const { localeCatalog } = useAtomStateValue(dateLocaleState);
 
+  const isSupportedObject = SUPPORTED_CALENDAR_OBJECT_NAMES.includes(
+    targetRecord.targetObjectNameSingular as (typeof SUPPORTED_CALENDAR_OBJECT_NAMES)[number],
+  );
+
   const [query, queryName] =
     targetRecord.targetObjectNameSingular === CoreObjectNameSingular.Person
       ? [
           getTimelineCalendarEventsFromPersonId,
           'getTimelineCalendarEventsFromPersonId',
         ]
-      : targetRecord.targetObjectNameSingular === CoreObjectNameSingular.Company
+      : targetRecord.targetObjectNameSingular ===
+          CoreObjectNameSingular.Opportunity
         ? [
-            getTimelineCalendarEventsFromCompanyId,
-            'getTimelineCalendarEventsFromCompanyId',
-          ]
-        : [
             getTimelineCalendarEventsFromOpportunityId,
             'getTimelineCalendarEventsFromOpportunityId',
+          ]
+        : [
+            getTimelineCalendarEventsFromCompanyId,
+            'getTimelineCalendarEventsFromCompanyId',
           ];
 
   const { data, firstQueryLoading, isFetchingMore, fetchMoreRecords } =
@@ -75,6 +86,7 @@ export const CalendarEventsCard = () => {
       'timelineCalendarEvents',
       targetRecord,
       TIMELINE_CALENDAR_EVENTS_DEFAULT_PAGE_SIZE,
+      !isSupportedObject,
     );
 
   const { timelineCalendarEvents, totalNumberOfCalendarEvents } =
@@ -99,6 +111,25 @@ export const CalendarEventsCard = () => {
   };
 
   const objectName = targetRecord.targetObjectNameSingular;
+
+  if (!isSupportedObject || (!firstQueryLoading && !timelineCalendarEvents?.length)) {
+    return (
+      <AnimatedPlaceholderEmptyContainer
+        // oxlint-disable-next-line react/jsx-props-no-spreading
+        {...EMPTY_PLACEHOLDER_TRANSITION_PROPS}
+      >
+        <AnimatedPlaceholder type="noMatchRecord" />
+        <AnimatedPlaceholderEmptyTextContainer>
+          <AnimatedPlaceholderEmptyTitle>
+            {t`No Events`}
+          </AnimatedPlaceholderEmptyTitle>
+          <AnimatedPlaceholderEmptySubTitle>
+            {t`No events have been scheduled with this ${objectName} yet.`}
+          </AnimatedPlaceholderEmptySubTitle>
+        </AnimatedPlaceholderEmptyTextContainer>
+      </AnimatedPlaceholderEmptyContainer>
+    );
+  }
 
   if (firstQueryLoading) {
     return <SkeletonLoader />;
