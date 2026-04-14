@@ -23,8 +23,6 @@ type CategorizedRelationFields = {
   boxedRelationFields: FieldMetadataItem[];
 };
 
-export { isActivityTargetField } from 'twenty-shared/utils';
-
 const isActivityTargetRelation = (
   fieldMetadataItem: FieldMetadataItem,
   objectNameSingular: string,

@@ -1,5 +1,5 @@
-import { CoreObjectNameSingular } from 'twenty-shared/types';
-import { isActivityTargetField } from '@/object-record/record-field-list/utils/categorizeRelationFields';
+import { CoreObjectNameSingular } from '@/types';
+import { isActivityTargetField } from '@/utils/fieldMetadata/isActivityTargetField';
 
 describe('isActivityTargetField', () => {
   it('should return true for noteTargets field on Note object', () => {

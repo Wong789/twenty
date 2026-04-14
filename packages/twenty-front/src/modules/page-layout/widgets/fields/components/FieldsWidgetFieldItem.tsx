@@ -1,9 +1,8 @@
 import { ActivityTargetsInlineCell } from '@/activities/inline-cell/components/ActivityTargetsInlineCell';
-import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { type EnrichedObjectMetadataItem } from '@/object-metadata/types/EnrichedObjectMetadataItem';
+import { type FieldMetadataItem } from '@/object-metadata/types/FieldMetadataItem';
 import { formatFieldMetadataItemAsColumnDefinition } from '@/object-metadata/utils/formatFieldMetadataItemAsColumnDefinition';
 import { isRecordFieldReadOnly } from '@/object-record/read-only/utils/isRecordFieldReadOnly';
-import { isActivityTargetField } from '@/object-record/record-field-list/utils/categorizeRelationFields';
 import {
   FieldContext,
   type RecordUpdateHook,
@@ -17,6 +16,7 @@ import {
   type CoreObjectNameSingular,
   type ObjectPermissions,
 } from 'twenty-shared/types';
+import { isActivityTargetField } from 'twenty-shared/utils';
 
 type FieldsWidgetFieldItemProps = {
   fieldMetadataItem: FieldMetadataItem;
