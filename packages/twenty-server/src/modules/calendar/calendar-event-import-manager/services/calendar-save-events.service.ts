@@ -74,20 +74,17 @@ export class CalendarSaveEventsService {
           );
 
           const fetchedCalendarEventsWithDBEvents: FetchedCalendarEventWithDBEvent[] =
-            eventsToProcess.map(
-              (event): FetchedCalendarEventWithDBEvent => {
-                const existingEventWithSameiCalUid =
-                  existingCalendarEvents.find(
-                    (existingEvent) => existingEvent.iCalUid === event.iCalUid,
-                  );
+            eventsToProcess.map((event): FetchedCalendarEventWithDBEvent => {
+              const existingEventWithSameiCalUid = existingCalendarEvents.find(
+                (existingEvent) => existingEvent.iCalUid === event.iCalUid,
+              );
 
-                return {
-                  fetchedCalendarEvent: event,
-                  existingCalendarEvent: existingEventWithSameiCalUid ?? null,
-                  newlyCreatedCalendarEvent: null,
-                };
-              },
-            );
+              return {
+                fetchedCalendarEvent: event,
+                existingCalendarEvent: existingEventWithSameiCalUid ?? null,
+                newlyCreatedCalendarEvent: null,
+              };
+            });
 
           const newCalendarEventsToInsert = fetchedCalendarEventsWithDBEvents
             .filter(

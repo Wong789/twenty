@@ -3,6 +3,7 @@ import { useLingui } from '@lingui/react/macro';
 import { useCallback, useState } from 'react';
 
 import { CalendarEventParticipantsResponseStatus } from '@/activities/calendar/components/CalendarEventParticipantsResponseStatus';
+import { LinkifiedTextBody } from '@/ui/display/components/LinkifiedTextBody';
 import { type CalendarEvent } from '@/activities/calendar/types/CalendarEvent';
 import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
 import { CoreObjectNameSingular } from 'twenty-shared/types';
@@ -107,9 +108,9 @@ export const CalendarEventDetails = ({
   const standardFieldOrder = [
     'startsAt',
     'endsAt',
+    'recurrence',
     'conferenceLink',
     'location',
-    'description',
   ];
 
   const standardFields = standardFieldOrder
@@ -121,7 +122,10 @@ export const CalendarEventDetails = ({
     .filter(isDefined);
 
   const customFields = inlineFieldMetadataItems.filter(
-    (field) => field.isCustom && !standardFieldOrder.includes(field.name),
+    (field) =>
+      field.isCustom &&
+      !standardFieldOrder.includes(field.name) &&
+      field.name !== 'description',
   );
 
   const { calendarEventParticipants } = calendarEvent;
@@ -235,6 +239,12 @@ export const CalendarEventDetails = ({
             />
           )}
           {standardFields.slice(2).map(renderField)}
+          {calendarEvent.description && (
+            <LinkifiedTextBody
+              body={calendarEvent.description}
+              isDisplayed
+            />
+          )}
           {customFields.map(renderField)}
         </StyledFields>
       </StyledContainer>
