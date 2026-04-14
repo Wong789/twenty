@@ -89,9 +89,9 @@ export default {
         380,
         387,
         418,
-        499,
-        504,
-        505
+        500,
+        505,
+        506
     ],
     "types": {
         "BillingProductDTO": {
@@ -9068,6 +9068,15 @@ export default {
                     ]
                 }
             ],
+            "updateWorkspaceMemberSettings": [
+                6,
+                {
+                    "input": [
+                        488,
+                        "UpdateWorkspaceMemberSettingsInput!"
+                    ]
+                }
+            ],
             "updateUserEmail": [
                 6,
                 {
@@ -9097,7 +9106,7 @@ export default {
                 66,
                 {
                     "data": [
-                        488,
+                        489,
                         "ActivateWorkspaceInput!"
                     ]
                 }
@@ -9106,7 +9115,7 @@ export default {
                 66,
                 {
                     "data": [
-                        489,
+                        490,
                         "UpdateWorkspaceInput!"
                     ]
                 }
@@ -9121,7 +9130,7 @@ export default {
                 232,
                 {
                     "input": [
-                        490,
+                        491,
                         "SetupOIDCSsoInput!"
                     ]
                 }
@@ -9130,7 +9139,7 @@ export default {
                 232,
                 {
                     "input": [
-                        491,
+                        492,
                         "SetupSAMLSsoInput!"
                     ]
                 }
@@ -9139,7 +9148,7 @@ export default {
                 228,
                 {
                     "input": [
-                        492,
+                        493,
                         "DeleteSsoInput!"
                     ]
                 }
@@ -9148,7 +9157,7 @@ export default {
                 229,
                 {
                     "input": [
-                        493,
+                        494,
                         "EditSsoInput!"
                     ]
                 }
@@ -9170,7 +9179,7 @@ export default {
                 323,
                 {
                     "input": [
-                        494,
+                        495,
                         "SendEmailInput!"
                     ]
                 }
@@ -9196,7 +9205,7 @@ export default {
                         "String!"
                     ],
                     "connectionParameters": [
-                        496,
+                        497,
                         "EmailAccountConnectionParameters!"
                     ],
                     "id": [
@@ -9208,7 +9217,7 @@ export default {
                 157,
                 {
                     "input": [
-                        498,
+                        499,
                         "UpdateLabPublicFeatureFlagInput!"
                     ]
                 }
@@ -9286,7 +9295,7 @@ export default {
                 6,
                 {
                     "role": [
-                        499,
+                        500,
                         "AiModelRole!"
                     ],
                     "modelId": [
@@ -9491,7 +9500,7 @@ export default {
                 68,
                 {
                     "input": [
-                        500,
+                        501,
                         "CreateOneAppTokenInput!"
                     ]
                 }
@@ -9527,7 +9536,7 @@ export default {
                 6,
                 {
                     "workspaceMigration": [
-                        502,
+                        503,
                         "WorkspaceMigrationInput!"
                     ]
                 }
@@ -9601,7 +9610,7 @@ export default {
                         "String!"
                     ],
                     "fileFolder": [
-                        505,
+                        506,
                         "FileFolder!"
                     ],
                     "filePath": [
@@ -11640,6 +11649,17 @@ export default {
                 1
             ]
         },
+        "UpdateWorkspaceMemberSettingsInput": {
+            "workspaceMemberId": [
+                3
+            ],
+            "update": [
+                15
+            ],
+            "__typename": [
+                1
+            ]
+        },
         "ActivateWorkspaceInput": {
             "displayName": [
                 1
@@ -11804,7 +11824,7 @@ export default {
                 1
             ],
             "files": [
-                495
+                496
             ],
             "__typename": [
                 1
@@ -11823,13 +11843,13 @@ export default {
         },
         "EmailAccountConnectionParameters": {
             "IMAP": [
-                497
+                498
             ],
             "SMTP": [
-                497
+                498
             ],
             "CALDAV": [
-                497
+                498
             ],
             "__typename": [
                 1
@@ -11869,7 +11889,7 @@ export default {
         "AiModelRole": {},
         "CreateOneAppTokenInput": {
             "appToken": [
-                501
+                502
             ],
             "__typename": [
                 1
@@ -11885,7 +11905,7 @@ export default {
         },
         "WorkspaceMigrationInput": {
             "actions": [
-                503
+                504
             ],
             "__typename": [
                 1
@@ -11893,7 +11913,7 @@ export default {
         },
         "WorkspaceMigrationDeleteActionInput": {
             "type": [
-                504
+                505
             ],
             "metadataName": [
                 355
@@ -11921,7 +11941,7 @@ export default {
                 260,
                 {
                     "input": [
-                        507,
+                        508,
                         "LogicFunctionLogsInput!"
                     ]
                 }

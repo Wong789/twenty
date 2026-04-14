@@ -3121,6 +3121,7 @@ export interface Mutation {
     verifyTwoFactorAuthenticationMethodForAuthenticatedUser: VerifyTwoFactorAuthenticationMethod
     deleteUser: User
     deleteUserFromWorkspace: UserWorkspace
+    updateWorkspaceMemberSettings: Scalars['Boolean']
     updateUserEmail: Scalars['Boolean']
     resendEmailVerificationToken: ResendEmailVerificationToken
     activateWorkspace: Workspace
@@ -6508,6 +6509,7 @@ export interface MutationGenqlSelection{
     verifyTwoFactorAuthenticationMethodForAuthenticatedUser?: (VerifyTwoFactorAuthenticationMethodGenqlSelection & { __args: {otp: Scalars['String']} })
     deleteUser?: UserGenqlSelection
     deleteUserFromWorkspace?: (UserWorkspaceGenqlSelection & { __args: {workspaceMemberIdToDelete: Scalars['String']} })
+    updateWorkspaceMemberSettings?: { __args: {input: UpdateWorkspaceMemberSettingsInput} }
     updateUserEmail?: { __args: {newEmail: Scalars['String'], verifyEmailRedirectPath?: (Scalars['String'] | null)} }
     resendEmailVerificationToken?: (ResendEmailVerificationTokenGenqlSelection & { __args: {email: Scalars['String'], origin: Scalars['String']} })
     activateWorkspace?: (WorkspaceGenqlSelection & { __args: {data: ActivateWorkspaceInput} })
@@ -6858,6 +6860,8 @@ export interface CreateApplicationRegistrationVariableInput {applicationRegistra
 export interface UpdateApplicationRegistrationVariableInput {id: Scalars['String'],update: UpdateApplicationRegistrationVariablePayload}
 
 export interface UpdateApplicationRegistrationVariablePayload {value?: (Scalars['String'] | null),description?: (Scalars['String'] | null)}
+
+export interface UpdateWorkspaceMemberSettingsInput {workspaceMemberId: Scalars['UUID'],update: Scalars['JSON']}
 
 export interface ActivateWorkspaceInput {displayName?: (Scalars['String'] | null)}
 
