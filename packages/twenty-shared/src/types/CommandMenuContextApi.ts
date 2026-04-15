@@ -13,6 +13,7 @@ export type CommandMenuContextApi = {
   objectPermissions: ObjectPermissions & { objectMetadataId: string };
   selectedRecords: ObjectRecord[];
   featureFlags: Record<string, boolean>;
+  permissionFlags: Record<string, boolean>;
   targetObjectReadPermissions: Record<string, boolean>;
   targetObjectWritePermissions: Record<string, boolean>;
   objectMetadataItem: Record<string, unknown>;
