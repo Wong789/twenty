@@ -269,10 +269,11 @@ export class UpgradeCommand extends CommandRunner {
     );
 
     for (const workspaceId of workspacesWithoutCursor) {
-      await this.upgradeMigrationService.markAsInitial({
+      await this.upgradeMigrationService.markAsWorkspaceInitial({
         name: lastWorkspaceCommand.name,
         workspaceId,
         executedByVersion: '1.21.0',
+        status: 'completed',
       });
     }
   }
