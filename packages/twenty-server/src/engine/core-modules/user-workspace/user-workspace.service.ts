@@ -325,6 +325,11 @@ export class UserWorkspaceService extends TypeOrmQueryService<UserWorkspaceEntit
       await this.roleTargetRepository.delete({ userWorkspaceId }); // TODO remove once userWorkspace foreign key is added on roleTarget
       await this.userWorkspaceRepository.delete({ id: userWorkspaceId });
     }
+
+    await this.coreEntityCacheService.invalidate(
+      'userWorkspaceEntity',
+      userWorkspaceId,
+    );
   }
 
   async findAvailableWorkspacesByEmail(email: string) {
