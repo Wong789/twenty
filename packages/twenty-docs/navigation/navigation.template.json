@@ -83,13 +83,18 @@
             }
           }
         },
-        "viewsPipelines": {
-          "label": "Views & Pipelines",
+        "layout": {
+          "label": "Layout",
           "groups": {
-            "viewsPipelinesReference": {
-              "label": "Reference"
+            "layoutReference": {
+              "label": "Reference",
+              "groups": {
+                "layoutViews": {
+                  "label": "Views"
+                }
+              }
             },
-            "viewsPipelinesHowTos": {
+            "layoutHowTos": {
               "label": "How-Tos"
             }
           }

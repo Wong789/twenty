@@ -232,19 +232,26 @@
                 ]
               },
               {
-                "group": "Views & Pipelines",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "user-guide/views-pipelines/overview",
+                  "user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "user-guide/views-pipelines/capabilities/table-views",
-                      "user-guide/views-pipelines/capabilities/kanban-views",
-                      "user-guide/views-pipelines/capabilities/calendar-view",
-                      "user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "user-guide/views-pipelines/capabilities/view-settings"
+                      "user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "user-guide/views-pipelines/capabilities/table-views",
+                          "user-guide/views-pipelines/capabilities/kanban-views",
+                          "user-guide/views-pipelines/capabilities/calendar-view",
+                          "user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
@@ -682,23 +689,30 @@
                 ]
               },
               {
-                "group": "Vues et pipelines",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/fr/user-guide/views-pipelines/overview",
+                  "l/fr/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/fr/user-guide/views-pipelines/capabilities/table-views",
-                      "l/fr/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/fr/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/fr/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/fr/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/fr/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/fr/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/fr/user-guide/views-pipelines/capabilities/table-views",
+                          "l/fr/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/fr/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/fr/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/fr/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/fr/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/fr/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Guides pratiques",
+                    "group": "How-Tos",
                     "pages": [
                       "l/fr/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/fr/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -1132,23 +1146,30 @@
                 ]
               },
               {
-                "group": "طرق العرض والمسارات",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/ar/user-guide/views-pipelines/overview",
+                  "l/ar/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/ar/user-guide/views-pipelines/capabilities/table-views",
-                      "l/ar/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/ar/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/ar/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/ar/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/ar/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/ar/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/ar/user-guide/views-pipelines/capabilities/table-views",
+                          "l/ar/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/ar/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/ar/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/ar/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/ar/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/ar/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "الإرشادات",
+                    "group": "How-Tos",
                     "pages": [
                       "l/ar/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/ar/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -1582,23 +1603,30 @@
                 ]
               },
               {
-                "group": "Zobrazení a pipeline",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/cs/user-guide/views-pipelines/overview",
+                  "l/cs/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/cs/user-guide/views-pipelines/capabilities/table-views",
-                      "l/cs/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/cs/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/cs/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/cs/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/cs/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/cs/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/cs/user-guide/views-pipelines/capabilities/table-views",
+                          "l/cs/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/cs/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/cs/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/cs/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/cs/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/cs/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Návody",
+                    "group": "How-Tos",
                     "pages": [
                       "l/cs/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/cs/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -2032,23 +2060,30 @@
                 ]
               },
               {
-                "group": "Ansichten & Pipelines",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/de/user-guide/views-pipelines/overview",
+                  "l/de/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/de/user-guide/views-pipelines/capabilities/table-views",
-                      "l/de/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/de/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/de/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/de/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/de/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/de/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/de/user-guide/views-pipelines/capabilities/table-views",
+                          "l/de/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/de/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/de/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/de/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/de/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/de/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Anleitungen",
+                    "group": "How-Tos",
                     "pages": [
                       "l/de/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/de/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -2482,23 +2517,30 @@
                 ]
               },
               {
-                "group": "Vistas y canalizaciones",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/es/user-guide/views-pipelines/overview",
+                  "l/es/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/es/user-guide/views-pipelines/capabilities/table-views",
-                      "l/es/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/es/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/es/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/es/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/es/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/es/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/es/user-guide/views-pipelines/capabilities/table-views",
+                          "l/es/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/es/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/es/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/es/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/es/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/es/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Guías prácticas",
+                    "group": "How-Tos",
                     "pages": [
                       "l/es/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/es/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -2932,23 +2974,30 @@
                 ]
               },
               {
-                "group": "Viste & Pipeline",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/it/user-guide/views-pipelines/overview",
+                  "l/it/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/it/user-guide/views-pipelines/capabilities/table-views",
-                      "l/it/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/it/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/it/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/it/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/it/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/it/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/it/user-guide/views-pipelines/capabilities/table-views",
+                          "l/it/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/it/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/it/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/it/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/it/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/it/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Guide pratiche",
+                    "group": "How-Tos",
                     "pages": [
                       "l/it/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/it/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -3382,23 +3431,30 @@
                 ]
               },
               {
-                "group": "ビューとパイプライン",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/ja/user-guide/views-pipelines/overview",
+                  "l/ja/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/ja/user-guide/views-pipelines/capabilities/table-views",
-                      "l/ja/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/ja/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/ja/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/ja/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/ja/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/ja/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/ja/user-guide/views-pipelines/capabilities/table-views",
+                          "l/ja/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/ja/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/ja/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/ja/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/ja/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/ja/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "ハウツー",
+                    "group": "How-Tos",
                     "pages": [
                       "l/ja/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/ja/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -3832,23 +3888,30 @@
                 ]
               },
               {
-                "group": "뷰 및 파이프라인",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/ko/user-guide/views-pipelines/overview",
+                  "l/ko/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/ko/user-guide/views-pipelines/capabilities/table-views",
-                      "l/ko/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/ko/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/ko/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/ko/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/ko/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/ko/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/ko/user-guide/views-pipelines/capabilities/table-views",
+                          "l/ko/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/ko/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/ko/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/ko/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/ko/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/ko/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "사용 방법",
+                    "group": "How-Tos",
                     "pages": [
                       "l/ko/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/ko/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -4282,19 +4345,26 @@
                 ]
               },
               {
-                "group": "Visualizações e pipelines",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/pt/user-guide/views-pipelines/overview",
+                  "l/pt/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/pt/user-guide/views-pipelines/capabilities/table-views",
-                      "l/pt/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/pt/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/pt/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/pt/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/pt/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/pt/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/pt/user-guide/views-pipelines/capabilities/table-views",
+                          "l/pt/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/pt/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/pt/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/pt/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/pt/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/pt/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
@@ -4732,19 +4802,26 @@
                 ]
               },
               {
-                "group": "Vizualizări și fluxuri",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/ro/user-guide/views-pipelines/overview",
+                  "l/ro/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/ro/user-guide/views-pipelines/capabilities/table-views",
-                      "l/ro/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/ro/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/ro/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/ro/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/ro/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/ro/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/ro/user-guide/views-pipelines/capabilities/table-views",
+                          "l/ro/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/ro/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/ro/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/ro/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/ro/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/ro/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
@@ -5182,23 +5259,30 @@
                 ]
               },
               {
-                "group": "Представления и воронки",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/ru/user-guide/views-pipelines/overview",
+                  "l/ru/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/ru/user-guide/views-pipelines/capabilities/table-views",
-                      "l/ru/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/ru/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/ru/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/ru/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/ru/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/ru/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/ru/user-guide/views-pipelines/capabilities/table-views",
+                          "l/ru/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/ru/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/ru/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/ru/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/ru/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/ru/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Инструкции",
+                    "group": "How-Tos",
                     "pages": [
                       "l/ru/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/ru/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -5632,23 +5716,30 @@
                 ]
               },
               {
-                "group": "Görünümler ve Boru Hatları",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/tr/user-guide/views-pipelines/overview",
+                  "l/tr/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/tr/user-guide/views-pipelines/capabilities/table-views",
-                      "l/tr/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/tr/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/tr/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/tr/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/tr/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/tr/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/tr/user-guide/views-pipelines/capabilities/table-views",
+                          "l/tr/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/tr/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/tr/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/tr/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/tr/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/tr/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "Nasıl Yapılırlar",
+                    "group": "How-Tos",
                     "pages": [
                       "l/tr/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/tr/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",
@@ -6082,23 +6173,30 @@
                 ]
               },
               {
-                "group": "视图与管道",
-                "icon": "table",
+                "group": "Layout",
+                "icon": "table-columns",
                 "pages": [
-                  "l/zh/user-guide/views-pipelines/overview",
+                  "l/zh/user-guide/layout/overview",
                   {
                     "group": "Reference",
                     "pages": [
-                      "l/zh/user-guide/views-pipelines/capabilities/table-views",
-                      "l/zh/user-guide/views-pipelines/capabilities/kanban-views",
-                      "l/zh/user-guide/views-pipelines/capabilities/calendar-view",
-                      "l/zh/user-guide/views-pipelines/capabilities/filters-and-sorting",
-                      "l/zh/user-guide/views-pipelines/capabilities/fields-and-columns",
-                      "l/zh/user-guide/views-pipelines/capabilities/view-settings"
+                      "l/zh/user-guide/layout/capabilities/navigation",
+                      {
+                        "group": "Views",
+                        "pages": [
+                          "l/zh/user-guide/views-pipelines/capabilities/table-views",
+                          "l/zh/user-guide/views-pipelines/capabilities/kanban-views",
+                          "l/zh/user-guide/views-pipelines/capabilities/calendar-view",
+                          "l/zh/user-guide/views-pipelines/capabilities/filters-and-sorting",
+                          "l/zh/user-guide/views-pipelines/capabilities/fields-and-columns",
+                          "l/zh/user-guide/views-pipelines/capabilities/view-settings"
+                        ]
+                      },
+                      "l/zh/user-guide/layout/capabilities/record-pages"
                     ]
                   },
                   {
-                    "group": "操作指南",
+                    "group": "How-Tos",
                     "pages": [
                       "l/zh/user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
                       "l/zh/user-guide/views-pipelines/how-tos/create-a-kanban-view-for-projects",

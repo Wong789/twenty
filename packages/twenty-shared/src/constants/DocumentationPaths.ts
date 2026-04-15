@@ -192,6 +192,11 @@ export const DOCUMENTATION_PATHS = {
   USER_GUIDE_DATA_MODEL_HOW_TOS_DATA_MODEL_FAQ:
     '/user-guide/data-model/how-tos/data-model-faq',
   USER_GUIDE_DATA_MODEL_OVERVIEW: '/user-guide/data-model/overview',
+  USER_GUIDE_LAYOUT_CAPABILITIES_NAVIGATION:
+    '/user-guide/layout/capabilities/navigation',
+  USER_GUIDE_LAYOUT_CAPABILITIES_RECORD_PAGES:
+    '/user-guide/layout/capabilities/record-pages',
+  USER_GUIDE_LAYOUT_OVERVIEW: '/user-guide/layout/overview',
   USER_GUIDE_PERMISSIONS_ACCESS_CAPABILITIES_PERMISSIONS:
     '/user-guide/permissions-access/capabilities/permissions',
   USER_GUIDE_PERMISSIONS_ACCESS_CAPABILITIES_SSO_CONFIGURATION:
@@ -241,7 +246,6 @@ export const DOCUMENTATION_PATHS = {
     '/user-guide/views-pipelines/how-tos/show-expected-amount-in-pipeline',
   USER_GUIDE_VIEWS_PIPELINES_HOW_TOS_TRACK_TIME_IN_STAGE:
     '/user-guide/views-pipelines/how-tos/track-time-in-stage',
-  USER_GUIDE_VIEWS_PIPELINES_OVERVIEW: '/user-guide/views-pipelines/overview',
   USER_GUIDE_WORKFLOWS_CAPABILITIES_SEND_EMAILS_FROM_WORKFLOWS:
     '/user-guide/workflows/capabilities/send-emails-from-workflows',
   USER_GUIDE_WORKFLOWS_CAPABILITIES_USE_BRANCHES_IN_WORKFLOWS:

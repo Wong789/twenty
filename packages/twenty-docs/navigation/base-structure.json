@@ -220,25 +220,33 @@
           ]
         },
         {
-          "key": "viewsPipelines",
-          "label": "Views & Pipelines",
-          "icon": "table",
+          "key": "layout",
+          "label": "Layout",
+          "icon": "table-columns",
           "pages": [
-            "user-guide/views-pipelines/overview",
+            "user-guide/layout/overview",
             {
-              "key": "viewsPipelinesReference",
+              "key": "layoutReference",
               "label": "Reference",
               "pages": [
-                "user-guide/views-pipelines/capabilities/table-views",
-                "user-guide/views-pipelines/capabilities/kanban-views",
-                "user-guide/views-pipelines/capabilities/calendar-view",
-                "user-guide/views-pipelines/capabilities/filters-and-sorting",
-                "user-guide/views-pipelines/capabilities/fields-and-columns",
-                "user-guide/views-pipelines/capabilities/view-settings"
+                "user-guide/layout/capabilities/navigation",
+                {
+                  "key": "layoutViews",
+                  "label": "Views",
+                  "pages": [
+                    "user-guide/views-pipelines/capabilities/table-views",
+                    "user-guide/views-pipelines/capabilities/kanban-views",
+                    "user-guide/views-pipelines/capabilities/calendar-view",
+                    "user-guide/views-pipelines/capabilities/filters-and-sorting",
+                    "user-guide/views-pipelines/capabilities/fields-and-columns",
+                    "user-guide/views-pipelines/capabilities/view-settings"
+                  ]
+                },
+                "user-guide/layout/capabilities/record-pages"
               ]
             },
             {
-              "key": "viewsPipelinesHowTos",
+              "key": "layoutHowTos",
               "label": "How-Tos",
               "pages": [
                 "user-guide/views-pipelines/how-tos/create-a-table-view-with-grouping",
