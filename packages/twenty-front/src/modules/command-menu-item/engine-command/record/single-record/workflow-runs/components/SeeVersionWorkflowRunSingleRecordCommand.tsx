@@ -11,7 +11,7 @@ export const SeeVersionWorkflowRunSingleRecordCommand = () => {
     !isDefined(selectedRecord) ||
     !isDefined(selectedRecord?.workflowVersion?.id)
   ) {
-    throw new Error('Selected record is required to see version workflow run');
+    return null;
   }
 
   return (
