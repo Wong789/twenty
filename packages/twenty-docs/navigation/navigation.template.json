@@ -161,47 +161,10 @@
           "label": "API"
         },
         "selfHost": {
-          "label": "Self-Host",
-          "groups": {
-            "selfHostReference": {
-              "label": "Reference"
-            }
-          }
+          "label": "Self-Host"
         },
         "contribute": {
-          "label": "Contribute",
-          "groups": {
-            "contributeReference": {
-              "label": "Reference",
-              "groups": {
-                "frontendDevelopment": {
-                  "label": "Frontend Development",
-                  "groups": {
-                    "twentyUi": {
-                      "label": "Twenty UI",
-                      "groups": {
-                        "display": {
-                          "label": "Display"
-                        },
-                        "feedback": {
-                          "label": "Feedback"
-                        },
-                        "input": {
-                          "label": "Input"
-                        },
-                        "navigation": {
-                          "label": "Navigation"
-                        }
-                      }
-                    }
-                  }
-                },
-                "backendDevelopment": {
-                  "label": "Backend Development"
-                }
-              }
-            }
-          }
+          "label": "Contribute"
         }
       }
     }

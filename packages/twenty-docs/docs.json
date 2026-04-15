@@ -371,7 +371,6 @@
               },
               {
                 "group": "Apps",
-                "icon": "cube",
                 "pages": [
                   "developers/extend/apps/getting-started",
                   "developers/extend/apps/building",
@@ -385,7 +384,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "developers/extend/api",
                   "developers/extend/webhooks",
@@ -394,106 +392,20 @@
               },
               {
                 "group": "Self-Host",
-                "icon": "desktop",
                 "pages": [
-                  "developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "developers/self-host/capabilities/docker-compose",
-                      "developers/self-host/capabilities/setup",
-                      "developers/self-host/capabilities/upgrade-guide",
-                      "developers/self-host/capabilities/cloud-providers",
-                      "developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "developers/self-host/capabilities/docker-compose",
+                  "developers/self-host/capabilities/setup",
+                  "developers/self-host/capabilities/upgrade-guide",
+                  "developers/self-host/capabilities/cloud-providers",
+                  "developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Contribute",
-                "icon": "github",
                 "pages": [
-                  "developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "developers/contribute/capabilities/local-setup",
-                      "developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Frontend Development",
-                        "pages": [
-                          "developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "twenty-ui/introduction",
-                              {
-                                "group": "Display",
-                                "pages": [
-                                  "twenty-ui/display/checkmark",
-                                  "twenty-ui/display/chip",
-                                  "twenty-ui/display/icons",
-                                  "twenty-ui/display/soon-pill",
-                                  "twenty-ui/display/tag",
-                                  "twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Feedback",
-                                "pages": [
-                                  "twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Input",
-                                "pages": [
-                                  "twenty-ui/input/buttons",
-                                  "twenty-ui/input/color-scheme",
-                                  "twenty-ui/input/text",
-                                  "twenty-ui/input/checkbox",
-                                  "twenty-ui/input/icon-picker",
-                                  "twenty-ui/input/image-input",
-                                  "twenty-ui/input/radio",
-                                  "twenty-ui/input/select",
-                                  "twenty-ui/input/toggle",
-                                  "twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navigation",
-                                "pages": [
-                                  "twenty-ui/navigation",
-                                  "twenty-ui/navigation/breadcrumb",
-                                  "twenty-ui/navigation/links",
-                                  "twenty-ui/navigation/menu-item",
-                                  "twenty-ui/navigation/navigation-bar",
-                                  "twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "developers/contribute/capabilities/frontend-development/style-guide",
-                          "developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Backend Development",
-                        "pages": [
-                          "developers/contribute/capabilities/backend-development/server-commands",
-                          "developers/contribute/capabilities/backend-development/feature-flags",
-                          "developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "developers/contribute/capabilities/backend-development/zapier",
-                          "developers/contribute/capabilities/backend-development/best-practices-server",
-                          "developers/contribute/capabilities/backend-development/custom-objects",
-                          "developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "developers/contribute/capabilities/local-setup",
+                  "developers/contribute/commands",
+                  "developers/contribute/style-guide"
                 ]
               }
             ]
@@ -839,7 +751,6 @@
               },
               {
                 "group": "Apps",
-                "icon": "cube",
                 "pages": [
                   "l/fr/developers/extend/apps/getting-started",
                   "l/fr/developers/extend/apps/building",
@@ -853,7 +764,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/fr/developers/extend/api",
                   "l/fr/developers/extend/webhooks",
@@ -862,106 +772,20 @@
               },
               {
                 "group": "Auto-hébergement",
-                "icon": "desktop",
                 "pages": [
-                  "l/fr/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/fr/developers/self-host/capabilities/docker-compose",
-                      "l/fr/developers/self-host/capabilities/setup",
-                      "l/fr/developers/self-host/capabilities/upgrade-guide",
-                      "l/fr/developers/self-host/capabilities/cloud-providers",
-                      "l/fr/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/fr/developers/self-host/capabilities/docker-compose",
+                  "l/fr/developers/self-host/capabilities/setup",
+                  "l/fr/developers/self-host/capabilities/upgrade-guide",
+                  "l/fr/developers/self-host/capabilities/cloud-providers",
+                  "l/fr/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Contribuer",
-                "icon": "github",
                 "pages": [
-                  "l/fr/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/fr/developers/contribute/capabilities/local-setup",
-                      "l/fr/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Développement frontend",
-                        "pages": [
-                          "l/fr/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/fr/twenty-ui/introduction",
-                              {
-                                "group": "Afficher",
-                                "pages": [
-                                  "l/fr/twenty-ui/display/checkmark",
-                                  "l/fr/twenty-ui/display/chip",
-                                  "l/fr/twenty-ui/display/icons",
-                                  "l/fr/twenty-ui/display/soon-pill",
-                                  "l/fr/twenty-ui/display/tag",
-                                  "l/fr/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Retour d'information",
-                                "pages": [
-                                  "l/fr/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Entrée ",
-                                "pages": [
-                                  "l/fr/twenty-ui/input/buttons",
-                                  "l/fr/twenty-ui/input/color-scheme",
-                                  "l/fr/twenty-ui/input/text",
-                                  "l/fr/twenty-ui/input/checkbox",
-                                  "l/fr/twenty-ui/input/icon-picker",
-                                  "l/fr/twenty-ui/input/image-input",
-                                  "l/fr/twenty-ui/input/radio",
-                                  "l/fr/twenty-ui/input/select",
-                                  "l/fr/twenty-ui/input/toggle",
-                                  "l/fr/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navigation",
-                                "pages": [
-                                  "l/fr/twenty-ui/navigation",
-                                  "l/fr/twenty-ui/navigation/breadcrumb",
-                                  "l/fr/twenty-ui/navigation/links",
-                                  "l/fr/twenty-ui/navigation/menu-item",
-                                  "l/fr/twenty-ui/navigation/navigation-bar",
-                                  "l/fr/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/fr/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/fr/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/fr/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/fr/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/fr/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/fr/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Développement backend",
-                        "pages": [
-                          "l/fr/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/fr/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/fr/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/fr/developers/contribute/capabilities/backend-development/zapier",
-                          "l/fr/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/fr/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/fr/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/fr/developers/contribute/capabilities/local-setup",
+                  "l/fr/developers/contribute/commands",
+                  "l/fr/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -1307,7 +1131,6 @@
               },
               {
                 "group": "التطبيقات",
-                "icon": "cube",
                 "pages": [
                   "l/ar/developers/extend/apps/getting-started",
                   "l/ar/developers/extend/apps/building",
@@ -1321,7 +1144,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/ar/developers/extend/api",
                   "l/ar/developers/extend/webhooks",
@@ -1330,106 +1152,20 @@
               },
               {
                 "group": "الاستضافة الذاتية",
-                "icon": "desktop",
                 "pages": [
-                  "l/ar/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ar/developers/self-host/capabilities/docker-compose",
-                      "l/ar/developers/self-host/capabilities/setup",
-                      "l/ar/developers/self-host/capabilities/upgrade-guide",
-                      "l/ar/developers/self-host/capabilities/cloud-providers",
-                      "l/ar/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/ar/developers/self-host/capabilities/docker-compose",
+                  "l/ar/developers/self-host/capabilities/setup",
+                  "l/ar/developers/self-host/capabilities/upgrade-guide",
+                  "l/ar/developers/self-host/capabilities/cloud-providers",
+                  "l/ar/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "المساهمة",
-                "icon": "github",
                 "pages": [
-                  "l/ar/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ar/developers/contribute/capabilities/local-setup",
-                      "l/ar/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "تطوير الواجهة الأمامية",
-                        "pages": [
-                          "l/ar/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/ar/twenty-ui/introduction",
-                              {
-                                "group": "عرض",
-                                "pages": [
-                                  "l/ar/twenty-ui/display/checkmark",
-                                  "l/ar/twenty-ui/display/chip",
-                                  "l/ar/twenty-ui/display/icons",
-                                  "l/ar/twenty-ui/display/soon-pill",
-                                  "l/ar/twenty-ui/display/tag",
-                                  "l/ar/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "التغذية الراجعة",
-                                "pages": [
-                                  "l/ar/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "إدخال",
-                                "pages": [
-                                  "l/ar/twenty-ui/input/buttons",
-                                  "l/ar/twenty-ui/input/color-scheme",
-                                  "l/ar/twenty-ui/input/text",
-                                  "l/ar/twenty-ui/input/checkbox",
-                                  "l/ar/twenty-ui/input/icon-picker",
-                                  "l/ar/twenty-ui/input/image-input",
-                                  "l/ar/twenty-ui/input/radio",
-                                  "l/ar/twenty-ui/input/select",
-                                  "l/ar/twenty-ui/input/toggle",
-                                  "l/ar/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "التنقل",
-                                "pages": [
-                                  "l/ar/twenty-ui/navigation",
-                                  "l/ar/twenty-ui/navigation/breadcrumb",
-                                  "l/ar/twenty-ui/navigation/links",
-                                  "l/ar/twenty-ui/navigation/menu-item",
-                                  "l/ar/twenty-ui/navigation/navigation-bar",
-                                  "l/ar/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/ar/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/ar/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/ar/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/ar/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/ar/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/ar/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "تطوير الواجهة الخلفية",
-                        "pages": [
-                          "l/ar/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/ar/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/ar/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/ar/developers/contribute/capabilities/backend-development/zapier",
-                          "l/ar/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/ar/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/ar/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/ar/developers/contribute/capabilities/local-setup",
+                  "l/ar/developers/contribute/commands",
+                  "l/ar/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -1775,7 +1511,6 @@
               },
               {
                 "group": "Aplikace",
-                "icon": "cube",
                 "pages": [
                   "l/cs/developers/extend/apps/getting-started",
                   "l/cs/developers/extend/apps/building",
@@ -1789,7 +1524,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/cs/developers/extend/api",
                   "l/cs/developers/extend/webhooks",
@@ -1798,106 +1532,20 @@
               },
               {
                 "group": "Vlastní hosting",
-                "icon": "desktop",
                 "pages": [
-                  "l/cs/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/cs/developers/self-host/capabilities/docker-compose",
-                      "l/cs/developers/self-host/capabilities/setup",
-                      "l/cs/developers/self-host/capabilities/upgrade-guide",
-                      "l/cs/developers/self-host/capabilities/cloud-providers",
-                      "l/cs/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/cs/developers/self-host/capabilities/docker-compose",
+                  "l/cs/developers/self-host/capabilities/setup",
+                  "l/cs/developers/self-host/capabilities/upgrade-guide",
+                  "l/cs/developers/self-host/capabilities/cloud-providers",
+                  "l/cs/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Přispět",
-                "icon": "github",
                 "pages": [
-                  "l/cs/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/cs/developers/contribute/capabilities/local-setup",
-                      "l/cs/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Vývoj frontendu",
-                        "pages": [
-                          "l/cs/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/cs/twenty-ui/introduction",
-                              {
-                                "group": "Zobrazit",
-                                "pages": [
-                                  "l/cs/twenty-ui/display/checkmark",
-                                  "l/cs/twenty-ui/display/chip",
-                                  "l/cs/twenty-ui/display/icons",
-                                  "l/cs/twenty-ui/display/soon-pill",
-                                  "l/cs/twenty-ui/display/tag",
-                                  "l/cs/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Zpětná vazba",
-                                "pages": [
-                                  "l/cs/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Vstup",
-                                "pages": [
-                                  "l/cs/twenty-ui/input/buttons",
-                                  "l/cs/twenty-ui/input/color-scheme",
-                                  "l/cs/twenty-ui/input/text",
-                                  "l/cs/twenty-ui/input/checkbox",
-                                  "l/cs/twenty-ui/input/icon-picker",
-                                  "l/cs/twenty-ui/input/image-input",
-                                  "l/cs/twenty-ui/input/radio",
-                                  "l/cs/twenty-ui/input/select",
-                                  "l/cs/twenty-ui/input/toggle",
-                                  "l/cs/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navigace",
-                                "pages": [
-                                  "l/cs/twenty-ui/navigation",
-                                  "l/cs/twenty-ui/navigation/breadcrumb",
-                                  "l/cs/twenty-ui/navigation/links",
-                                  "l/cs/twenty-ui/navigation/menu-item",
-                                  "l/cs/twenty-ui/navigation/navigation-bar",
-                                  "l/cs/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/cs/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/cs/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/cs/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/cs/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/cs/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/cs/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Vývoj backendu",
-                        "pages": [
-                          "l/cs/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/cs/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/cs/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/cs/developers/contribute/capabilities/backend-development/zapier",
-                          "l/cs/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/cs/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/cs/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/cs/developers/contribute/capabilities/local-setup",
+                  "l/cs/developers/contribute/commands",
+                  "l/cs/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -2243,7 +1891,6 @@
               },
               {
                 "group": "Apps",
-                "icon": "cube",
                 "pages": [
                   "l/de/developers/extend/apps/getting-started",
                   "l/de/developers/extend/apps/building",
@@ -2257,7 +1904,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/de/developers/extend/api",
                   "l/de/developers/extend/webhooks",
@@ -2266,106 +1912,20 @@
               },
               {
                 "group": "Selbsthosting",
-                "icon": "desktop",
                 "pages": [
-                  "l/de/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/de/developers/self-host/capabilities/docker-compose",
-                      "l/de/developers/self-host/capabilities/setup",
-                      "l/de/developers/self-host/capabilities/upgrade-guide",
-                      "l/de/developers/self-host/capabilities/cloud-providers",
-                      "l/de/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/de/developers/self-host/capabilities/docker-compose",
+                  "l/de/developers/self-host/capabilities/setup",
+                  "l/de/developers/self-host/capabilities/upgrade-guide",
+                  "l/de/developers/self-host/capabilities/cloud-providers",
+                  "l/de/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Mitwirken",
-                "icon": "github",
                 "pages": [
-                  "l/de/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/de/developers/contribute/capabilities/local-setup",
-                      "l/de/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Frontend-Entwicklung",
-                        "pages": [
-                          "l/de/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/de/twenty-ui/introduction",
-                              {
-                                "group": "Anzeigen",
-                                "pages": [
-                                  "l/de/twenty-ui/display/checkmark",
-                                  "l/de/twenty-ui/display/chip",
-                                  "l/de/twenty-ui/display/icons",
-                                  "l/de/twenty-ui/display/soon-pill",
-                                  "l/de/twenty-ui/display/tag",
-                                  "l/de/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Rückmeldung",
-                                "pages": [
-                                  "l/de/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Eingabe",
-                                "pages": [
-                                  "l/de/twenty-ui/input/buttons",
-                                  "l/de/twenty-ui/input/color-scheme",
-                                  "l/de/twenty-ui/input/text",
-                                  "l/de/twenty-ui/input/checkbox",
-                                  "l/de/twenty-ui/input/icon-picker",
-                                  "l/de/twenty-ui/input/image-input",
-                                  "l/de/twenty-ui/input/radio",
-                                  "l/de/twenty-ui/input/select",
-                                  "l/de/twenty-ui/input/toggle",
-                                  "l/de/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navigation",
-                                "pages": [
-                                  "l/de/twenty-ui/navigation",
-                                  "l/de/twenty-ui/navigation/breadcrumb",
-                                  "l/de/twenty-ui/navigation/links",
-                                  "l/de/twenty-ui/navigation/menu-item",
-                                  "l/de/twenty-ui/navigation/navigation-bar",
-                                  "l/de/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/de/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/de/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/de/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/de/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/de/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/de/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Backend-Entwicklung",
-                        "pages": [
-                          "l/de/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/de/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/de/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/de/developers/contribute/capabilities/backend-development/zapier",
-                          "l/de/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/de/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/de/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/de/developers/contribute/capabilities/local-setup",
+                  "l/de/developers/contribute/commands",
+                  "l/de/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -2711,7 +2271,6 @@
               },
               {
                 "group": "Apps",
-                "icon": "cube",
                 "pages": [
                   "l/es/developers/extend/apps/getting-started",
                   "l/es/developers/extend/apps/building",
@@ -2725,7 +2284,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/es/developers/extend/api",
                   "l/es/developers/extend/webhooks",
@@ -2734,106 +2292,20 @@
               },
               {
                 "group": "Autoalojamiento",
-                "icon": "desktop",
                 "pages": [
-                  "l/es/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/es/developers/self-host/capabilities/docker-compose",
-                      "l/es/developers/self-host/capabilities/setup",
-                      "l/es/developers/self-host/capabilities/upgrade-guide",
-                      "l/es/developers/self-host/capabilities/cloud-providers",
-                      "l/es/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/es/developers/self-host/capabilities/docker-compose",
+                  "l/es/developers/self-host/capabilities/setup",
+                  "l/es/developers/self-host/capabilities/upgrade-guide",
+                  "l/es/developers/self-host/capabilities/cloud-providers",
+                  "l/es/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Contribuir",
-                "icon": "github",
                 "pages": [
-                  "l/es/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/es/developers/contribute/capabilities/local-setup",
-                      "l/es/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Desarrollo Frontend",
-                        "pages": [
-                          "l/es/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/es/twenty-ui/introduction",
-                              {
-                                "group": "Mostrar",
-                                "pages": [
-                                  "l/es/twenty-ui/display/checkmark",
-                                  "l/es/twenty-ui/display/chip",
-                                  "l/es/twenty-ui/display/icons",
-                                  "l/es/twenty-ui/display/soon-pill",
-                                  "l/es/twenty-ui/display/tag",
-                                  "l/es/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Retroalimentación",
-                                "pages": [
-                                  "l/es/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Entrada",
-                                "pages": [
-                                  "l/es/twenty-ui/input/buttons",
-                                  "l/es/twenty-ui/input/color-scheme",
-                                  "l/es/twenty-ui/input/text",
-                                  "l/es/twenty-ui/input/checkbox",
-                                  "l/es/twenty-ui/input/icon-picker",
-                                  "l/es/twenty-ui/input/image-input",
-                                  "l/es/twenty-ui/input/radio",
-                                  "l/es/twenty-ui/input/select",
-                                  "l/es/twenty-ui/input/toggle",
-                                  "l/es/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navegación",
-                                "pages": [
-                                  "l/es/twenty-ui/navigation",
-                                  "l/es/twenty-ui/navigation/breadcrumb",
-                                  "l/es/twenty-ui/navigation/links",
-                                  "l/es/twenty-ui/navigation/menu-item",
-                                  "l/es/twenty-ui/navigation/navigation-bar",
-                                  "l/es/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/es/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/es/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/es/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/es/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/es/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/es/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Desarrollo Backend",
-                        "pages": [
-                          "l/es/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/es/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/es/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/es/developers/contribute/capabilities/backend-development/zapier",
-                          "l/es/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/es/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/es/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/es/developers/contribute/capabilities/local-setup",
+                  "l/es/developers/contribute/commands",
+                  "l/es/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -3179,7 +2651,6 @@
               },
               {
                 "group": "App",
-                "icon": "cube",
                 "pages": [
                   "l/it/developers/extend/apps/getting-started",
                   "l/it/developers/extend/apps/building",
@@ -3193,7 +2664,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/it/developers/extend/api",
                   "l/it/developers/extend/webhooks",
@@ -3202,106 +2672,20 @@
               },
               {
                 "group": "Auto-ospitazione",
-                "icon": "desktop",
                 "pages": [
-                  "l/it/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/it/developers/self-host/capabilities/docker-compose",
-                      "l/it/developers/self-host/capabilities/setup",
-                      "l/it/developers/self-host/capabilities/upgrade-guide",
-                      "l/it/developers/self-host/capabilities/cloud-providers",
-                      "l/it/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/it/developers/self-host/capabilities/docker-compose",
+                  "l/it/developers/self-host/capabilities/setup",
+                  "l/it/developers/self-host/capabilities/upgrade-guide",
+                  "l/it/developers/self-host/capabilities/cloud-providers",
+                  "l/it/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Contribuire",
-                "icon": "github",
                 "pages": [
-                  "l/it/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/it/developers/contribute/capabilities/local-setup",
-                      "l/it/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Sviluppo Frontend",
-                        "pages": [
-                          "l/it/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/it/twenty-ui/introduction",
-                              {
-                                "group": "Mostra",
-                                "pages": [
-                                  "l/it/twenty-ui/display/checkmark",
-                                  "l/it/twenty-ui/display/chip",
-                                  "l/it/twenty-ui/display/icons",
-                                  "l/it/twenty-ui/display/soon-pill",
-                                  "l/it/twenty-ui/display/tag",
-                                  "l/it/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Feedback",
-                                "pages": [
-                                  "l/it/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Input",
-                                "pages": [
-                                  "l/it/twenty-ui/input/buttons",
-                                  "l/it/twenty-ui/input/color-scheme",
-                                  "l/it/twenty-ui/input/text",
-                                  "l/it/twenty-ui/input/checkbox",
-                                  "l/it/twenty-ui/input/icon-picker",
-                                  "l/it/twenty-ui/input/image-input",
-                                  "l/it/twenty-ui/input/radio",
-                                  "l/it/twenty-ui/input/select",
-                                  "l/it/twenty-ui/input/toggle",
-                                  "l/it/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navigazione",
-                                "pages": [
-                                  "l/it/twenty-ui/navigation",
-                                  "l/it/twenty-ui/navigation/breadcrumb",
-                                  "l/it/twenty-ui/navigation/links",
-                                  "l/it/twenty-ui/navigation/menu-item",
-                                  "l/it/twenty-ui/navigation/navigation-bar",
-                                  "l/it/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/it/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/it/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/it/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/it/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/it/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/it/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Sviluppo Backend",
-                        "pages": [
-                          "l/it/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/it/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/it/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/it/developers/contribute/capabilities/backend-development/zapier",
-                          "l/it/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/it/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/it/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/it/developers/contribute/capabilities/local-setup",
+                  "l/it/developers/contribute/commands",
+                  "l/it/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -3647,7 +3031,6 @@
               },
               {
                 "group": "Apps",
-                "icon": "cube",
                 "pages": [
                   "l/ja/developers/extend/apps/getting-started",
                   "l/ja/developers/extend/apps/building",
@@ -3661,7 +3044,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/ja/developers/extend/api",
                   "l/ja/developers/extend/webhooks",
@@ -3670,106 +3052,20 @@
               },
               {
                 "group": "セルフホスト",
-                "icon": "desktop",
                 "pages": [
-                  "l/ja/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ja/developers/self-host/capabilities/docker-compose",
-                      "l/ja/developers/self-host/capabilities/setup",
-                      "l/ja/developers/self-host/capabilities/upgrade-guide",
-                      "l/ja/developers/self-host/capabilities/cloud-providers",
-                      "l/ja/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/ja/developers/self-host/capabilities/docker-compose",
+                  "l/ja/developers/self-host/capabilities/setup",
+                  "l/ja/developers/self-host/capabilities/upgrade-guide",
+                  "l/ja/developers/self-host/capabilities/cloud-providers",
+                  "l/ja/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "貢献",
-                "icon": "github",
                 "pages": [
-                  "l/ja/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ja/developers/contribute/capabilities/local-setup",
-                      "l/ja/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "フロントエンド開発",
-                        "pages": [
-                          "l/ja/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/ja/twenty-ui/introduction",
-                              {
-                                "group": "表示",
-                                "pages": [
-                                  "l/ja/twenty-ui/display/checkmark",
-                                  "l/ja/twenty-ui/display/chip",
-                                  "l/ja/twenty-ui/display/icons",
-                                  "l/ja/twenty-ui/display/soon-pill",
-                                  "l/ja/twenty-ui/display/tag",
-                                  "l/ja/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "フィードバック",
-                                "pages": [
-                                  "l/ja/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "入力",
-                                "pages": [
-                                  "l/ja/twenty-ui/input/buttons",
-                                  "l/ja/twenty-ui/input/color-scheme",
-                                  "l/ja/twenty-ui/input/text",
-                                  "l/ja/twenty-ui/input/checkbox",
-                                  "l/ja/twenty-ui/input/icon-picker",
-                                  "l/ja/twenty-ui/input/image-input",
-                                  "l/ja/twenty-ui/input/radio",
-                                  "l/ja/twenty-ui/input/select",
-                                  "l/ja/twenty-ui/input/toggle",
-                                  "l/ja/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "ナビゲーション",
-                                "pages": [
-                                  "l/ja/twenty-ui/navigation",
-                                  "l/ja/twenty-ui/navigation/breadcrumb",
-                                  "l/ja/twenty-ui/navigation/links",
-                                  "l/ja/twenty-ui/navigation/menu-item",
-                                  "l/ja/twenty-ui/navigation/navigation-bar",
-                                  "l/ja/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/ja/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/ja/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/ja/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/ja/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/ja/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/ja/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "バックエンド開発",
-                        "pages": [
-                          "l/ja/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/ja/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/ja/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/ja/developers/contribute/capabilities/backend-development/zapier",
-                          "l/ja/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/ja/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/ja/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/ja/developers/contribute/capabilities/local-setup",
+                  "l/ja/developers/contribute/commands",
+                  "l/ja/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -4115,7 +3411,6 @@
               },
               {
                 "group": "Apps",
-                "icon": "cube",
                 "pages": [
                   "l/ko/developers/extend/apps/getting-started",
                   "l/ko/developers/extend/apps/building",
@@ -4129,7 +3424,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/ko/developers/extend/api",
                   "l/ko/developers/extend/webhooks",
@@ -4138,106 +3432,20 @@
               },
               {
                 "group": "셀프 호스팅",
-                "icon": "desktop",
                 "pages": [
-                  "l/ko/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ko/developers/self-host/capabilities/docker-compose",
-                      "l/ko/developers/self-host/capabilities/setup",
-                      "l/ko/developers/self-host/capabilities/upgrade-guide",
-                      "l/ko/developers/self-host/capabilities/cloud-providers",
-                      "l/ko/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/ko/developers/self-host/capabilities/docker-compose",
+                  "l/ko/developers/self-host/capabilities/setup",
+                  "l/ko/developers/self-host/capabilities/upgrade-guide",
+                  "l/ko/developers/self-host/capabilities/cloud-providers",
+                  "l/ko/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "기여",
-                "icon": "github",
                 "pages": [
-                  "l/ko/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ko/developers/contribute/capabilities/local-setup",
-                      "l/ko/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "프론트엔드 개발",
-                        "pages": [
-                          "l/ko/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/ko/twenty-ui/introduction",
-                              {
-                                "group": "표시",
-                                "pages": [
-                                  "l/ko/twenty-ui/display/checkmark",
-                                  "l/ko/twenty-ui/display/chip",
-                                  "l/ko/twenty-ui/display/icons",
-                                  "l/ko/twenty-ui/display/soon-pill",
-                                  "l/ko/twenty-ui/display/tag",
-                                  "l/ko/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "피드백",
-                                "pages": [
-                                  "l/ko/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "입력",
-                                "pages": [
-                                  "l/ko/twenty-ui/input/buttons",
-                                  "l/ko/twenty-ui/input/color-scheme",
-                                  "l/ko/twenty-ui/input/text",
-                                  "l/ko/twenty-ui/input/checkbox",
-                                  "l/ko/twenty-ui/input/icon-picker",
-                                  "l/ko/twenty-ui/input/image-input",
-                                  "l/ko/twenty-ui/input/radio",
-                                  "l/ko/twenty-ui/input/select",
-                                  "l/ko/twenty-ui/input/toggle",
-                                  "l/ko/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "네비게이션",
-                                "pages": [
-                                  "l/ko/twenty-ui/navigation",
-                                  "l/ko/twenty-ui/navigation/breadcrumb",
-                                  "l/ko/twenty-ui/navigation/links",
-                                  "l/ko/twenty-ui/navigation/menu-item",
-                                  "l/ko/twenty-ui/navigation/navigation-bar",
-                                  "l/ko/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/ko/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/ko/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/ko/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/ko/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/ko/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/ko/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "백엔드 개발",
-                        "pages": [
-                          "l/ko/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/ko/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/ko/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/ko/developers/contribute/capabilities/backend-development/zapier",
-                          "l/ko/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/ko/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/ko/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/ko/developers/contribute/capabilities/local-setup",
+                  "l/ko/developers/contribute/commands",
+                  "l/ko/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -4583,7 +3791,6 @@
               },
               {
                 "group": "Aplicativos",
-                "icon": "cube",
                 "pages": [
                   "l/pt/developers/extend/apps/getting-started",
                   "l/pt/developers/extend/apps/building",
@@ -4597,7 +3804,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/pt/developers/extend/api",
                   "l/pt/developers/extend/webhooks",
@@ -4606,106 +3812,20 @@
               },
               {
                 "group": "Self-Host",
-                "icon": "desktop",
                 "pages": [
-                  "l/pt/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/pt/developers/self-host/capabilities/docker-compose",
-                      "l/pt/developers/self-host/capabilities/setup",
-                      "l/pt/developers/self-host/capabilities/upgrade-guide",
-                      "l/pt/developers/self-host/capabilities/cloud-providers",
-                      "l/pt/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/pt/developers/self-host/capabilities/docker-compose",
+                  "l/pt/developers/self-host/capabilities/setup",
+                  "l/pt/developers/self-host/capabilities/upgrade-guide",
+                  "l/pt/developers/self-host/capabilities/cloud-providers",
+                  "l/pt/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Contribute",
-                "icon": "github",
                 "pages": [
-                  "l/pt/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/pt/developers/contribute/capabilities/local-setup",
-                      "l/pt/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Desenvolvimento Frontend",
-                        "pages": [
-                          "l/pt/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/pt/twenty-ui/introduction",
-                              {
-                                "group": "Exibir",
-                                "pages": [
-                                  "l/pt/twenty-ui/display/checkmark",
-                                  "l/pt/twenty-ui/display/chip",
-                                  "l/pt/twenty-ui/display/icons",
-                                  "l/pt/twenty-ui/display/soon-pill",
-                                  "l/pt/twenty-ui/display/tag",
-                                  "l/pt/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Feedback",
-                                "pages": [
-                                  "l/pt/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Entrada",
-                                "pages": [
-                                  "l/pt/twenty-ui/input/buttons",
-                                  "l/pt/twenty-ui/input/color-scheme",
-                                  "l/pt/twenty-ui/input/text",
-                                  "l/pt/twenty-ui/input/checkbox",
-                                  "l/pt/twenty-ui/input/icon-picker",
-                                  "l/pt/twenty-ui/input/image-input",
-                                  "l/pt/twenty-ui/input/radio",
-                                  "l/pt/twenty-ui/input/select",
-                                  "l/pt/twenty-ui/input/toggle",
-                                  "l/pt/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navegação",
-                                "pages": [
-                                  "l/pt/twenty-ui/navigation",
-                                  "l/pt/twenty-ui/navigation/breadcrumb",
-                                  "l/pt/twenty-ui/navigation/links",
-                                  "l/pt/twenty-ui/navigation/menu-item",
-                                  "l/pt/twenty-ui/navigation/navigation-bar",
-                                  "l/pt/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/pt/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/pt/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/pt/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/pt/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/pt/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/pt/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Desenvolvimento Backend",
-                        "pages": [
-                          "l/pt/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/pt/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/pt/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/pt/developers/contribute/capabilities/backend-development/zapier",
-                          "l/pt/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/pt/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/pt/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/pt/developers/contribute/capabilities/local-setup",
+                  "l/pt/developers/contribute/commands",
+                  "l/pt/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -5051,7 +4171,6 @@
               },
               {
                 "group": "Aplicații",
-                "icon": "cube",
                 "pages": [
                   "l/ro/developers/extend/apps/getting-started",
                   "l/ro/developers/extend/apps/building",
@@ -5065,7 +4184,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/ro/developers/extend/api",
                   "l/ro/developers/extend/webhooks",
@@ -5074,106 +4192,20 @@
               },
               {
                 "group": "Self-Host",
-                "icon": "desktop",
                 "pages": [
-                  "l/ro/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ro/developers/self-host/capabilities/docker-compose",
-                      "l/ro/developers/self-host/capabilities/setup",
-                      "l/ro/developers/self-host/capabilities/upgrade-guide",
-                      "l/ro/developers/self-host/capabilities/cloud-providers",
-                      "l/ro/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/ro/developers/self-host/capabilities/docker-compose",
+                  "l/ro/developers/self-host/capabilities/setup",
+                  "l/ro/developers/self-host/capabilities/upgrade-guide",
+                  "l/ro/developers/self-host/capabilities/cloud-providers",
+                  "l/ro/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Contribute",
-                "icon": "github",
                 "pages": [
-                  "l/ro/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ro/developers/contribute/capabilities/local-setup",
-                      "l/ro/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Frontend Development",
-                        "pages": [
-                          "l/ro/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/ro/twenty-ui/introduction",
-                              {
-                                "group": "Afișare",
-                                "pages": [
-                                  "l/ro/twenty-ui/display/checkmark",
-                                  "l/ro/twenty-ui/display/chip",
-                                  "l/ro/twenty-ui/display/icons",
-                                  "l/ro/twenty-ui/display/soon-pill",
-                                  "l/ro/twenty-ui/display/tag",
-                                  "l/ro/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Feedback",
-                                "pages": [
-                                  "l/ro/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Intrare",
-                                "pages": [
-                                  "l/ro/twenty-ui/input/buttons",
-                                  "l/ro/twenty-ui/input/color-scheme",
-                                  "l/ro/twenty-ui/input/text",
-                                  "l/ro/twenty-ui/input/checkbox",
-                                  "l/ro/twenty-ui/input/icon-picker",
-                                  "l/ro/twenty-ui/input/image-input",
-                                  "l/ro/twenty-ui/input/radio",
-                                  "l/ro/twenty-ui/input/select",
-                                  "l/ro/twenty-ui/input/toggle",
-                                  "l/ro/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Navigare",
-                                "pages": [
-                                  "l/ro/twenty-ui/navigation",
-                                  "l/ro/twenty-ui/navigation/breadcrumb",
-                                  "l/ro/twenty-ui/navigation/links",
-                                  "l/ro/twenty-ui/navigation/menu-item",
-                                  "l/ro/twenty-ui/navigation/navigation-bar",
-                                  "l/ro/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/ro/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/ro/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/ro/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/ro/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/ro/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/ro/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Dezvoltare Backend",
-                        "pages": [
-                          "l/ro/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/ro/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/ro/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/ro/developers/contribute/capabilities/backend-development/zapier",
-                          "l/ro/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/ro/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/ro/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/ro/developers/contribute/capabilities/local-setup",
+                  "l/ro/developers/contribute/commands",
+                  "l/ro/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -5519,7 +4551,6 @@
               },
               {
                 "group": "Приложения",
-                "icon": "cube",
                 "pages": [
                   "l/ru/developers/extend/apps/getting-started",
                   "l/ru/developers/extend/apps/building",
@@ -5533,7 +4564,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/ru/developers/extend/api",
                   "l/ru/developers/extend/webhooks",
@@ -5542,106 +4572,20 @@
               },
               {
                 "group": "Самостоятельный хостинг",
-                "icon": "desktop",
                 "pages": [
-                  "l/ru/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ru/developers/self-host/capabilities/docker-compose",
-                      "l/ru/developers/self-host/capabilities/setup",
-                      "l/ru/developers/self-host/capabilities/upgrade-guide",
-                      "l/ru/developers/self-host/capabilities/cloud-providers",
-                      "l/ru/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/ru/developers/self-host/capabilities/docker-compose",
+                  "l/ru/developers/self-host/capabilities/setup",
+                  "l/ru/developers/self-host/capabilities/upgrade-guide",
+                  "l/ru/developers/self-host/capabilities/cloud-providers",
+                  "l/ru/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Внести вклад",
-                "icon": "github",
                 "pages": [
-                  "l/ru/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/ru/developers/contribute/capabilities/local-setup",
-                      "l/ru/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Разработка интерфейса",
-                        "pages": [
-                          "l/ru/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/ru/twenty-ui/introduction",
-                              {
-                                "group": "Отображение",
-                                "pages": [
-                                  "l/ru/twenty-ui/display/checkmark",
-                                  "l/ru/twenty-ui/display/chip",
-                                  "l/ru/twenty-ui/display/icons",
-                                  "l/ru/twenty-ui/display/soon-pill",
-                                  "l/ru/twenty-ui/display/tag",
-                                  "l/ru/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Обратная связь",
-                                "pages": [
-                                  "l/ru/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Ввод",
-                                "pages": [
-                                  "l/ru/twenty-ui/input/buttons",
-                                  "l/ru/twenty-ui/input/color-scheme",
-                                  "l/ru/twenty-ui/input/text",
-                                  "l/ru/twenty-ui/input/checkbox",
-                                  "l/ru/twenty-ui/input/icon-picker",
-                                  "l/ru/twenty-ui/input/image-input",
-                                  "l/ru/twenty-ui/input/radio",
-                                  "l/ru/twenty-ui/input/select",
-                                  "l/ru/twenty-ui/input/toggle",
-                                  "l/ru/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Навигация",
-                                "pages": [
-                                  "l/ru/twenty-ui/navigation",
-                                  "l/ru/twenty-ui/navigation/breadcrumb",
-                                  "l/ru/twenty-ui/navigation/links",
-                                  "l/ru/twenty-ui/navigation/menu-item",
-                                  "l/ru/twenty-ui/navigation/navigation-bar",
-                                  "l/ru/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/ru/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/ru/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/ru/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/ru/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/ru/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/ru/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Разработка серверной части",
-                        "pages": [
-                          "l/ru/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/ru/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/ru/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/ru/developers/contribute/capabilities/backend-development/zapier",
-                          "l/ru/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/ru/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/ru/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/ru/developers/contribute/capabilities/local-setup",
+                  "l/ru/developers/contribute/commands",
+                  "l/ru/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -5987,7 +4931,6 @@
               },
               {
                 "group": "Uygulamalar",
-                "icon": "cube",
                 "pages": [
                   "l/tr/developers/extend/apps/getting-started",
                   "l/tr/developers/extend/apps/building",
@@ -6001,7 +4944,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/tr/developers/extend/api",
                   "l/tr/developers/extend/webhooks",
@@ -6010,106 +4952,20 @@
               },
               {
                 "group": "Kendi Kendine Barındırma",
-                "icon": "desktop",
                 "pages": [
-                  "l/tr/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/tr/developers/self-host/capabilities/docker-compose",
-                      "l/tr/developers/self-host/capabilities/setup",
-                      "l/tr/developers/self-host/capabilities/upgrade-guide",
-                      "l/tr/developers/self-host/capabilities/cloud-providers",
-                      "l/tr/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/tr/developers/self-host/capabilities/docker-compose",
+                  "l/tr/developers/self-host/capabilities/setup",
+                  "l/tr/developers/self-host/capabilities/upgrade-guide",
+                  "l/tr/developers/self-host/capabilities/cloud-providers",
+                  "l/tr/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "Katkıda Bulunun",
-                "icon": "github",
                 "pages": [
-                  "l/tr/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/tr/developers/contribute/capabilities/local-setup",
-                      "l/tr/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "Frontend Geliştirme",
-                        "pages": [
-                          "l/tr/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/tr/twenty-ui/introduction",
-                              {
-                                "group": "Görüntüle",
-                                "pages": [
-                                  "l/tr/twenty-ui/display/checkmark",
-                                  "l/tr/twenty-ui/display/chip",
-                                  "l/tr/twenty-ui/display/icons",
-                                  "l/tr/twenty-ui/display/soon-pill",
-                                  "l/tr/twenty-ui/display/tag",
-                                  "l/tr/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "Geri Bildirim",
-                                "pages": [
-                                  "l/tr/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "Girdi",
-                                "pages": [
-                                  "l/tr/twenty-ui/input/buttons",
-                                  "l/tr/twenty-ui/input/color-scheme",
-                                  "l/tr/twenty-ui/input/text",
-                                  "l/tr/twenty-ui/input/checkbox",
-                                  "l/tr/twenty-ui/input/icon-picker",
-                                  "l/tr/twenty-ui/input/image-input",
-                                  "l/tr/twenty-ui/input/radio",
-                                  "l/tr/twenty-ui/input/select",
-                                  "l/tr/twenty-ui/input/toggle",
-                                  "l/tr/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "Gezinme",
-                                "pages": [
-                                  "l/tr/twenty-ui/navigation",
-                                  "l/tr/twenty-ui/navigation/breadcrumb",
-                                  "l/tr/twenty-ui/navigation/links",
-                                  "l/tr/twenty-ui/navigation/menu-item",
-                                  "l/tr/twenty-ui/navigation/navigation-bar",
-                                  "l/tr/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/tr/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/tr/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/tr/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/tr/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/tr/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/tr/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "Backend Geliştirme",
-                        "pages": [
-                          "l/tr/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/tr/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/tr/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/tr/developers/contribute/capabilities/backend-development/zapier",
-                          "l/tr/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/tr/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/tr/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/tr/developers/contribute/capabilities/local-setup",
+                  "l/tr/developers/contribute/commands",
+                  "l/tr/developers/contribute/style-guide"
                 ]
               }
             ]
@@ -6455,7 +5311,6 @@
               },
               {
                 "group": "应用",
-                "icon": "cube",
                 "pages": [
                   "l/zh/developers/extend/apps/getting-started",
                   "l/zh/developers/extend/apps/building",
@@ -6469,7 +5324,6 @@
               },
               {
                 "group": "API",
-                "icon": "plug",
                 "pages": [
                   "l/zh/developers/extend/api",
                   "l/zh/developers/extend/webhooks",
@@ -6478,106 +5332,20 @@
               },
               {
                 "group": "自托管",
-                "icon": "desktop",
                 "pages": [
-                  "l/zh/developers/self-host/self-host",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/zh/developers/self-host/capabilities/docker-compose",
-                      "l/zh/developers/self-host/capabilities/setup",
-                      "l/zh/developers/self-host/capabilities/upgrade-guide",
-                      "l/zh/developers/self-host/capabilities/cloud-providers",
-                      "l/zh/developers/self-host/capabilities/troubleshooting"
-                    ]
-                  }
+                  "l/zh/developers/self-host/capabilities/docker-compose",
+                  "l/zh/developers/self-host/capabilities/setup",
+                  "l/zh/developers/self-host/capabilities/upgrade-guide",
+                  "l/zh/developers/self-host/capabilities/cloud-providers",
+                  "l/zh/developers/self-host/capabilities/troubleshooting"
                 ]
               },
               {
                 "group": "贡献",
-                "icon": "github",
                 "pages": [
-                  "l/zh/developers/contribute/contribute",
-                  {
-                    "group": "Reference",
-                    "pages": [
-                      "l/zh/developers/contribute/capabilities/local-setup",
-                      "l/zh/developers/contribute/capabilities/bug-and-requests",
-                      {
-                        "group": "前端开发",
-                        "pages": [
-                          "l/zh/developers/contribute/capabilities/frontend-development/storybook",
-                          {
-                            "group": "Twenty UI",
-                            "pages": [
-                              "l/zh/twenty-ui/introduction",
-                              {
-                                "group": "展示",
-                                "pages": [
-                                  "l/zh/twenty-ui/display/checkmark",
-                                  "l/zh/twenty-ui/display/chip",
-                                  "l/zh/twenty-ui/display/icons",
-                                  "l/zh/twenty-ui/display/soon-pill",
-                                  "l/zh/twenty-ui/display/tag",
-                                  "l/zh/twenty-ui/display/app-tooltip"
-                                ]
-                              },
-                              {
-                                "group": "反馈",
-                                "pages": [
-                                  "l/zh/twenty-ui/progress-bar"
-                                ]
-                              },
-                              {
-                                "group": "输入",
-                                "pages": [
-                                  "l/zh/twenty-ui/input/buttons",
-                                  "l/zh/twenty-ui/input/color-scheme",
-                                  "l/zh/twenty-ui/input/text",
-                                  "l/zh/twenty-ui/input/checkbox",
-                                  "l/zh/twenty-ui/input/icon-picker",
-                                  "l/zh/twenty-ui/input/image-input",
-                                  "l/zh/twenty-ui/input/radio",
-                                  "l/zh/twenty-ui/input/select",
-                                  "l/zh/twenty-ui/input/toggle",
-                                  "l/zh/twenty-ui/input/block-editor"
-                                ]
-                              },
-                              {
-                                "group": "导航",
-                                "pages": [
-                                  "l/zh/twenty-ui/navigation",
-                                  "l/zh/twenty-ui/navigation/breadcrumb",
-                                  "l/zh/twenty-ui/navigation/links",
-                                  "l/zh/twenty-ui/navigation/menu-item",
-                                  "l/zh/twenty-ui/navigation/navigation-bar",
-                                  "l/zh/twenty-ui/navigation/step-bar"
-                                ]
-                              }
-                            ]
-                          },
-                          "l/zh/developers/contribute/capabilities/frontend-development/frontend-commands",
-                          "l/zh/developers/contribute/capabilities/frontend-development/work-with-figma",
-                          "l/zh/developers/contribute/capabilities/frontend-development/best-practices-front",
-                          "l/zh/developers/contribute/capabilities/frontend-development/style-guide",
-                          "l/zh/developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                          "l/zh/developers/contribute/capabilities/frontend-development/hotkeys"
-                        ]
-                      },
-                      {
-                        "group": "后端开发",
-                        "pages": [
-                          "l/zh/developers/contribute/capabilities/backend-development/server-commands",
-                          "l/zh/developers/contribute/capabilities/backend-development/feature-flags",
-                          "l/zh/developers/contribute/capabilities/backend-development/folder-architecture-server",
-                          "l/zh/developers/contribute/capabilities/backend-development/zapier",
-                          "l/zh/developers/contribute/capabilities/backend-development/best-practices-server",
-                          "l/zh/developers/contribute/capabilities/backend-development/custom-objects",
-                          "l/zh/developers/contribute/capabilities/backend-development/queue"
-                        ]
-                      }
-                    ]
-                  }
+                  "l/zh/developers/contribute/capabilities/local-setup",
+                  "l/zh/developers/contribute/commands",
+                  "l/zh/developers/contribute/style-guide"
                 ]
               }
             ]

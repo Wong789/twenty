@@ -12,39 +12,10 @@
  */
 
 export const DOCUMENTATION_PATHS = {
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_BEST_PRACTICES_SERVER:
-    '/developers/contribute/capabilities/backend-development/best-practices-server',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_CUSTOM_OBJECTS:
-    '/developers/contribute/capabilities/backend-development/custom-objects',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_FEATURE_FLAGS:
-    '/developers/contribute/capabilities/backend-development/feature-flags',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_FOLDER_ARCHITECTURE_SERVER:
-    '/developers/contribute/capabilities/backend-development/folder-architecture-server',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_QUEUE:
-    '/developers/contribute/capabilities/backend-development/queue',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_SERVER_COMMANDS:
-    '/developers/contribute/capabilities/backend-development/server-commands',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BACKEND_DEVELOPMENT_ZAPIER:
-    '/developers/contribute/capabilities/backend-development/zapier',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_BUG_AND_REQUESTS:
-    '/developers/contribute/capabilities/bug-and-requests',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_BEST_PRACTICES_FRONT:
-    '/developers/contribute/capabilities/frontend-development/best-practices-front',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_FOLDER_ARCHITECTURE_FRONT:
-    '/developers/contribute/capabilities/frontend-development/folder-architecture-front',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_FRONTEND_COMMANDS:
-    '/developers/contribute/capabilities/frontend-development/frontend-commands',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_HOTKEYS:
-    '/developers/contribute/capabilities/frontend-development/hotkeys',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_STORYBOOK:
-    '/developers/contribute/capabilities/frontend-development/storybook',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_STYLE_GUIDE:
-    '/developers/contribute/capabilities/frontend-development/style-guide',
-  DEVELOPERS_CONTRIBUTE_CAPABILITIES_FRONTEND_DEVELOPMENT_WORK_WITH_FIGMA:
-    '/developers/contribute/capabilities/frontend-development/work-with-figma',
   DEVELOPERS_CONTRIBUTE_CAPABILITIES_LOCAL_SETUP:
     '/developers/contribute/capabilities/local-setup',
-  DEVELOPERS_CONTRIBUTE_CONTRIBUTE: '/developers/contribute/contribute',
+  DEVELOPERS_CONTRIBUTE_COMMANDS: '/developers/contribute/commands',
+  DEVELOPERS_CONTRIBUTE_STYLE_GUIDE: '/developers/contribute/style-guide',
   DEVELOPERS_EXTEND_API: '/developers/extend/api',
   DEVELOPERS_EXTEND_APPS_BUILDING: '/developers/extend/apps/building',
   DEVELOPERS_EXTEND_APPS_CLI_AND_TESTING:
@@ -72,7 +43,6 @@ export const DOCUMENTATION_PATHS = {
     '/developers/self-host/capabilities/troubleshooting',
   DEVELOPERS_SELF_HOST_CAPABILITIES_UPGRADE_GUIDE:
     '/developers/self-host/capabilities/upgrade-guide',
-  DEVELOPERS_SELF_HOST_SELF_HOST: '/developers/self-host/self-host',
   GETTING_STARTED_CORE_CONCEPTS_AI: '/getting-started/core-concepts/ai',
   GETTING_STARTED_CORE_CONCEPTS_CALENDAR_AND_EMAIL:
     '/getting-started/core-concepts/calendar-and-email',
@@ -86,30 +56,6 @@ export const DOCUMENTATION_PATHS = {
   GETTING_STARTED_INTRODUCTION: '/getting-started/introduction',
   GETTING_STARTED_KEY_FEATURES: '/getting-started/key-features',
   GETTING_STARTED_QUICKSTART: '/getting-started/quickstart',
-  TWENTY_UI_DISPLAY_APP_TOOLTIP: '/twenty-ui/display/app-tooltip',
-  TWENTY_UI_DISPLAY_CHECKMARK: '/twenty-ui/display/checkmark',
-  TWENTY_UI_DISPLAY_CHIP: '/twenty-ui/display/chip',
-  TWENTY_UI_DISPLAY_ICONS: '/twenty-ui/display/icons',
-  TWENTY_UI_DISPLAY_SOON_PILL: '/twenty-ui/display/soon-pill',
-  TWENTY_UI_DISPLAY_TAG: '/twenty-ui/display/tag',
-  TWENTY_UI_INPUT_BLOCK_EDITOR: '/twenty-ui/input/block-editor',
-  TWENTY_UI_INPUT_BUTTONS: '/twenty-ui/input/buttons',
-  TWENTY_UI_INPUT_CHECKBOX: '/twenty-ui/input/checkbox',
-  TWENTY_UI_INPUT_COLOR_SCHEME: '/twenty-ui/input/color-scheme',
-  TWENTY_UI_INPUT_ICON_PICKER: '/twenty-ui/input/icon-picker',
-  TWENTY_UI_INPUT_IMAGE_INPUT: '/twenty-ui/input/image-input',
-  TWENTY_UI_INPUT_RADIO: '/twenty-ui/input/radio',
-  TWENTY_UI_INPUT_SELECT: '/twenty-ui/input/select',
-  TWENTY_UI_INPUT_TEXT: '/twenty-ui/input/text',
-  TWENTY_UI_INPUT_TOGGLE: '/twenty-ui/input/toggle',
-  TWENTY_UI_INTRODUCTION: '/twenty-ui/introduction',
-  TWENTY_UI_NAVIGATION: '/twenty-ui/navigation',
-  TWENTY_UI_NAVIGATION_BREADCRUMB: '/twenty-ui/navigation/breadcrumb',
-  TWENTY_UI_NAVIGATION_LINKS: '/twenty-ui/navigation/links',
-  TWENTY_UI_NAVIGATION_MENU_ITEM: '/twenty-ui/navigation/menu-item',
-  TWENTY_UI_NAVIGATION_NAVIGATION_BAR: '/twenty-ui/navigation/navigation-bar',
-  TWENTY_UI_NAVIGATION_STEP_BAR: '/twenty-ui/navigation/step-bar',
-  TWENTY_UI_PROGRESS_BAR: '/twenty-ui/progress-bar',
   USER_GUIDE_AI_CAPABILITIES_AI_AGENTS: '/user-guide/ai/capabilities/ai-agents',
   USER_GUIDE_AI_CAPABILITIES_AI_CHATBOT:
     '/user-guide/ai/capabilities/ai-chatbot',

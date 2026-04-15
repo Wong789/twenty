@@ -379,7 +379,6 @@
         {
           "key": "apps",
           "label": "Apps",
-          "icon": "cube",
           "pages": [
             "developers/extend/apps/getting-started",
             "developers/extend/apps/building",
@@ -394,7 +393,6 @@
         {
           "key": "api",
           "label": "API",
-          "icon": "plug",
           "pages": [
             "developers/extend/api",
             "developers/extend/webhooks",
@@ -404,116 +402,21 @@
         {
           "key": "selfHost",
           "label": "Self-Host",
-          "icon": "desktop",
           "pages": [
-            "developers/self-host/self-host",
-            {
-              "key": "selfHostReference",
-              "label": "Reference",
-              "pages": [
-                "developers/self-host/capabilities/docker-compose",
-                "developers/self-host/capabilities/setup",
-                "developers/self-host/capabilities/upgrade-guide",
-                "developers/self-host/capabilities/cloud-providers",
-                "developers/self-host/capabilities/troubleshooting"
-              ]
-            }
+            "developers/self-host/capabilities/docker-compose",
+            "developers/self-host/capabilities/setup",
+            "developers/self-host/capabilities/upgrade-guide",
+            "developers/self-host/capabilities/cloud-providers",
+            "developers/self-host/capabilities/troubleshooting"
           ]
         },
         {
           "key": "contribute",
           "label": "Contribute",
-          "icon": "github",
           "pages": [
-            "developers/contribute/contribute",
-            {
-              "key": "contributeReference",
-              "label": "Reference",
-              "pages": [
-                "developers/contribute/capabilities/local-setup",
-                "developers/contribute/capabilities/bug-and-requests",
-                {
-                  "key": "frontendDevelopment",
-                  "label": "Frontend Development",
-                  "pages": [
-                    "developers/contribute/capabilities/frontend-development/storybook",
-                    {
-                      "key": "twentyUi",
-                      "label": "Twenty UI",
-                      "pages": [
-                        "twenty-ui/introduction",
-                        {
-                          "key": "display",
-                          "label": "Display",
-                          "pages": [
-                            "twenty-ui/display/checkmark",
-                            "twenty-ui/display/chip",
-                            "twenty-ui/display/icons",
-                            "twenty-ui/display/soon-pill",
-                            "twenty-ui/display/tag",
-                            "twenty-ui/display/app-tooltip"
-                          ]
-                        },
-                        {
-                          "key": "feedback",
-                          "label": "Feedback",
-                          "pages": [
-                            "twenty-ui/progress-bar"
-                          ]
-                        },
-                        {
-                          "key": "input",
-                          "label": "Input",
-                          "pages": [
-                            "twenty-ui/input/buttons",
-                            "twenty-ui/input/color-scheme",
-                            "twenty-ui/input/text",
-                            "twenty-ui/input/checkbox",
-                            "twenty-ui/input/icon-picker",
-                            "twenty-ui/input/image-input",
-                            "twenty-ui/input/radio",
-                            "twenty-ui/input/select",
-                            "twenty-ui/input/toggle",
-                            "twenty-ui/input/block-editor"
-                          ]
-                        },
-                        {
-                          "key": "navigation",
-                          "label": "Navigation",
-                          "pages": [
-                            "twenty-ui/navigation",
-                            "twenty-ui/navigation/breadcrumb",
-                            "twenty-ui/navigation/links",
-                            "twenty-ui/navigation/menu-item",
-                            "twenty-ui/navigation/navigation-bar",
-                            "twenty-ui/navigation/step-bar"
-                          ]
-                        }
-                      ]
-                    },
-                    "developers/contribute/capabilities/frontend-development/frontend-commands",
-                    "developers/contribute/capabilities/frontend-development/work-with-figma",
-                    "developers/contribute/capabilities/frontend-development/best-practices-front",
-                    "developers/contribute/capabilities/frontend-development/style-guide",
-                    "developers/contribute/capabilities/frontend-development/folder-architecture-front",
-                    "developers/contribute/capabilities/frontend-development/hotkeys"
-                  ]
-                },
-                {
-                  "key": "backendDevelopment",
-                  "label": "Backend Development",
-                  "pages": [
-                    "developers/contribute/capabilities/backend-development/server-commands",
-                    "developers/contribute/capabilities/backend-development/feature-flags",
-                    "developers/contribute/capabilities/backend-development/folder-architecture-server",
-                    "developers/contribute/capabilities/backend-development/zapier",
-                    "developers/contribute/capabilities/backend-development/best-practices-server",
-                    "developers/contribute/capabilities/backend-development/custom-objects",
-                    "developers/contribute/capabilities/backend-development/queue"
-                  ]
-                }
-              ]
-            }
+            "developers/contribute/capabilities/local-setup",
+            "developers/contribute/commands",
+            "developers/contribute/style-guide"
           ]
         }
       ]
