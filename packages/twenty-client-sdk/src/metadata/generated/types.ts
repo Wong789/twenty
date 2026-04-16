@@ -3478,11 +3478,14 @@ export default {
                 1
             ]
         },
-        "NativeModelCapabilities": {
+        "AgentCapabilities": {
             "webSearch": [
                 6
             ],
             "twitterSearch": [
+                6
+            ],
+            "codeInterpreter": [
                 6
             ],
             "__typename": [
@@ -3511,7 +3514,7 @@ export default {
             "outputCostPerMillionTokens": [
                 11
             ],
-            "nativeCapabilities": [
+            "capabilities": [
                 177
             ],
             "isDeprecated": [
