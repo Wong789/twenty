@@ -348,12 +348,8 @@ export const fromPageLayoutWidgetConfigurationToUniversalConfiguration = ({
     }
 
     case WidgetConfigurationType.FIELD: {
-      const {
-        fieldMetadataId,
-        fieldDisplayMode,
-        configurationType,
-        viewId,
-      } = configuration;
+      const { fieldMetadataId, fieldDisplayMode, configurationType, viewId } =
+        configuration;
 
       const fieldMetadataUniversalIdentifier =
         getFieldMetadataUniversalIdentifier({

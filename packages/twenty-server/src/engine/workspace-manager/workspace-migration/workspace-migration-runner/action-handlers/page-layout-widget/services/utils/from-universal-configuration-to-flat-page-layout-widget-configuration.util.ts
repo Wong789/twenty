@@ -22,7 +22,7 @@ const resolveFieldMetadataIdOrThrow = ({
 }): string => {
   if (!isDefined(fieldMetadataUniversalIdentifier)) {
     throw new FlatEntityMapsException(
-      `Could not found any field metadata universal identifier while resolving page layout widget`,
+      `Could not find any field metadata universal identifier while resolving page layout widget`,
       FlatEntityMapsExceptionCode.ENTITY_NOT_FOUND,
     );
   }

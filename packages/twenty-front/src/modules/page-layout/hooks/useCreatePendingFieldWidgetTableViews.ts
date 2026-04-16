@@ -5,8 +5,8 @@ import { pageLayoutPersistedComponentState } from '@/page-layout/states/pageLayo
 import { type FieldConfiguration } from '@/page-layout/types/FieldConfiguration';
 import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { resolveRelatedObjectForFieldWidget } from '@/page-layout/utils/resolveRelatedObjectForFieldWidget';
-import { filterFieldsForRecordTableViewCreation } from '@/page-layout/widgets/record-table/utils/filterFieldsForRecordTableViewCreation';
-import { sortFieldsByRelevanceForRecordTableWidget } from '@/page-layout/widgets/record-table/utils/sortFieldsByRelevanceForRecordTableWidget';
+import { DEFAULT_VIEW_FIELD_SIZE } from '@/page-layout/widgets/field/constants/fieldWidgetTableDefaults';
+import { buildDefaultViewFieldInputs } from '@/page-layout/widgets/field/utils/buildDefaultViewFieldInputs';
 import { usePerformViewAPIPersist } from '@/views/hooks/internal/usePerformViewAPIPersist';
 import { usePerformViewFieldAPIPersist } from '@/views/hooks/internal/usePerformViewFieldAPIPersist';
 import { useStore } from 'jotai';
@@ -19,8 +19,9 @@ import {
 } from '~/generated-metadata/graphql';
 import { v4 } from 'uuid';
 
-const DEFAULT_VIEW_FIELD_SIZE = 180;
-const INITIAL_VISIBLE_FIELDS_COUNT_IN_WIDGET = 6;
+type FieldWidgetWithConfig = PageLayoutWidget & {
+  fieldConfig: FieldConfiguration;
+};
 
 export const useCreatePendingFieldWidgetTableViews = () => {
   const { performViewAPICreate } = usePerformViewAPIPersist();
@@ -32,13 +33,16 @@ export const useCreatePendingFieldWidgetTableViews = () => {
     async (
       widget: PageLayoutWidget,
       viewId: string,
-      pageLayoutId: string,
+      ungroupedDraft: Record<
+        string,
+        Array<{
+          viewFieldId?: string | null;
+          fieldMetadataItem: { id: string };
+          position: number;
+          isVisible: boolean;
+        }>
+      >,
     ) => {
-      const ungroupedDraft = store.get(
-        fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
-          instanceId: pageLayoutId,
-        }),
-      );
       const draftFields = ungroupedDraft[widget.id] ?? [];
 
       if (!isNonEmptyArray(draftFields)) {
@@ -57,10 +61,12 @@ export const useCreatePendingFieldWidgetTableViews = () => {
         }));
 
       const fieldsToUpdate = draftFields
-        .filter((field) => isDefined(field.viewFieldId))
+        .filter((field): field is typeof field & { viewFieldId: string } =>
+          isDefined(field.viewFieldId),
+        )
         .map((field) => ({
           input: {
-            id: field.viewFieldId!,
+            id: field.viewFieldId,
             update: {
               isVisible: field.isVisible,
               position: field.position,
@@ -76,7 +82,7 @@ export const useCreatePendingFieldWidgetTableViews = () => {
         await performViewFieldAPIUpdate(fieldsToUpdate);
       }
     },
-    [store, performViewFieldAPICreate, performViewFieldAPIUpdate],
+    [performViewFieldAPICreate, performViewFieldAPIUpdate],
   );
 
   const createPendingFieldWidgetTableViews = useCallback(
@@ -88,6 +94,12 @@ export const useCreatePendingFieldWidgetTableViews = () => {
       );
       const persisted = store.get(
         pageLayoutPersistedComponentState.atomFamily({
+          instanceId: pageLayoutId,
+        }),
+      );
+
+      const ungroupedDraft = store.get(
+        fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
           instanceId: pageLayoutId,
         }),
       );
@@ -104,49 +116,43 @@ export const useCreatePendingFieldWidgetTableViews = () => {
 
       const objectMetadataItems = store.get(objectMetadataItemsSelector.atom);
 
-      const tableFieldWidgets = draft.tabs
+      const tableFieldWidgets: FieldWidgetWithConfig[] = draft.tabs
         .flatMap((tab) => tab.widgets)
-        .filter((widget) => {
-          if (widget.type !== WidgetType.FIELD) {
-            return false;
-          }
-
-          const config = widget.configuration as FieldConfiguration;
-
-          if (config.fieldDisplayMode !== FieldDisplayMode.VIEW) {
-            return false;
-          }
-
-          return isDefined(config.viewId);
-        });
+        .filter(
+          (
+            widget,
+          ): widget is PageLayoutWidget & { type: typeof WidgetType.FIELD } =>
+            widget.type === WidgetType.FIELD,
+        )
+        .map((widget) => ({
+          ...widget,
+          fieldConfig: widget.configuration as FieldConfiguration,
+        }))
+        .filter(
+          (widget) =>
+            widget.fieldConfig.fieldDisplayMode === FieldDisplayMode.VIEW &&
+            isDefined(widget.fieldConfig.viewId),
+        );
 
       const pendingWidgets = tableFieldWidgets.filter(
         (widget) =>
           persistedViewIdsByWidgetId.get(widget.id) !==
-          (widget.configuration as FieldConfiguration).viewId,
+          widget.fieldConfig.viewId,
       );
 
       const existingWidgetsWithDraft = tableFieldWidgets.filter((widget) => {
-        const config = widget.configuration as FieldConfiguration;
-
         if (
-          persistedViewIdsByWidgetId.get(widget.id) !== config.viewId
+          persistedViewIdsByWidgetId.get(widget.id) !==
+          widget.fieldConfig.viewId
         ) {
           return false;
         }
-
-        const ungroupedDraft = store.get(
-          fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
-            instanceId: pageLayoutId,
-          }),
-        );
 
         return isNonEmptyArray(ungroupedDraft[widget.id]);
       });
 
       for (const widget of pendingWidgets) {
-        const config = widget.configuration as FieldConfiguration;
-        const viewId = config.viewId;
+        const viewId = widget.fieldConfig.viewId;
 
         if (!isDefined(viewId)) {
           continue;
@@ -162,7 +168,7 @@ export const useCreatePendingFieldWidgetTableViews = () => {
         const resolved = resolveRelatedObjectForFieldWidget({
           objectMetadataItems,
           parentObjectMetadataId,
-          fieldMetadataId: config.fieldMetadataId,
+          fieldMetadataId: widget.fieldConfig.fieldMetadataId,
         });
 
         if (!isDefined(resolved)) {
@@ -190,48 +196,27 @@ export const useCreatePendingFieldWidgetTableViews = () => {
           );
         }
 
-        const ungroupedDraft = store.get(
-          fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
-            instanceId: pageLayoutId,
-          }),
-        );
-
         if (isNonEmptyArray(ungroupedDraft[widget.id])) {
-          await persistDraftViewFields(widget, viewId, pageLayoutId);
+          await persistDraftViewFields(widget, viewId, ungroupedDraft);
           continue;
         }
 
-        const eligibleFields = relatedObject.fields.filter(
-          filterFieldsForRecordTableViewCreation,
-        );
-
-        const sortedFields = eligibleFields.toSorted(
-          sortFieldsByRelevanceForRecordTableWidget(
-            relatedObject.labelIdentifierFieldMetadataId,
-          ),
-        );
-
-        const viewFieldInputs = sortedFields.map((field, index) => ({
-          id: v4(),
+        const viewFieldInputs = buildDefaultViewFieldInputs({
+          relatedObject,
           viewId,
-          fieldMetadataId: field.id,
-          position: index,
-          size: DEFAULT_VIEW_FIELD_SIZE,
-          isVisible: index < INITIAL_VISIBLE_FIELDS_COUNT_IN_WIDGET,
-        }));
+        });
 
         await performViewFieldAPICreate({ inputs: viewFieldInputs });
       }
 
       for (const widget of existingWidgetsWithDraft) {
-        const config = widget.configuration as FieldConfiguration;
-        const viewId = config.viewId;
+        const viewId = widget.fieldConfig.viewId;
 
         if (!isDefined(viewId)) {
           continue;
         }
 
-        await persistDraftViewFields(widget, viewId, pageLayoutId);
+        await persistDraftViewFields(widget, viewId, ungroupedDraft);
       }
     },
     [

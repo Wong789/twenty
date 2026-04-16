@@ -1,6 +1,12 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 import { type FieldConfiguration } from 'twenty-shared/types';
 

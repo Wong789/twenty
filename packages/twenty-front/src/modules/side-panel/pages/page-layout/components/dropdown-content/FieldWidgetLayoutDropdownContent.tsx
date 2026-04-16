@@ -100,18 +100,21 @@ export const FieldWidgetLayoutDropdownContent = () => {
 
     // Seed a synthetic view into the client metadata store so RecordTableWidget
     // can render immediately, before the real view is persisted on Save.
+    const widgetId = widgetInEditMode?.id;
+
     if (
       fieldDisplayMode === FieldDisplayMode.VIEW &&
       isDefined(nextViewId) &&
       isDefined(currentFieldMetadataId) &&
-      isDefined(parentObjectMetadataId)
+      isDefined(parentObjectMetadataId) &&
+      isDefined(widgetId)
     ) {
       seedDraftViewForFieldWidgetTable({
         viewId: nextViewId,
         fieldMetadataId: currentFieldMetadataId,
         parentObjectMetadataId,
         pageLayoutId,
-        widgetId: widgetInEditMode!.id,
+        widgetId,
       });
     }
 

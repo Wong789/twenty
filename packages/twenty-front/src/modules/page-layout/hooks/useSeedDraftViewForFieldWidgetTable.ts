@@ -7,20 +7,15 @@ import { fieldsWidgetGroupsDraftComponentState } from '@/page-layout/states/fiel
 import { fieldsWidgetUngroupedFieldsDraftComponentState } from '@/page-layout/states/fieldsWidgetUngroupedFieldsDraftComponentState';
 import { hasInitializedFieldsWidgetGroupsDraftComponentState } from '@/page-layout/states/hasInitializedFieldsWidgetGroupsDraftComponentState';
 import { resolveRelatedObjectForFieldWidget } from '@/page-layout/utils/resolveRelatedObjectForFieldWidget';
-import { filterFieldsForRecordTableViewCreation } from '@/page-layout/widgets/record-table/utils/filterFieldsForRecordTableViewCreation';
-import { sortFieldsByRelevanceForRecordTableWidget } from '@/page-layout/widgets/record-table/utils/sortFieldsByRelevanceForRecordTableWidget';
+import { buildDefaultViewFieldInputs } from '@/page-layout/widgets/field/utils/buildDefaultViewFieldInputs';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
 import { isDefined } from 'twenty-shared/utils';
-import { v4 } from 'uuid';
 import {
   ViewOpenRecordIn,
   ViewType,
   ViewVisibility,
 } from '~/generated-metadata/graphql';
-
-const DEFAULT_VIEW_FIELD_SIZE = 180;
-const INITIAL_VISIBLE_FIELDS_COUNT_IN_WIDGET = 6;
 
 export const useSeedDraftViewForFieldWidgetTable = () => {
   const store = useStore();
@@ -79,27 +74,13 @@ export const useSeedDraftViewForFieldWidgetTable = () => {
         current: [...viewsCurrent, syntheticView],
       });
 
-      const eligibleFields = relatedObject.fields.filter(
-        filterFieldsForRecordTableViewCreation,
-      );
-
-      const sortedFields = eligibleFields.toSorted(
-        sortFieldsByRelevanceForRecordTableWidget(
-          relatedObject.labelIdentifierFieldMetadataId,
-        ),
-      );
-
-      const syntheticViewFields: FlatViewField[] = sortedFields.map(
-        (field, index) => ({
-          id: v4(),
-          viewId,
-          fieldMetadataId: field.id,
-          position: index,
-          size: DEFAULT_VIEW_FIELD_SIZE,
-          isVisible: index < INITIAL_VISIBLE_FIELDS_COUNT_IN_WIDGET,
-          isActive: true,
-        }),
-      );
+      const syntheticViewFields: FlatViewField[] = buildDefaultViewFieldInputs({
+        relatedObject,
+        viewId,
+      }).map((input) => ({
+        ...input,
+        isActive: true,
+      }));
 
       const viewFieldsEntry = store.get(
         metadataStoreState.atomFamily('viewFields'),
@@ -111,21 +92,25 @@ export const useSeedDraftViewForFieldWidgetTable = () => {
         current: [...viewFieldsCurrent, ...syntheticViewFields],
       });
 
-      const ungroupedDraftFields = syntheticViewFields.map(
-        (viewField, index) => {
+      const ungroupedDraftFields = syntheticViewFields
+        .map((viewField, index) => {
           const fieldMetadataItem = relatedObject.fields.find(
             (field) => field.id === viewField.fieldMetadataId,
           );
 
+          if (!isDefined(fieldMetadataItem)) {
+            return undefined;
+          }
+
           return {
-            fieldMetadataItem: fieldMetadataItem!,
+            fieldMetadataItem,
             position: viewField.position,
             isVisible: viewField.isVisible,
             globalIndex: index,
             viewFieldId: viewField.id,
           };
-        },
-      );
+        })
+        .filter(isDefined);
 
       store.set(
         fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({

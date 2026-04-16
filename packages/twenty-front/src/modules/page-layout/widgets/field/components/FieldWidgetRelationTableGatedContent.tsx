@@ -30,18 +30,12 @@ export const FieldWidgetRelationTableGatedContent = ({
 
   const store = useStore();
 
-  const lastLoadedAtom = useAtomComponentStateCallbackState(
-    lastLoadedRecordTableWidgetViewIdComponentState,
-  );
-
   const currentRecordFiltersAtom = useAtomComponentStateCallbackState(
     currentRecordFiltersComponentState,
   );
 
   useEffect(() => {
-    const lastLoaded = store.get(lastLoadedAtom);
-
-    if (lastLoaded?.viewId !== viewId) {
+    if (lastLoadedRecordTableWidgetViewId?.viewId !== viewId) {
       setIsScopedFilterReady(false);
       return;
     }
@@ -85,7 +79,6 @@ export const FieldWidgetRelationTableGatedContent = ({
     inverseRelationFieldMetadataId,
     targetRecordId,
     store,
-    lastLoadedAtom,
     currentRecordFiltersAtom,
   ]);
 

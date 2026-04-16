@@ -21,7 +21,9 @@ export const resolveRelatedObjectForFieldWidget = ({
     return undefined;
   }
 
-  const field = parentObject.fields.find((f) => f.id === fieldMetadataId);
+  const field = parentObject.fields.find(
+    (fieldItem) => fieldItem.id === fieldMetadataId,
+  );
   const relatedObjectId = field?.relation?.targetObjectMetadata.id;
 
   if (!isDefined(field) || !isDefined(relatedObjectId)) {

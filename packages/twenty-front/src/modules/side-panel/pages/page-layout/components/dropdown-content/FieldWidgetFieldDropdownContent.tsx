@@ -111,17 +111,20 @@ export const FieldWidgetFieldDropdownContent = () => {
       },
     });
 
+    const widgetId = widgetInEditMode?.id;
+
     if (
       staysInTableMode &&
       isDefined(nextViewId) &&
-      isDefined(parentObjectMetadataId)
+      isDefined(parentObjectMetadataId) &&
+      isDefined(widgetId)
     ) {
       seedDraftViewForFieldWidgetTable({
         viewId: nextViewId,
         fieldMetadataId,
         parentObjectMetadataId,
         pageLayoutId,
-        widgetId: widgetInEditMode!.id,
+        widgetId,
       });
     }
 

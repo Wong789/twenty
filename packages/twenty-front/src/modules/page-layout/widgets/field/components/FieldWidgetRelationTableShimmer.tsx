@@ -32,9 +32,9 @@ export const FieldWidgetRelationTableShimmer = () => {
       <StyledContainer>
         {Array.from({ length: SHIMMER_ROW_COUNT }).map((_, rowIndex) => (
           <StyledRow key={rowIndex}>
-            {SHIMMER_COLUMN_WIDTHS.map((width, colIndex) => (
+            {SHIMMER_COLUMN_WIDTHS.map((width, columnIndex) => (
               <Skeleton
-                key={colIndex}
+                key={columnIndex}
                 width={width}
                 height={SKELETON_LOADER_HEIGHT_SIZES.standard.m}
               />
