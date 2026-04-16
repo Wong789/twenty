@@ -52,6 +52,10 @@ describe('ClientConfigController', () => {
             label: 'GPT-4o',
             modelFamily: ModelFamily.GPT,
             sdkPackage: '@ai-sdk/openai' as const,
+            capabilities: {
+              webSearch: true,
+              twitterSearch: false,
+            },
             inputCostPerMillionTokensInCredits: 2500000,
             outputCostPerMillionTokensInCredits: 10000000,
           },

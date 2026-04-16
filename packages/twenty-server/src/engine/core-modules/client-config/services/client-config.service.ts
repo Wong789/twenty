@@ -42,7 +42,7 @@ export class ClientConfigService {
 
   private deriveAgentCapabilities(
     sdkPackage?: AiSdkPackage,
-  ): AgentCapabilities | undefined {
+  ): AgentCapabilities {
     const hasNativeWebSearch =
       sdkPackage === AI_SDK_OPENAI ||
       sdkPackage === AI_SDK_ANTHROPIC ||
@@ -53,17 +53,9 @@ export class ClientConfigService {
       this.twentyConfigService.get('WEB_SEARCH_DRIVER') !==
       WebSearchDriverType.DISABLED;
 
-    const hasXSearchCapability = sdkPackage === AI_SDK_XAI;
-
-    const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
-
-    if (!webSearch && !hasXSearchCapability) {
-      return undefined;
-    }
-
     return {
-      ...(webSearch && { webSearch }),
-      ...(hasXSearchCapability && { twitterSearch: true }),
+      webSearch: hasNativeWebSearch || isWebSearchDriverEnabled,
+      twitterSearch: sdkPackage === AI_SDK_XAI,
     };
   }
 
@@ -152,6 +144,9 @@ export class ClientConfigService {
             defaultPerformanceModel?.providerName,
           ),
           sdkPackage: defaultPerformanceModel?.sdkPackage ?? null,
+          capabilities: this.deriveAgentCapabilities(
+            defaultPerformanceModel?.sdkPackage,
+          ),
           inputCostPerMillionTokens:
             defaultPerformanceModelConfig?.inputCostPerMillionTokens,
           outputCostPerMillionTokens:
@@ -170,6 +165,9 @@ export class ClientConfigService {
           providerName: defaultSpeedModel?.providerName,
           providerLabel: getProviderLabel(defaultSpeedModel?.providerName),
           sdkPackage: defaultSpeedModel?.sdkPackage ?? null,
+          capabilities: this.deriveAgentCapabilities(
+            defaultSpeedModel?.sdkPackage,
+          ),
           inputCostPerMillionTokens:
             defaultSpeedModelConfig?.inputCostPerMillionTokens,
           outputCostPerMillionTokens:

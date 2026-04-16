@@ -31,11 +31,11 @@ registerEnumType(AiModelRole, {
 
 @ObjectType()
 export class AgentCapabilities {
-  @Field(() => Boolean, { nullable: true })
-  webSearch?: boolean;
+  @Field(() => Boolean)
+  webSearch: boolean;
 
-  @Field(() => Boolean, { nullable: true })
-  twitterSearch?: boolean;
+  @Field(() => Boolean)
+  twitterSearch: boolean;
 }
 
 @ObjectType()
@@ -62,8 +62,8 @@ export class ClientAIModelConfig {
   @Field(() => Number, { nullable: true })
   outputCostPerMillionTokens?: number;
 
-  @Field(() => AgentCapabilities, { nullable: true })
-  capabilities?: AgentCapabilities;
+  @Field(() => AgentCapabilities)
+  capabilities: AgentCapabilities;
 
   @Field(() => Boolean, { nullable: true })
   isDeprecated?: boolean;

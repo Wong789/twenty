@@ -287,6 +287,7 @@ describe('ClientConfigService', () => {
         webSearch: true,
         twitterSearch: true,
       });
+      expect(xaiModel?.capabilities).not.toHaveProperty('codeInterpreter');
       expect(result.isCodeInterpreterEnabled).toBe(false);
     });
 
@@ -324,6 +325,7 @@ describe('ClientConfigService', () => {
       expect(result.isCodeInterpreterEnabled).toBe(true);
       expect(openAiModel?.capabilities).toEqual({
         webSearch: true,
+        twitterSearch: false,
       });
       expect(openAiModel?.capabilities).not.toHaveProperty('codeInterpreter');
     });
