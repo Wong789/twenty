@@ -1438,8 +1438,8 @@ export interface PublicWorkspaceDataSummary {
 }
 
 export interface AgentCapabilities {
-    webSearch?: Scalars['Boolean']
-    twitterSearch?: Scalars['Boolean']
+    webSearch: Scalars['Boolean']
+    twitterSearch: Scalars['Boolean']
     __typename: 'AgentCapabilities'
 }
 
@@ -1451,7 +1451,7 @@ export interface ClientAIModelConfig {
     sdkPackage?: Scalars['String']
     inputCostPerMillionTokens?: Scalars['Float']
     outputCostPerMillionTokens?: Scalars['Float']
-    capabilities?: AgentCapabilities
+    capabilities: AgentCapabilities
     isDeprecated?: Scalars['Boolean']
     isRecommended?: Scalars['Boolean']
     providerName?: Scalars['String']

@@ -1739,8 +1739,8 @@ type PublicWorkspaceDataSummary {
 }
 
 type AgentCapabilities {
-  webSearch: Boolean
-  twitterSearch: Boolean
+  webSearch: Boolean!
+  twitterSearch: Boolean!
 }
 
 type ClientAIModelConfig {
@@ -1751,7 +1751,7 @@ type ClientAIModelConfig {
   sdkPackage: String
   inputCostPerMillionTokens: Float
   outputCostPerMillionTokens: Float
-  capabilities: AgentCapabilities
+  capabilities: AgentCapabilities!
   isDeprecated: Boolean
   isRecommended: Boolean
   providerName: String
