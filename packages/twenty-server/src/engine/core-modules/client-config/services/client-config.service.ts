@@ -40,21 +40,21 @@ export class ClientConfigService {
     private maintenanceModeService: MaintenanceModeService,
   ) {}
 
-  private deriveAgentCapabilities(
+  private deriveAvailableModelCapabilities(
     sdkPackage?: AiSdkPackage,
   ): AgentCapabilities {
-    const hasNativeWebSearch =
+    const supportsProviderNativeWebSearch =
       sdkPackage === AI_SDK_OPENAI ||
       sdkPackage === AI_SDK_ANTHROPIC ||
       sdkPackage === AI_SDK_BEDROCK ||
       sdkPackage === AI_SDK_XAI;
 
-    const isWebSearchDriverEnabled =
+    const isExternalWebSearchEnabled =
       this.twentyConfigService.get('WEB_SEARCH_DRIVER') !==
       WebSearchDriverType.DISABLED;
 
     return {
-      webSearch: hasNativeWebSearch || isWebSearchDriverEnabled,
+      webSearch: supportsProviderNativeWebSearch || isExternalWebSearchEnabled,
       twitterSearch: sdkPackage === AI_SDK_XAI,
     };
   }
@@ -104,7 +104,7 @@ export class ClientConfigService {
           sdkPackage: registeredModel.sdkPackage,
           providerName,
           providerLabel: getProviderLabel(providerName),
-          capabilities: this.deriveAgentCapabilities(
+          capabilities: this.deriveAvailableModelCapabilities(
             registeredModel.sdkPackage,
           ),
           inputCostPerMillionTokens: modelConfig?.inputCostPerMillionTokens,
@@ -144,7 +144,7 @@ export class ClientConfigService {
             defaultPerformanceModel?.providerName,
           ),
           sdkPackage: defaultPerformanceModel?.sdkPackage ?? null,
-          capabilities: this.deriveAgentCapabilities(
+          capabilities: this.deriveAvailableModelCapabilities(
             defaultPerformanceModel?.sdkPackage,
           ),
           inputCostPerMillionTokens:
@@ -165,7 +165,7 @@ export class ClientConfigService {
           providerName: defaultSpeedModel?.providerName,
           providerLabel: getProviderLabel(defaultSpeedModel?.providerName),
           sdkPackage: defaultSpeedModel?.sdkPackage ?? null,
-          capabilities: this.deriveAgentCapabilities(
+          capabilities: this.deriveAvailableModelCapabilities(
             defaultSpeedModel?.sdkPackage,
           ),
           inputCostPerMillionTokens:

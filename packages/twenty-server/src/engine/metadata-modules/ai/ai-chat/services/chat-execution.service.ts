@@ -114,6 +114,8 @@ export class ChatExecutionService {
         workspace.id,
       );
 
+    // Regular AI chat is not executing a saved agent, so agent-specific
+    // capability toggles should only apply in AgentAsyncExecutorService.
     const toolProviderContext: ToolProviderContext = {
       workspaceId: workspace.id,
       roleId,

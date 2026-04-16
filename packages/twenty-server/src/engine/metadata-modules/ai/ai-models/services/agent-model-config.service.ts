@@ -12,18 +12,12 @@ import {
   AI_SDK_OPENAI,
   AI_SDK_XAI,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
-import {
-  AiModelRegistryService,
-  RegisteredAIModel,
-} from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import { RegisteredAIModel } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/ai-models/services/sdk-provider-factory.service';
 
 @Injectable()
 export class AgentModelConfigService {
-  constructor(
-    private readonly aiModelRegistryService: AiModelRegistryService,
-    private readonly sdkProviderFactory: SdkProviderFactoryService,
-  ) {}
+  constructor(private readonly sdkProviderFactory: SdkProviderFactoryService) {}
 
   getProviderOptions(model: RegisteredAIModel): ProviderOptions {
     switch (model.sdkPackage) {
@@ -45,13 +39,20 @@ export class AgentModelConfigService {
   ): ToolSet {
     const tools: ToolSet = {};
     const modelConfiguration = agent.modelConfiguration ?? {};
+    const isWebSearchEnabledForAgent = isAgentCapabilityEnabled(
+      modelConfiguration,
+      'webSearch',
+    );
+    const isTwitterSearchEnabledForAgent = isAgentCapabilityEnabled(
+      modelConfiguration,
+      'twitterSearch',
+    );
+    const shouldExposeProviderNativeWebSearch =
+      options.useProviderNativeWebSearch && isWebSearchEnabledForAgent;
 
     switch (model.sdkPackage) {
       case AI_SDK_ANTHROPIC:
-        if (
-          options.useProviderNativeWebSearch &&
-          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
-        ) {
+        if (shouldExposeProviderNativeWebSearch) {
           const anthropicProvider = model.providerName
             ? this.sdkProviderFactory.getRawAnthropicProvider(
                 model.providerName,
@@ -64,10 +65,7 @@ export class AgentModelConfigService {
         }
         break;
       case AI_SDK_BEDROCK: {
-        if (
-          options.useProviderNativeWebSearch &&
-          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
-        ) {
+        if (shouldExposeProviderNativeWebSearch) {
           const bedrockProvider = model.providerName
             ? this.sdkProviderFactory.getRawBedrockProvider(model.providerName)
             : undefined;
@@ -80,10 +78,7 @@ export class AgentModelConfigService {
         break;
       }
       case AI_SDK_OPENAI:
-        if (
-          options.useProviderNativeWebSearch &&
-          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
-        ) {
+        if (shouldExposeProviderNativeWebSearch) {
           const openaiProvider = model.providerName
             ? this.sdkProviderFactory.getRawOpenAIProvider(model.providerName)
             : undefined;
@@ -106,14 +101,11 @@ export class AgentModelConfigService {
           break;
         }
 
-        if (
-          options.useProviderNativeWebSearch &&
-          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
-        ) {
+        if (shouldExposeProviderNativeWebSearch) {
           tools.web_search = xaiProvider.tools.webSearch() as ToolSet[string];
         }
 
-        if (isAgentCapabilityEnabled(modelConfiguration, 'twitterSearch')) {
+        if (isTwitterSearchEnabledForAgent) {
           tools.x_search = xaiProvider.tools.xSearch() as ToolSet[string];
         }
 

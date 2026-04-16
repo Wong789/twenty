@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { isAgentCapabilityEnabled, ToolCategory } from 'twenty-shared/ai';
 import { PermissionFlagType } from 'twenty-shared/constants';
+import { isDefined } from 'twenty-shared/utils';
 import { z } from 'zod';
 
 import { type GenerateDescriptorOptions } from 'src/engine/core-modules/tool-provider/interfaces/generate-descriptor-options.type';
@@ -128,14 +129,14 @@ export class ActionToolProvider implements ToolProvider {
       ),
     );
 
-    const isCodeInterpreterEnabledForAgent = isAgentCapabilityEnabled(
-      context.agent?.modelConfiguration,
-      'codeInterpreter',
-    );
+    const agent = context.agent;
+    const isCodeInterpreterEnabledForContext = !isDefined(agent)
+      ? true
+      : isAgentCapabilityEnabled(agent.modelConfiguration, 'codeInterpreter');
 
     const hasCodeInterpreterPermission =
       this.codeInterpreterService.isEnabled() &&
-      isCodeInterpreterEnabledForAgent &&
+      isCodeInterpreterEnabledForContext &&
       (await this.permissionsService.hasToolPermission(
         context.rolePermissionConfig,
         context.workspaceId,
@@ -152,12 +153,11 @@ export class ActionToolProvider implements ToolProvider {
       );
     }
 
-    const isWebSearchEnabledForAgent = isAgentCapabilityEnabled(
-      context.agent?.modelConfiguration,
-      'webSearch',
-    );
+    const isWebSearchEnabledForContext = !isDefined(agent)
+      ? true
+      : isAgentCapabilityEnabled(agent.modelConfiguration, 'webSearch');
 
-    if (this.webSearchService.isEnabled() && isWebSearchEnabledForAgent) {
+    if (this.webSearchService.isEnabled() && isWebSearchEnabledForContext) {
       descriptors.push(
         this.buildDescriptor('web_search', this.webSearchTool, includeSchemas),
       );

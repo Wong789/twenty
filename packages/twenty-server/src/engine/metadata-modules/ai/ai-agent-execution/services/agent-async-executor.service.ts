@@ -179,9 +179,8 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
     rolePermissionConfig?: RolePermissionConfig;
     authContext?: WorkspaceAuthContext;
   }): Promise<AgentExecutionResult> {
-    let registeredModelForErrorLog: RegisteredAIModel | undefined;
-    let generatedToolNamesForErrorLog: string[] = [];
-    let lazyWorkflowToolCountForLog = 0;
+    let resolvedModelForLog: RegisteredAIModel | undefined;
+    let lazyWorkflowToolCount = 0;
 
     try {
       if (agent) {
@@ -200,7 +199,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
       const registeredModel =
         await this.aiModelRegistryService.resolveModelForAgent(agent);
 
-      registeredModelForErrorLog = registeredModel;
+      resolvedModelForLog = registeredModel;
 
       let tools: ToolSet = {};
       let providerOptions = {};
@@ -246,7 +245,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
         });
 
         tools = toolRuntime.runtimeTools;
-        lazyWorkflowToolCountForLog = toolRuntime.lazyToolCatalog.length;
+        lazyWorkflowToolCount = toolRuntime.lazyToolCatalog.length;
         workflowToolCatalogPrompt = this.buildWorkflowToolCatalogPrompt({
           toolCatalog: toolRuntime.lazyToolCatalog,
           directToolNames: toolRuntime.directToolNames,
@@ -256,10 +255,10 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           this.agentModelConfigService.getProviderOptions(registeredModel);
       }
 
-      generatedToolNamesForErrorLog = Object.keys(tools);
+      const runtimeToolCount = Object.keys(tools).length;
 
       this.logger.log(
-        `Generated ${generatedToolNamesForErrorLog.length} runtime tools and ${lazyWorkflowToolCountForLog} lazy workflow tools for agent`,
+        `Generated ${runtimeToolCount} runtime tools and ${lazyWorkflowToolCount} lazy workflow tools for agent`,
       );
 
       const textResponse = await generateText({
@@ -357,7 +356,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
         error instanceof Error ? error.message : String(error);
 
       this.logger.error(
-        `Workflow agent execution failed [workspace=${agent?.workspaceId} agent=${agent?.id} model=${registeredModelForErrorLog?.modelId}${statusSuffix}]: ${errorMessage}`,
+        `Workflow agent execution failed [workspace=${agent?.workspaceId} agent=${agent?.id} model=${resolvedModelForLog?.modelId}${statusSuffix}]: ${errorMessage}`,
         error instanceof Error ? error.stack : undefined,
       );
 
