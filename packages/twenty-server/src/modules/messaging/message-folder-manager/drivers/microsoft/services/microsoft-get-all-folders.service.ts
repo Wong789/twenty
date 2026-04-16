@@ -62,11 +62,19 @@ export class MicrosoftGetAllFoldersService implements MessageFolderDriver {
           return { value: [] };
         });
 
-      const folders = (response.value as MicrosoftGraphFolder[]) || [];
-      const rootFolderId = this.getRootFolderId(folders);
+      const topLevelFolders =
+        (response.value as MicrosoftGraphFolder[]) || [];
+
+      const allFolders = await this.fetchFoldersRecursively(
+        microsoftClient,
+        connectedAccount,
+        topLevelFolders,
+      );
+
+      const rootFolderId = this.getRootFolderId(topLevelFolders);
       const folderInfos: DiscoveredMessageFolder[] = [];
 
-      for (const folder of folders) {
+      for (const folder of allFolders) {
         if (!folder.displayName) {
           continue;
         }
@@ -109,6 +117,44 @@ export class MicrosoftGetAllFoldersService implements MessageFolderDriver {
 
       throw error;
     }
+  }
+
+  private async fetchFoldersRecursively(
+    microsoftClient: any,
+    connectedAccount: Pick<ConnectedAccountEntity, 'id'>,
+    folders: MicrosoftGraphFolder[],
+  ): Promise<MicrosoftGraphFolder[]> {
+    const allFolders: MicrosoftGraphFolder[] = [...folders];
+
+    for (const folder of folders) {
+      if (folder.childFolderCount && folder.childFolderCount > 0) {
+        const childResponse = await microsoftClient
+          .api(`/me/mailFolders/${folder.id}/childFolders`)
+          .version('beta')
+          .top(MESSAGING_MICROSOFT_MAIL_FOLDERS_LIST_MAX_RESULT)
+          .get()
+          .catch((error: Error) => {
+            this.logger.error(
+              `Connected account ${connectedAccount.id}: Error fetching child folders for ${folder.id}: ${error.message}`,
+            );
+
+            return { value: [] };
+          });
+
+        const childFolders =
+          (childResponse.value as MicrosoftGraphFolder[]) || [];
+
+        const nestedFolders = await this.fetchFoldersRecursively(
+          microsoftClient,
+          connectedAccount,
+          childFolders,
+        );
+
+        allFolders.push(...nestedFolders);
+      }
+    }
+
+    return allFolders;
   }
 
   private isSentFolder(standardFolder: StandardFolder | null): boolean {
