@@ -387,7 +387,10 @@ export const PageLayoutTabList = ({
             onDragEnd={handleDragEnd}
             onDragUpdate={handleDragUpdate}
           >
-            <StyledContainer className={className}>
+            <StyledContainer
+              data-testid="page-layout-tab-list"
+              className={className}
+            >
               <PageLayoutTabListVisibleTabs
                 visibleTabs={tabsWithIcons}
                 visibleTabCount={visibleTabCount}
@@ -452,7 +455,10 @@ export const PageLayoutTabList = ({
             </StyledContainer>
           </DragDropContext>
         ) : (
-          <StyledContainer className={className}>
+          <StyledContainer
+            data-testid="page-layout-tab-list"
+            className={className}
+          >
             <PageLayoutTabListVisibleTabs
               visibleTabs={tabsWithIcons}
               visibleTabCount={visibleTabCount}
