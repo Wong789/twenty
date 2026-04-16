@@ -7,5 +7,6 @@ export const AGENT_CAPABILITY_DEFAULTS = {
   // This is to prevent accidental code execution by default.
   // but will it break existing agents?
   // is it worth the migration? @FelixMalfait
+  // is the flag on on prod?
   codeInterpreter: false,
 } satisfies Record<AgentCapability, boolean>;
