@@ -95,7 +95,8 @@ export const SettingsApplicationsTable = ({
                   />
                 }
                 link={getSettingsPath(SettingsPath.ApplicationDetail, {
-                  applicationId: application.id,
+                  applicationUniversalIdentifier:
+                    application.universalIdentifier,
                 })}
               />
             );

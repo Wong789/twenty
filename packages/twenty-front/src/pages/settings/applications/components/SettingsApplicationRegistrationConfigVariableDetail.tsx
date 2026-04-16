@@ -2,12 +2,11 @@ import { useLingui } from '@lingui/react/macro';
 import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import {
+  FindApplicationRegistrationByUniversalIdentifierDocument,
   FindApplicationRegistrationVariablesDocument,
-  FindOneApplicationRegistrationDocument,
   UpdateApplicationRegistrationVariableDocument,
 } from '~/generated-metadata/graphql';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { useSnackBar } from '@/ui/feedback/snack-bar-manager/hooks/useSnackBar';
 import { isNonEmptyString } from '@sniptt/guards';
 import { SubMenuTopBarContainer } from '@/ui/layout/page/components/SubMenuTopBarContainer';
 import { getSettingsPath } from 'twenty-shared/utils';
@@ -25,26 +24,26 @@ export const SettingsApplicationRegistrationConfigVariableDetail = () => {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  const { applicationRegistrationId = '' } = useParams<{
-    applicationRegistrationId: string;
+  const { applicationUniversalIdentifier = '' } = useParams<{
+    applicationUniversalIdentifier: string;
   }>();
 
   const { data: applicationRegistrationData } = useQuery(
-    FindOneApplicationRegistrationDocument,
+    FindApplicationRegistrationByUniversalIdentifierDocument,
     {
-      variables: { id: applicationRegistrationId },
-      skip: !applicationRegistrationId,
+      variables: { universalIdentifier: applicationUniversalIdentifier },
+      skip: !applicationUniversalIdentifier,
     },
   );
 
   const registration =
-    applicationRegistrationData?.findOneApplicationRegistration;
+    applicationRegistrationData?.findApplicationRegistrationByUniversalIdentifier;
 
   const { data: variablesData } = useQuery(
     FindApplicationRegistrationVariablesDocument,
     {
-      variables: { applicationRegistrationId },
-      skip: !applicationRegistrationId,
+      variables: { applicationRegistrationId: registration?.id ?? '' },
+      skip: !registration?.id,
     },
   );
 
@@ -128,7 +127,7 @@ export const SettingsApplicationRegistrationConfigVariableDetail = () => {
           children: t`${registration.name} - Config`,
           href: getSettingsPath(
             SettingsPath.ApplicationRegistrationDetail,
-            { applicationRegistrationId },
+            { applicationUniversalIdentifier },
             undefined,
             'config',
           ),

@@ -42,7 +42,7 @@ export const SettingsApplicationRegistrationConfigTab = ({
     to: getSettingsPath(
       SettingsPath.ApplicationRegistrationConfigVariableDetails,
       {
-        applicationRegistrationId,
+        applicationUniversalIdentifier: registration.universalIdentifier,
         variableKey: variable.key,
       },
     ),

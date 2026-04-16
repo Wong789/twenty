@@ -2524,6 +2524,7 @@ type File {
 
 type MarketplaceApp {
   id: String!
+  universalIdentifier: String!
   name: String!
   description: String!
   icon: String!

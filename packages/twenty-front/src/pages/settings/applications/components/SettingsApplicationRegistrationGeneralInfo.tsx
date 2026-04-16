@@ -92,8 +92,8 @@ export const SettingsApplicationRegistrationGeneralInfo = ({
     },
   );
 
-  const shareLink = getSettingsPath(SettingsPath.AvailableApplicationDetail, {
-    availableApplicationId: registration.universalIdentifier,
+  const shareLink = getSettingsPath(SettingsPath.ApplicationDetail, {
+    applicationUniversalIdentifier: registration.universalIdentifier,
   });
 
   const ownerWorkspace = ownerWorkspaceData?.getPublicWorkspaceDataById;

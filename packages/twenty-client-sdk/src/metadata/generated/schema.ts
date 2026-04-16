@@ -2235,6 +2235,7 @@ export interface File {
 
 export interface MarketplaceApp {
     id: Scalars['String']
+    universalIdentifier: Scalars['String']
     name: Scalars['String']
     description: Scalars['String']
     icon: Scalars['String']
@@ -5564,6 +5565,7 @@ export interface FileGenqlSelection{
 
 export interface MarketplaceAppGenqlSelection{
     id?: boolean | number
+    universalIdentifier?: boolean | number
     name?: boolean | number
     description?: boolean | number
     icon?: boolean | number

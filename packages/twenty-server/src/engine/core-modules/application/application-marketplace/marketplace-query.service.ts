@@ -84,7 +84,8 @@ export class MarketplaceQueryService {
     const app = registration.manifest?.application;
 
     return {
-      id: registration.universalIdentifier,
+      id: registration.id,
+      universalIdentifier: registration.universalIdentifier,
       name: app?.displayName ?? registration.name,
       description: app?.description ?? '',
       icon: app?.icon ?? 'IconApps',

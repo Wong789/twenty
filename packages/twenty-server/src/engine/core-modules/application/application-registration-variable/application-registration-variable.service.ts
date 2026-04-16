@@ -26,9 +26,18 @@ export class ApplicationRegistrationVariableService {
   ) {}
 
   async findVariables(
-    applicationRegistrationId: string,
+    applicationUniversalIdentifier: string,
     workspaceId: string,
   ): Promise<ApplicationRegistrationVariableEntity[]> {
+    const applicationRegistration =
+      await this.applicationRegistrationRepository.findOneOrFail({
+        where: {
+          universalIdentifier: applicationUniversalIdentifier,
+        },
+      });
+
+    const applicationRegistrationId = applicationRegistration.id;
+
     await this.assertRegistrationOwnedByWorkspace(
       applicationRegistrationId,
       workspaceId,

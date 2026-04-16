@@ -102,7 +102,10 @@ export const SettingsAdminApps = () => {
                 key={registration.id}
                 to={getSettingsPath(
                   SettingsPath.AdminPanelApplicationRegistrationDetail,
-                  { applicationRegistrationId: registration.id },
+                  {
+                    applicationUniversalIdentifier:
+                      registration.universalIdentifier,
+                  },
                 )}
                 gridAutoColumns={TABLE_GRID}
                 mobileGridAutoColumns={TABLE_GRID_MOBILE}

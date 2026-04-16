@@ -20,7 +20,7 @@ import {
   IconSettings,
 } from 'twenty-ui/display';
 import { useQuery } from '@apollo/client/react';
-import { FindOneApplicationDocument } from '~/generated-metadata/graphql';
+import { FindOneApplicationByUniversalIdentifierDocument } from '~/generated-metadata/graphql';
 import { currentWorkspaceState } from '@/auth/states/currentWorkspaceState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { SettingsLogicFunctionCodeEditorTab } from '@/settings/logic-functions/components/tabs/SettingsLogicFunctionCodeEditorTab';
@@ -29,25 +29,30 @@ import { useExecuteLogicFunction } from '@/logic-functions/hooks/useExecuteLogic
 const LOGIC_FUNCTION_DETAIL_ID = 'logic-function-detail';
 
 export const SettingsLogicFunctionDetail = () => {
-  const { logicFunctionId = '', applicationId = '' } = useParams();
+  const { logicFunctionId = '', applicationUniversalIdentifier = '' } =
+    useParams();
 
   const navigate = useNavigate();
   const currentWorkspace = useAtomStateValue(currentWorkspaceState);
 
-  const { data, loading: applicationLoading } = useQuery(
-    FindOneApplicationDocument,
+  const { data: applicationData, loading: applicationLoading } = useQuery(
+    FindOneApplicationByUniversalIdentifierDocument,
     {
-      variables: { id: applicationId },
-      skip: !applicationId,
+      variables: { universalIdentifier: applicationUniversalIdentifier },
+      skip: !applicationUniversalIdentifier,
     },
   );
 
-  const applicationName = data?.findOneApplication?.name;
+  const application = applicationData?.findOneApplication;
+
+  if (!application) {
+    return null;
+  }
 
   const workspaceCustomApplicationId =
     currentWorkspace?.workspaceCustomApplication?.id;
 
-  const isManaged = applicationId !== workspaceCustomApplicationId;
+  const isManaged = application.id !== workspaceCustomApplicationId;
 
   const instanceId = `${LOGIC_FUNCTION_DETAIL_ID}-${logicFunctionId}`;
 
@@ -88,7 +93,7 @@ export const SettingsLogicFunctionDetail = () => {
   const isTestTab = activeTabId === 'test';
 
   const breadcrumbLinks =
-    isDefined(applicationId) && applicationId !== ''
+    isDefined(application.id) && application.id !== ''
       ? [
           {
             children: t`Workspace`,
@@ -99,11 +104,11 @@ export const SettingsLogicFunctionDetail = () => {
             href: getSettingsPath(SettingsPath.Applications),
           },
           {
-            children: `${applicationName}`,
+            children: `${application.name} - ${t`Content`}`,
             href: getSettingsPath(
               SettingsPath.ApplicationDetail,
               {
-                applicationId,
+                applicationUniversalIdentifier: application.universalIdentifier,
               },
               undefined,
               'content',

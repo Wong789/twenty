@@ -5036,6 +5036,9 @@ export default {
             "id": [
                 1
             ],
+            "universalIdentifier": [
+                1
+            ],
             "name": [
                 1
             ],

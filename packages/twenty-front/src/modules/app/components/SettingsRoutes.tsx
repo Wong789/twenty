@@ -172,14 +172,6 @@ const SettingsApplications = lazy(() =>
   ),
 );
 
-const SettingsApplicationDetails = lazy(() =>
-  import('~/pages/settings/applications/SettingsApplicationDetails').then(
-    (module) => ({
-      default: module.SettingsApplicationDetails,
-    }),
-  ),
-);
-
 const SettingsAdminApplicationRegistrationDetail = lazy(() =>
   import(
     '~/pages/settings/admin-panel/SettingsAdminApplicationRegistrationDetail'
@@ -188,12 +180,12 @@ const SettingsAdminApplicationRegistrationDetail = lazy(() =>
   })),
 );
 
-const SettingsAvailableApplicationDetails = lazy(() =>
-  import(
-    '~/pages/settings/applications/SettingsAvailableApplicationDetails'
-  ).then((module) => ({
-    default: module.SettingsAvailableApplicationDetails,
-  })),
+const SettingsApplicationPage = lazy(() =>
+  import('~/pages/settings/applications/SettingsApplicationPage').then(
+    (module) => ({
+      default: module.SettingsApplicationPage,
+    }),
+  ),
 );
 
 const SettingsApplicationRegistrationDetails = lazy(() =>
@@ -738,11 +730,7 @@ export const SettingsRoutes = ({ isAdminPageEnabled }: SettingsRoutesProps) => (
         />
         <Route
           path={SettingsPath.ApplicationDetail}
-          element={<SettingsApplicationDetails />}
-        />
-        <Route
-          path={SettingsPath.AvailableApplicationDetail}
-          element={<SettingsAvailableApplicationDetails />}
+          element={<SettingsApplicationPage />}
         />
         <Route
           path={SettingsPath.ApplicationRegistrationDetail}

@@ -24,8 +24,8 @@ export const SettingsApplicationRegistrationDistributionTab = ({
   const isTarballSource =
     registration.sourceType === ApplicationRegistrationSourceType.TARBALL;
 
-  const shareLink = getSettingsPath(SettingsPath.AvailableApplicationDetail, {
-    availableApplicationId: registration.universalIdentifier,
+  const shareLink = getSettingsPath(SettingsPath.ApplicationDetail, {
+    applicationUniversalIdentifier: registration.universalIdentifier,
   });
 
   const publishCommands = ['yarn twenty publish'];

@@ -38,10 +38,10 @@ import { Section } from 'twenty-ui/layout';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
 import { useQuery } from '@apollo/client/react';
 import {
-  PermissionFlagType,
-  FindOneApplicationByUniversalIdentifierDocument,
-  FindMarketplaceAppDetailDocument,
   ApplicationRegistrationSourceType,
+  FindMarketplaceAppDetailDocument,
+  FindOneApplicationByUniversalIdentifierDocument,
+  PermissionFlagType,
 } from '~/generated-metadata/graphql';
 import { SettingsApplicationPermissionsTab } from '~/pages/settings/applications/tabs/SettingsApplicationPermissionsTab';
 import { SettingsAvailableApplicationDetailContentTab } from '~/pages/settings/applications/tabs/SettingsAvailableApplicationDetailContentTab';
@@ -179,9 +179,9 @@ const StyledSectionTitle = styled.h2`
 
 const StyledAboutContainer = styled.div``;
 
-export const SettingsAvailableApplicationDetails = () => {
-  const { availableApplicationId = '' } = useParams<{
-    availableApplicationId: string;
+export const SettingsApplicationPage = () => {
+  const { applicationUniversalIdentifier = '' } = useParams<{
+    applicationUniversalIdentifier: string;
   }>();
 
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState(0);
@@ -195,14 +195,14 @@ export const SettingsAvailableApplicationDetails = () => {
   const { data: applicationData } = useQuery(
     FindOneApplicationByUniversalIdentifierDocument,
     {
-      variables: { universalIdentifier: availableApplicationId },
-      skip: !availableApplicationId,
+      variables: { universalIdentifier: applicationUniversalIdentifier },
+      skip: !applicationUniversalIdentifier,
     },
   );
 
   const { data: detailData } = useQuery(FindMarketplaceAppDetailDocument, {
-    variables: { universalIdentifier: availableApplicationId },
-    skip: !availableApplicationId,
+    variables: { universalIdentifier: applicationUniversalIdentifier },
+    skip: !applicationUniversalIdentifier,
   });
 
   const application = applicationData?.findOneApplication;

@@ -48,8 +48,8 @@ export const SettingsAvailableApplicationCard = ({
   return (
     <StyledLinkContainer>
       <Link
-        to={getSettingsPath(SettingsPath.AvailableApplicationDetail, {
-          availableApplicationId: application.id,
+        to={getSettingsPath(SettingsPath.ApplicationDetail, {
+          applicationUniversalIdentifier: application.universalIdentifier,
         })}
       >
         <Card rounded fullWidth>

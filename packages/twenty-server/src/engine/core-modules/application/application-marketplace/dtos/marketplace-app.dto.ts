@@ -18,6 +18,11 @@ export class MarketplaceAppDTO {
   @IsString()
   @IsNotEmpty()
   @Field()
+  universalIdentifier: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Field()
   name: string;
 
   @IsString()

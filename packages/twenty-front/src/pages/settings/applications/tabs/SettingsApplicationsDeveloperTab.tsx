@@ -20,11 +20,11 @@ import {
   Avatar,
   CommandBlock,
   H2Title,
+  IconArrowUpRight,
   IconChevronRight,
   IconCopy,
-  IconArrowUpRight,
-  OverflowingTextWithTooltip,
   InlineBanner,
+  OverflowingTextWithTooltip,
 } from 'twenty-ui/display';
 import { Button, SearchInput } from 'twenty-ui/input';
 import { Section } from 'twenty-ui/layout';
@@ -121,7 +121,7 @@ export const SettingsApplicationsDeveloperTab = () => {
     registration: ApplicationRegistrationFragmentFragment,
   ) =>
     getSettingsPath(SettingsPath.ApplicationRegistrationDetail, {
-      applicationRegistrationId: registration.id,
+      applicationUniversalIdentifier: registration.universalIdentifier,
     });
 
   return (
@@ -232,12 +232,10 @@ export const SettingsApplicationsDeveloperTab = () => {
                       <TableRow
                         key={application.id}
                         gridAutoColumns={NPM_PACKAGES_GRID_COLUMNS}
-                        to={getSettingsPath(
-                          SettingsPath.AvailableApplicationDetail,
-                          {
-                            availableApplicationId: application.id,
-                          },
-                        )}
+                        to={getSettingsPath(SettingsPath.ApplicationDetail, {
+                          applicationUniversalIdentifier:
+                            application.universalIdentifier,
+                        })}
                       >
                         <StyledNameTableCell>
                           <Avatar

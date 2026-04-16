@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { useParams } from 'react-router-dom';
 import { SettingsPath } from 'twenty-shared/types';
 import { getSettingsPath, isDefined } from 'twenty-shared/utils';
-import { FindOneApplicationRegistrationDocument } from '~/generated-metadata/graphql';
+import { FindApplicationRegistrationByUniversalIdentifierDocument } from '~/generated-metadata/graphql';
 import { useLingui } from '@lingui/react/macro';
 import { Tag } from 'twenty-ui/components';
 import { TabList } from '@/ui/layout/tab-list/components/TabList';
@@ -32,16 +32,19 @@ export const SettingsApplicationRegistrationDetails = () => {
     REGISTRATION_DETAIL_TAB_LIST_ID,
   );
 
-  const { applicationRegistrationId = '' } = useParams<{
-    applicationRegistrationId: string;
+  const { applicationUniversalIdentifier = '' } = useParams<{
+    applicationUniversalIdentifier: string;
   }>();
 
-  const { data, loading } = useQuery(FindOneApplicationRegistrationDocument, {
-    variables: { id: applicationRegistrationId },
-    skip: !applicationRegistrationId,
-  });
+  const { data, loading } = useQuery(
+    FindApplicationRegistrationByUniversalIdentifierDocument,
+    {
+      variables: { universalIdentifier: applicationUniversalIdentifier },
+      skip: !applicationUniversalIdentifier,
+    },
+  );
 
-  const registration = data?.findOneApplicationRegistration;
+  const registration = data?.findApplicationRegistrationByUniversalIdentifier;
 
   if (loading || !isDefined(registration)) {
     return null;

@@ -32,15 +32,15 @@ export const SettingsAdminApplicationRegistrationDetail = () => {
     REGISTRATION_DETAIL_TAB_LIST_ID,
   );
 
-  const { applicationRegistrationId = '' } = useParams<{
-    applicationRegistrationId: string;
+  const { applicationUniversalIdentifier = '' } = useParams<{
+    applicationUniversalIdentifier: string;
   }>();
 
   const { data, loading } = useQuery(
     FindOneAdminApplicationRegistrationDocument,
     {
-      variables: { id: applicationRegistrationId },
-      skip: !applicationRegistrationId,
+      variables: { id: applicationUniversalIdentifier },
+      skip: !applicationUniversalIdentifier,
     },
   );
 

@@ -27,7 +27,7 @@ import type { SingleTabProps } from '@/ui/layout/tab-list/types/SingleTabProps';
 
 const APPLICATION_DETAIL_ID = 'application-detail-id';
 
-export const SettingsApplicationDetails = () => {
+export const SettingsApplicationDetailsToRemove = () => {
   const { applicationId = '' } = useParams<{ applicationId: string }>();
 
   const activeTabId = useAtomComponentStateValue(
