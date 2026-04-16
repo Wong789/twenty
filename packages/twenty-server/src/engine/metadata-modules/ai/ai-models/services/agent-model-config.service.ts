@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 
 import { ProviderOptions } from '@ai-sdk/provider-utils';
 import { ToolSet } from 'ai';
+import { isAgentCapabilityEnabled } from 'twenty-shared/ai';
 
+import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
 import {
   AI_SDK_ANTHROPIC,
@@ -15,7 +17,6 @@ import {
   RegisteredAIModel,
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/ai-models/services/sdk-provider-factory.service';
-import { FlatAgentWithRoleId } from 'src/engine/metadata-modules/flat-agent/types/flat-agent.type';
 
 @Injectable()
 export class AgentModelConfigService {
@@ -39,7 +40,7 @@ export class AgentModelConfigService {
 
   getNativeModelTools(
     model: RegisteredAIModel,
-    agent: FlatAgentWithRoleId,
+    agent: ToolProviderAgent,
     options: { useProviderNativeWebSearch: boolean },
   ): ToolSet {
     const tools: ToolSet = {};
@@ -49,7 +50,7 @@ export class AgentModelConfigService {
       case AI_SDK_ANTHROPIC:
         if (
           options.useProviderNativeWebSearch &&
-          modelConfiguration.webSearch?.enabled !== false
+          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
         ) {
           const anthropicProvider = model.providerName
             ? this.sdkProviderFactory.getRawAnthropicProvider(
@@ -65,7 +66,7 @@ export class AgentModelConfigService {
       case AI_SDK_BEDROCK: {
         if (
           options.useProviderNativeWebSearch &&
-          modelConfiguration.webSearch?.enabled !== false
+          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
         ) {
           const bedrockProvider = model.providerName
             ? this.sdkProviderFactory.getRawBedrockProvider(model.providerName)
@@ -81,7 +82,7 @@ export class AgentModelConfigService {
       case AI_SDK_OPENAI:
         if (
           options.useProviderNativeWebSearch &&
-          modelConfiguration.webSearch?.enabled !== false
+          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
         ) {
           const openaiProvider = model.providerName
             ? this.sdkProviderFactory.getRawOpenAIProvider(model.providerName)
@@ -107,12 +108,12 @@ export class AgentModelConfigService {
 
         if (
           options.useProviderNativeWebSearch &&
-          modelConfiguration.webSearch?.enabled !== false
+          isAgentCapabilityEnabled(modelConfiguration, 'webSearch')
         ) {
           tools.web_search = xaiProvider.tools.webSearch() as ToolSet[string];
         }
 
-        if (modelConfiguration.twitterSearch?.enabled) {
+        if (isAgentCapabilityEnabled(modelConfiguration, 'twitterSearch')) {
           tools.x_search = xaiProvider.tools.xSearch() as ToolSet[string];
         }
 

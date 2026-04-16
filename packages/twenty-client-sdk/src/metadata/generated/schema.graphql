@@ -1735,7 +1735,6 @@ type PublicWorkspaceData {
 type AgentCapabilities {
   webSearch: Boolean
   twitterSearch: Boolean
-  codeInterpreter: Boolean
 }
 
 type ClientAIModelConfig {
@@ -1856,6 +1855,7 @@ type ClientConfig {
   analyticsEnabled: Boolean!
   support: Support!
   isAttachmentPreviewEnabled: Boolean!
+  isCodeInterpreterEnabled: Boolean!
   sentry: Sentry!
   captcha: Captcha!
   api: ApiConfig!

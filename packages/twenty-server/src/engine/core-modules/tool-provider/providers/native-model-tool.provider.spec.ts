@@ -12,6 +12,7 @@ import { type FlatAgentWithRoleId } from 'src/engine/metadata-modules/flat-agent
 describe('NativeModelToolProvider', () => {
   const agent = {
     id: 'agent-id',
+    modelId: 'xai-model',
     modelConfiguration: {
       webSearch: { enabled: true },
       twitterSearch: { enabled: true },
@@ -19,6 +20,9 @@ describe('NativeModelToolProvider', () => {
   } as FlatAgentWithRoleId;
 
   const context = {
+    workspaceId: 'workspace-id',
+    roleId: 'role-id',
+    rolePermissionConfig: { unionOf: ['role-id'] },
     agent,
   } as ToolProviderContext;
 

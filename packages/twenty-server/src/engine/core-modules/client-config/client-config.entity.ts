@@ -36,9 +36,6 @@ export class AgentCapabilities {
 
   @Field(() => Boolean, { nullable: true })
   twitterSearch?: boolean;
-
-  @Field(() => Boolean, { nullable: true })
-  codeInterpreter?: boolean;
 }
 
 @ObjectType()
@@ -278,6 +275,9 @@ export class ClientConfig {
 
   @Field(() => Boolean)
   isAttachmentPreviewEnabled: boolean;
+
+  @Field(() => Boolean)
+  isCodeInterpreterEnabled: boolean;
 
   @Field(() => Sentry)
   sentry: Sentry;

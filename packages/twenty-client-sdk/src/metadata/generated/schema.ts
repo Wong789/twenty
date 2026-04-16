@@ -1433,7 +1433,6 @@ export interface PublicWorkspaceData {
 export interface AgentCapabilities {
     webSearch?: Scalars['Boolean']
     twitterSearch?: Scalars['Boolean']
-    codeInterpreter?: Scalars['Boolean']
     __typename: 'AgentCapabilities'
 }
 
@@ -1554,6 +1553,7 @@ export interface ClientConfig {
     analyticsEnabled: Scalars['Boolean']
     support: Support
     isAttachmentPreviewEnabled: Scalars['Boolean']
+    isCodeInterpreterEnabled: Scalars['Boolean']
     sentry: Sentry
     captcha: Captcha
     api: ApiConfig
@@ -4684,7 +4684,6 @@ export interface PublicWorkspaceDataGenqlSelection{
 export interface AgentCapabilitiesGenqlSelection{
     webSearch?: boolean | number
     twitterSearch?: boolean | number
-    codeInterpreter?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -4811,6 +4810,7 @@ export interface ClientConfigGenqlSelection{
     analyticsEnabled?: boolean | number
     support?: SupportGenqlSelection
     isAttachmentPreviewEnabled?: boolean | number
+    isCodeInterpreterEnabled?: boolean | number
     sentry?: SentryGenqlSelection
     captcha?: CaptchaGenqlSelection
     api?: ApiConfigGenqlSelection

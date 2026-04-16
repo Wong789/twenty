@@ -3485,9 +3485,6 @@ export default {
             "twitterSearch": [
                 6
             ],
-            "codeInterpreter": [
-                6
-            ],
             "__typename": [
                 1
             ]
@@ -3747,6 +3744,9 @@ export default {
                 183
             ],
             "isAttachmentPreviewEnabled": [
+                6
+            ],
+            "isCodeInterpreterEnabled": [
                 6
             ],
             "sentry": [

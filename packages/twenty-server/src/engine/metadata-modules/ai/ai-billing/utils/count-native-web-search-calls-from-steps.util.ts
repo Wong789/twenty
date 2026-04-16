@@ -1,7 +1,8 @@
 import { type StepResult, type ToolSet } from 'ai';
 
-// TODO: Confirm whether x_search should be billed the same as native web_search.
-const NATIVE_SEARCH_TOOL_NAMES = new Set(['web_search', 'x_search']);
+// x_search is billed alongside web_search because both represent
+// provider-native search tool calls.
+export const NATIVE_SEARCH_TOOL_NAMES = new Set(['web_search', 'x_search']);
 
 export const countNativeWebSearchCallsFromSteps = (
   steps: StepResult<ToolSet>[],

@@ -57,18 +57,13 @@ export class ClientConfigService {
 
     const webSearch = hasNativeWebSearch || isWebSearchDriverEnabled;
 
-    const codeInterpreter =
-      this.twentyConfigService.get('CODE_INTERPRETER_TYPE') !==
-      CodeInterpreterDriverType.DISABLED;
-
-    if (!webSearch && !hasXSearchCapability && !codeInterpreter) {
+    if (!webSearch && !hasXSearchCapability) {
       return undefined;
     }
 
     return {
       ...(webSearch && { webSearch }),
       ...(hasXSearchCapability && { twitterSearch: true }),
-      ...(codeInterpreter && { codeInterpreter }),
     };
   }
 
@@ -245,6 +240,9 @@ export class ClientConfigService {
       isAttachmentPreviewEnabled: this.twentyConfigService.get(
         'IS_ATTACHMENT_PREVIEW_ENABLED',
       ),
+      isCodeInterpreterEnabled:
+        this.twentyConfigService.get('CODE_INTERPRETER_TYPE') !==
+        CodeInterpreterDriverType.DISABLED,
       analyticsEnabled: this.twentyConfigService.get('ANALYTICS_ENABLED'),
       canManageFeatureFlags:
         this.twentyConfigService.get('NODE_ENV') ===

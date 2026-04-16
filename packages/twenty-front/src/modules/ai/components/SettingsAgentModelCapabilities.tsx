@@ -1,9 +1,13 @@
 import { aiModelsState } from '@/client-config/states/aiModelsState';
+import { isCodeInterpreterEnabledState } from '@/client-config/states/isCodeInterpreterEnabledState';
 import { InputLabel } from '@/ui/input/components/InputLabel';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
-import { type ModelConfiguration } from 'twenty-shared/ai';
+import {
+  isAgentCapabilityEnabled,
+  type ModelConfiguration,
+} from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
 import { IconBrandX, IconCode, IconWorld } from 'twenty-ui/display';
 import { Section } from 'twenty-ui/layout';
@@ -35,18 +39,21 @@ export const SettingsAgentModelCapabilities = ({
   disabled = false,
 }: SettingsAgentModelCapabilitiesProps) => {
   const aiModels = useAtomStateValue(aiModelsState);
+  const isCodeInterpreterEnabled = useAtomStateValue(
+    isCodeInterpreterEnabledState,
+  );
 
   const selectedModel = aiModels.find((m) => m.modelId === selectedModelId);
-  const capabilities = selectedModel?.capabilities;
+  const modelCapabilities = selectedModel?.capabilities;
 
-  if (!isDefined(capabilities)) {
+  if (!isDefined(modelCapabilities) && !isCodeInterpreterEnabled) {
     return null;
   }
 
   if (
-    !capabilities.webSearch &&
-    !capabilities.twitterSearch &&
-    !capabilities.codeInterpreter
+    !modelCapabilities?.webSearch &&
+    !modelCapabilities?.twitterSearch &&
+    !isCodeInterpreterEnabled
   ) {
     return null;
   }
@@ -69,15 +76,11 @@ export const SettingsAgentModelCapabilities = ({
   };
 
   const isCapabilityEnabled = (capability: AgentCapabilityKey) => {
-    if (capability === 'webSearch' || capability === 'codeInterpreter') {
-      return modelConfiguration[capability]?.enabled !== false;
-    }
-
-    return modelConfiguration[capability]?.enabled || false;
+    return isAgentCapabilityEnabled(modelConfiguration, capability);
   };
 
   const capabilityItems = [
-    ...(capabilities.webSearch
+    ...(modelCapabilities?.webSearch
       ? [
           {
             key: 'webSearch' as const,
@@ -87,7 +90,7 @@ export const SettingsAgentModelCapabilities = ({
           },
         ]
       : []),
-    ...(capabilities.twitterSearch
+    ...(modelCapabilities?.twitterSearch
       ? [
           {
             key: 'twitterSearch' as const,
@@ -97,7 +100,7 @@ export const SettingsAgentModelCapabilities = ({
           },
         ]
       : []),
-    ...(capabilities.codeInterpreter
+    ...(isCodeInterpreterEnabled
       ? [
           {
             key: 'codeInterpreter' as const,

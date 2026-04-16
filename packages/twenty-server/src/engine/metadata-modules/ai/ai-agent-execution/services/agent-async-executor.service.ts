@@ -14,6 +14,7 @@ import { isDefined } from 'twenty-shared/utils';
 import { type Repository } from 'typeorm';
 
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
+import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
 
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
@@ -34,7 +35,10 @@ import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
-import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
+import {
+  countNativeWebSearchCallsFromSteps,
+  NATIVE_SEARCH_TOOL_NAMES,
+} from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
@@ -59,6 +63,11 @@ const WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES = [
   ToolCategory.DATABASE_CRUD,
   ToolCategory.ACTION,
 ] as const;
+
+const toToolProviderAgent = (agent: AgentEntity): ToolProviderAgent => ({
+  modelId: agent.modelId,
+  modelConfiguration: agent.modelConfiguration ?? null,
+});
 
 // Agent execution within workflows uses database and action tools only.
 // Workflow tools are intentionally excluded to avoid circular dependencies
@@ -130,22 +139,30 @@ export class AgentAsyncExecutorService {
       error instanceof Error
         ? (error as Error & { cause?: unknown }).cause
         : undefined;
-    const apiCallError = APICallError.isInstance(error)
-      ? error
-      : APICallError.isInstance(cause)
-        ? cause
-        : undefined;
 
-    if (apiCallError) {
+    if (APICallError.isInstance(error)) {
       return {
-        name: apiCallError.name,
-        message: apiCallError.message,
-        url: apiCallError.url,
-        statusCode: apiCallError.statusCode,
-        responseBody: apiCallError.responseBody,
-        isRetryable: apiCallError.isRetryable,
+        name: error.name,
+        message: error.message,
+        url: error.url,
+        statusCode: error.statusCode,
+        responseBody: error.responseBody,
+        isRetryable: error.isRetryable,
       };
     }
+
+    if (APICallError.isInstance(cause)) {
+      return {
+        name: cause.name,
+        message: cause.message,
+        url: cause.url,
+        statusCode: cause.statusCode,
+        responseBody: cause.responseBody,
+        isRetryable: cause.isRetryable,
+      };
+    }
+
+    return undefined;
   }
 
   private getErrorDetailsForLog(error: unknown): Record<string, unknown> {
@@ -178,8 +195,8 @@ export class AgentAsyncExecutorService {
       sdkPackage: context.sdkPackage,
       toolCount: context.toolNames.length,
       toolNames: context.toolNames,
-      nativeSearchToolNames: context.toolNames.filter(
-        (toolName) => toolName === 'web_search' || toolName === 'x_search',
+      nativeSearchToolNames: context.toolNames.filter((toolName) =>
+        NATIVE_SEARCH_TOOL_NAMES.has(toolName),
       ),
       error: this.getErrorDetailsForLog(error),
     };
@@ -282,7 +299,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           rolePermissionConfig: effectiveRoleConfig ?? { unionOf: [] },
           authContext,
           actorContext,
-          agent: agent as unknown as ToolProviderContext['agent'],
+          agent: toToolProviderAgent(agent),
           userId:
             isDefined(authContext) && isUserAuthContext(authContext)
               ? authContext.user.id
@@ -301,13 +318,11 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           },
         );
 
-        const toolRuntime = await this.lazyToolRuntimeService.buildToolRuntime(
-          {
-            context: toolProviderContext,
-            directTools: nativeModelTools,
-            lazyToolCategories: WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES,
-          },
-        );
+        const toolRuntime = await this.lazyToolRuntimeService.buildToolRuntime({
+          context: toolProviderContext,
+          directTools: nativeModelTools,
+          lazyToolCategories: WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES,
+        });
 
         tools = toolRuntime.runtimeTools;
         lazyWorkflowToolCountForLog = toolRuntime.lazyToolCatalog.length;

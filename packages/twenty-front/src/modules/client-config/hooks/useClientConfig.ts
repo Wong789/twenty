@@ -8,6 +8,7 @@ import { canManageFeatureFlagsState } from '@/client-config/states/canManageFeat
 import { captchaState } from '@/client-config/states/captchaState';
 import { isAnalyticsEnabledState } from '@/client-config/states/isAnalyticsEnabledState';
 import { isAttachmentPreviewEnabledState } from '@/client-config/states/isAttachmentPreviewEnabledState';
+import { isCodeInterpreterEnabledState } from '@/client-config/states/isCodeInterpreterEnabledState';
 import { isConfigVariablesInDbEnabledState } from '@/client-config/states/isConfigVariablesInDbEnabledState';
 import { isDeveloperDefaultSignInPrefilledState } from '@/client-config/states/isDeveloperDefaultSignInPrefilledState';
 import { isClickHouseConfiguredState } from '@/client-config/states/isClickHouseConfiguredState';
@@ -92,6 +93,9 @@ export const useClientConfig = (): UseClientConfigResult => {
 
   const setIsAttachmentPreviewEnabled = useSetAtomState(
     isAttachmentPreviewEnabledState,
+  );
+  const setIsCodeInterpreterEnabled = useSetAtomState(
+    isCodeInterpreterEnabledState,
   );
 
   const setIsConfigVariablesInDbEnabled = useSetAtomState(
@@ -185,6 +189,7 @@ export const useClientConfig = (): UseClientConfigResult => {
       setIsGoogleMessagingEnabled(clientConfig?.isGoogleMessagingEnabled);
       setIsGoogleCalendarEnabled(clientConfig?.isGoogleCalendarEnabled);
       setIsAttachmentPreviewEnabled(clientConfig?.isAttachmentPreviewEnabled);
+      setIsCodeInterpreterEnabled(clientConfig?.isCodeInterpreterEnabled);
       setIsConfigVariablesInDbEnabled(
         clientConfig?.isConfigVariablesInDbEnabled,
       );
@@ -229,6 +234,7 @@ export const useClientConfig = (): UseClientConfigResult => {
     setIsGoogleMessagingEnabled,
     setIsAnalyticsEnabled,
     setIsAttachmentPreviewEnabled,
+    setIsCodeInterpreterEnabled,
     setIsConfigVariablesInDbEnabled,
     setIsDeveloperDefaultSignInPrefilled,
     setIsEmailVerificationRequired,

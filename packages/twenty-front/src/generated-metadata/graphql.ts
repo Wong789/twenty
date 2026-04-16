@@ -165,7 +165,6 @@ export type Agent = {
 
 export type AgentCapabilities = {
   __typename?: 'AgentCapabilities';
-  codeInterpreter?: Maybe<Scalars['Boolean']>;
   twitterSearch?: Maybe<Scalars['Boolean']>;
   webSearch?: Maybe<Scalars['Boolean']>;
 };
@@ -966,6 +965,7 @@ export type ClientConfig = {
   isAttachmentPreviewEnabled: Scalars['Boolean'];
   isClickHouseConfigured: Scalars['Boolean'];
   isCloudflareIntegrationEnabled: Scalars['Boolean'];
+  isCodeInterpreterEnabled: Scalars['Boolean'];
   isConfigVariablesInDbEnabled: Scalars['Boolean'];
   isEmailVerificationRequired: Scalars['Boolean'];
   isGoogleCalendarEnabled: Scalars['Boolean'];

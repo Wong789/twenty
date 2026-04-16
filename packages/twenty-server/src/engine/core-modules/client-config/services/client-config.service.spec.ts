@@ -11,7 +11,10 @@ import { DomainServerConfigService } from 'src/engine/core-modules/domain/domain
 import { PUBLIC_FEATURE_FLAGS } from 'src/engine/core-modules/feature-flag/constants/public-feature-flag.const';
 import { TwentyConfigService } from 'src/engine/core-modules/twenty-config/twenty-config.service';
 import { WebSearchDriverType } from 'src/engine/core-modules/web-search/web-search.interface';
-import { AI_SDK_XAI } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
+import {
+  AI_SDK_OPENAI,
+  AI_SDK_XAI,
+} from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 
 describe('ClientConfigService', () => {
@@ -172,6 +175,7 @@ describe('ClientConfigService', () => {
           mutationMaximumAffectedRecords: 1000,
         },
         isAttachmentPreviewEnabled: true,
+        isCodeInterpreterEnabled: false,
         analyticsEnabled: true,
         canManageFeatureFlags: true,
         publicFeatureFlags: PUBLIC_FEATURE_FLAGS,
@@ -283,6 +287,45 @@ describe('ClientConfigService', () => {
         webSearch: true,
         twitterSearch: true,
       });
+      expect(result.isCodeInterpreterEnabled).toBe(false);
+    });
+
+    it('surfaces code interpreter availability at the client-config level', async () => {
+      jest
+        .spyOn(aiModelRegistryService, 'getAdminFilteredModels')
+        .mockReturnValue([
+          {
+            modelId: 'openai-model',
+            sdkPackage: AI_SDK_OPENAI,
+            model: {} as never,
+            providerName: 'openai',
+          },
+        ]);
+
+      jest
+        .spyOn(twentyConfigService, 'get')
+        .mockImplementation((key: string) => {
+          if (key === 'WEB_SEARCH_DRIVER') {
+            return WebSearchDriverType.DISABLED;
+          }
+
+          if (key === 'CODE_INTERPRETER_TYPE') {
+            return CodeInterpreterDriverType.LOCAL;
+          }
+
+          return undefined;
+        });
+
+      const result = await service.getClientConfig();
+      const openAiModel = result.aiModels.find(
+        (model) => model.modelId === 'openai-model',
+      );
+
+      expect(result.isCodeInterpreterEnabled).toBe(true);
+      expect(openAiModel?.capabilities).toEqual({
+        webSearch: true,
+      });
+      expect(openAiModel?.capabilities).not.toHaveProperty('codeInterpreter');
     });
   });
 });

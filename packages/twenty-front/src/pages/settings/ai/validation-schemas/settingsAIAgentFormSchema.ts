@@ -25,6 +25,12 @@ export const settingsAIAgentFormSchema = z.object({
           configuration: z.record(z.string(), z.unknown()).optional(),
         })
         .optional(),
+      codeInterpreter: z
+        .object({
+          enabled: z.boolean(),
+          configuration: z.record(z.string(), z.unknown()).optional(),
+        })
+        .optional(),
     })
     .optional(),
   responseFormat: z
