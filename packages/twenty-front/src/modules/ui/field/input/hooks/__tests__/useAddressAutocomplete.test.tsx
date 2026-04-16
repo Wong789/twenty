@@ -293,6 +293,42 @@ describe('useAddressAutocomplete', () => {
     );
   });
 
+  it('should close dropdown and not throw when autocomplete query fails', async () => {
+    mockGetPlaceAutocompleteData.mockRejectedValue(
+      new Error('Network error'),
+    );
+
+    const { result } = renderHook(() => useAddressAutocomplete());
+
+    await act(async () => {
+      await result.current.getAutocompletePlaceData('ü', 'token123');
+    });
+
+    expect(mockCloseDropdown).toHaveBeenCalled();
+    expect(mockOpenDropdown).not.toHaveBeenCalled();
+  });
+
+  it('should close dropdown and not throw when place details query fails', async () => {
+    const mockOnChange = jest.fn();
+
+    mockGetPlaceDetailsData.mockRejectedValue(
+      new Error('Network error'),
+    );
+
+    const { result } = renderHook(() => useAddressAutocomplete(mockOnChange));
+
+    await act(async () => {
+      await result.current.autoFillInputsFromPlaceDetails(
+        'place123',
+        'token123',
+        '123 Main St',
+      );
+    });
+
+    expect(mockCloseDropdown).toHaveBeenCalled();
+    expect(mockOnChange).not.toHaveBeenCalled();
+  });
+
   it('should handle address autocomplete with country and isFieldCity parameters', async () => {
     mockGetPlaceAutocompleteData.mockResolvedValue([
       { text: 'Boston, MA', placeId: 'place1' },

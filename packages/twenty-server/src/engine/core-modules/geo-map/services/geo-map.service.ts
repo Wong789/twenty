@@ -34,6 +34,10 @@ export class GeoMapService {
     country?: string,
     isFieldCity?: boolean,
   ): Promise<GeoMapAutocompleteSanitizedResult[] | undefined> {
+    if (!isNonEmptyString(this.apiMapKey)) {
+      return [];
+    }
+
     if (!isNonEmptyString(address?.trim())) {
       return [];
     }
@@ -61,6 +65,10 @@ export class GeoMapService {
     placeId: string,
     token: string,
   ): Promise<GeoMapAddressFields | undefined> {
+    if (!isNonEmptyString(this.apiMapKey)) {
+      return {};
+    }
+
     const httpClient = this.secureHttpClientService.getHttpClient();
 
     const result = await httpClient.get(

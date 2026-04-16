@@ -47,12 +47,20 @@ export const useAddressAutocomplete = (
       country?: string,
       isFieldCity?: boolean,
     ) => {
-      const placeAutocompleteData = await getPlaceAutocompleteData(
-        address,
-        token,
-        country,
-        isFieldCity,
-      );
+      let placeAutocompleteData: PlaceAutocompleteResult[] | undefined;
+
+      try {
+        placeAutocompleteData = await getPlaceAutocompleteData(
+          address,
+          token,
+          country,
+          isFieldCity,
+        );
+      } catch {
+        closeDropdownOfAutocomplete();
+
+        return;
+      }
 
       const newData = placeAutocompleteData?.map((data) => ({
         text: data.text,
@@ -76,7 +84,16 @@ export const useAddressAutocomplete = (
       addressStreet1?: string,
       internalValue?: FieldAddressDraftValue,
     ) => {
-      const placeData = await getPlaceDetailsData(placeId, token);
+      let placeData: Awaited<ReturnType<typeof getPlaceDetailsData>>;
+
+      try {
+        placeData = await getPlaceDetailsData(placeId, token);
+      } catch {
+        closeDropdownOfAutocomplete();
+
+        return;
+      }
+
       const countryName = findCountryNameByCountryCode(placeData?.country);
 
       const updatedAddress = {
