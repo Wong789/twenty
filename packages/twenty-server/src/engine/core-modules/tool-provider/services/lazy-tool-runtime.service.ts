@@ -41,11 +41,12 @@ export class LazyToolRuntimeService {
     );
 
     const lazyToolNames = new Set(lazyToolCatalog.map((tool) => tool.name));
-    const excludedToolNames = new Set(
-      toolCatalog
+    const excludedToolNames = new Set([
+      ...toolCatalog
         .filter((tool) => !lazyToolNames.has(tool.name))
         .map((tool) => tool.name),
-    );
+      ...Object.keys(directTools),
+    ]);
 
     return {
       toolCatalog,
