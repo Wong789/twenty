@@ -1,7 +1,9 @@
+import { CommandMenuItem } from '@/command-menu/components/CommandMenuItem';
 import { CommandMenuItemDropdown } from '@/command-menu/components/CommandMenuItemDropdown';
 import { useFieldMetadataItemById } from '@/object-metadata/hooks/useFieldMetadataItemById';
 import { SidePanelGroup } from '@/side-panel/components/SidePanelGroup';
 import { SidePanelList } from '@/side-panel/components/SidePanelList';
+import { useSidePanelSubPageHistory } from '@/side-panel/hooks/useSidePanelSubPageHistory';
 import { FieldWidgetFieldDropdownContent } from '@/side-panel/pages/page-layout/components/dropdown-content/FieldWidgetFieldDropdownContent';
 import { FieldWidgetLayoutDropdownContent } from '@/side-panel/pages/page-layout/components/dropdown-content/FieldWidgetLayoutDropdownContent';
 import { WidgetSettingsManageSection } from '@/side-panel/pages/page-layout/components/WidgetSettingsManageSection';
@@ -10,12 +12,17 @@ import { WIDGET_SETTINGS_SELECTABLE_ITEM_IDS } from '@/side-panel/pages/page-lay
 import { usePageLayoutIdFromContextStore } from '@/side-panel/pages/page-layout/hooks/usePageLayoutIdFromContextStore';
 import { useWidgetInEditMode } from '@/side-panel/pages/page-layout/hooks/useWidgetInEditMode';
 import { useWidgetSettingsPlacementSelectableItemIds } from '@/side-panel/pages/page-layout/hooks/useWidgetSettingsPlacementSelectableItemIds';
+import { SidePanelSubPages } from '@/side-panel/types/SidePanelSubPages';
 import { DropdownContent } from '@/ui/layout/dropdown/components/DropdownContent';
 import { SelectableListItem } from '@/ui/layout/selectable-list/components/SelectableListItem';
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
 import { isDefined } from 'twenty-shared/utils';
-import { IconLayoutSidebarRight, IconListDetails } from 'twenty-ui/display';
+import {
+  IconColumns,
+  IconLayoutSidebarRight,
+  IconListDetails,
+} from 'twenty-ui/display';
 import {
   FieldDisplayMode,
   type FieldConfiguration,
@@ -37,6 +44,7 @@ const StyledSidePanelContainer = styled.div`
 export const SidePanelRecordPageFieldSettings = () => {
   const { t } = useLingui();
   const { pageLayoutId } = usePageLayoutIdFromContextStore();
+  const { navigateToSidePanelSubPage } = useSidePanelSubPageHistory();
 
   const { placementSelectableItemIds } =
     useWidgetSettingsPlacementSelectableItemIds(pageLayoutId);
@@ -63,15 +71,25 @@ export const SidePanelRecordPageFieldSettings = () => {
     [FieldDisplayMode.FIELD]: t`Field`,
     [FieldDisplayMode.CARD]: t`Card`,
     [FieldDisplayMode.EDITOR]: t`Editor`,
+    [FieldDisplayMode.VIEW]: t`Table`,
   };
 
   const layoutLabel = isDefined(currentDisplayMode)
     ? (displayModeLabels[currentDisplayMode] ?? '')
     : '';
 
+  const isTableDisplayMode = currentDisplayMode === FieldDisplayMode.VIEW;
+
+  const handleNavigateToFields = () => {
+    navigateToSidePanelSubPage(
+      SidePanelSubPages.PageLayoutFieldWidgetTableFields,
+    );
+  };
+
   const selectableItemIds = [
     'field',
     'layout',
+    ...(isTableDisplayMode ? ['fields'] : []),
     WIDGET_SETTINGS_SELECTABLE_ITEM_IDS.VISIBILITY_RESTRICTION,
     WIDGET_SETTINGS_SELECTABLE_ITEM_IDS.RESET_TO_DEFAULT,
     WIDGET_SETTINGS_SELECTABLE_ITEM_IDS.REPLACE_WIDGET,
@@ -116,6 +134,20 @@ export const SidePanelRecordPageFieldSettings = () => {
                 contextualTextPosition="right"
               />
             </SelectableListItem>
+            {isTableDisplayMode && (
+              <SelectableListItem
+                itemId="fields"
+                onEnter={handleNavigateToFields}
+              >
+                <CommandMenuItem
+                  id="fields"
+                  label={t`Fields`}
+                  Icon={IconColumns}
+                  hasSubMenu
+                  onClick={handleNavigateToFields}
+                />
+              </SelectableListItem>
+            )}
           </SidePanelGroup>
           <WidgetSettingsManageSection pageLayoutId={pageLayoutId} />
           <WidgetSettingsPlacementSection pageLayoutId={pageLayoutId} />

@@ -12,7 +12,7 @@ import { type WidgetAction } from '@/page-layout/widgets/types/WidgetAction';
 import { getObjectPermissionsFromMapByObjectMetadataId } from '@/settings/roles/role-permissions/objects-permissions/utils/getObjectPermissionsFromMapByObjectMetadataId';
 import { useTargetRecord } from '@/ui/layout/contexts/useTargetRecord';
 import { isDefined } from 'twenty-shared/utils';
-import { FieldDisplayMode, RelationType } from '~/generated-metadata/graphql';
+import { RelationType } from '~/generated-metadata/graphql';
 
 type UseWidgetActionsParams = {
   widget: PageLayoutWidget;
@@ -72,16 +72,6 @@ export const useWidgetActions = ({
     actions.push({
       id: 'see-all',
       position: 0,
-    });
-  }
-
-  const isTableDisplayMode =
-    widget.configuration.fieldDisplayMode === FieldDisplayMode.VIEW;
-
-  if (isTableDisplayMode) {
-    actions.push({
-      id: 'fields',
-      position: 0.5,
     });
   }
 

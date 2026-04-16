@@ -120,6 +120,8 @@ export const FieldWidgetFieldDropdownContent = () => {
         viewId: nextViewId,
         fieldMetadataId,
         parentObjectMetadataId,
+        pageLayoutId,
+        widgetId: widgetInEditMode!.id,
       });
     }
 

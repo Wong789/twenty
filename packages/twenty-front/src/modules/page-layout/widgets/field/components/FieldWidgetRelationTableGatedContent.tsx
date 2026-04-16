@@ -24,7 +24,7 @@ export const FieldWidgetRelationTableGatedContent = ({
 }: FieldWidgetRelationTableGatedContentProps) => {
   const [isScopedFilterReady, setIsScopedFilterReady] = useState(false);
 
-  const lastLoadedViewId = useAtomComponentStateValue(
+  const lastLoadedRecordTableWidgetViewId = useAtomComponentStateValue(
     lastLoadedRecordTableWidgetViewIdComponentState,
   );
 
@@ -79,7 +79,7 @@ export const FieldWidgetRelationTableGatedContent = ({
 
     setIsScopedFilterReady(true);
   }, [
-    lastLoadedViewId,
+    lastLoadedRecordTableWidgetViewId,
     viewId,
     widgetId,
     inverseRelationFieldMetadataId,

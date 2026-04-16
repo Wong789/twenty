@@ -1,7 +1,9 @@
 import { objectMetadataItemsSelector } from '@/object-metadata/states/objectMetadataItemsSelector';
+import { fieldsWidgetUngroupedFieldsDraftComponentState } from '@/page-layout/states/fieldsWidgetUngroupedFieldsDraftComponentState';
 import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { pageLayoutPersistedComponentState } from '@/page-layout/states/pageLayoutPersistedComponentState';
 import { type FieldConfiguration } from '@/page-layout/types/FieldConfiguration';
+import { type PageLayoutWidget } from '@/page-layout/types/PageLayoutWidget';
 import { resolveRelatedObjectForFieldWidget } from '@/page-layout/utils/resolveRelatedObjectForFieldWidget';
 import { filterFieldsForRecordTableViewCreation } from '@/page-layout/widgets/record-table/utils/filterFieldsForRecordTableViewCreation';
 import { sortFieldsByRelevanceForRecordTableWidget } from '@/page-layout/widgets/record-table/utils/sortFieldsByRelevanceForRecordTableWidget';
@@ -9,7 +11,7 @@ import { usePerformViewAPIPersist } from '@/views/hooks/internal/usePerformViewA
 import { usePerformViewFieldAPIPersist } from '@/views/hooks/internal/usePerformViewFieldAPIPersist';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined, isNonEmptyArray } from 'twenty-shared/utils';
 import {
   FieldDisplayMode,
   ViewType,
@@ -22,8 +24,60 @@ const INITIAL_VISIBLE_FIELDS_COUNT_IN_WIDGET = 6;
 
 export const useCreatePendingFieldWidgetTableViews = () => {
   const { performViewAPICreate } = usePerformViewAPIPersist();
-  const { performViewFieldAPICreate } = usePerformViewFieldAPIPersist();
+  const { performViewFieldAPICreate, performViewFieldAPIUpdate } =
+    usePerformViewFieldAPIPersist();
   const store = useStore();
+
+  const persistDraftViewFields = useCallback(
+    async (
+      widget: PageLayoutWidget,
+      viewId: string,
+      pageLayoutId: string,
+    ) => {
+      const ungroupedDraft = store.get(
+        fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
+          instanceId: pageLayoutId,
+        }),
+      );
+      const draftFields = ungroupedDraft[widget.id] ?? [];
+
+      if (!isNonEmptyArray(draftFields)) {
+        return;
+      }
+
+      const fieldsToCreate = draftFields
+        .filter((field) => !isDefined(field.viewFieldId))
+        .map((field) => ({
+          id: v4(),
+          viewId,
+          fieldMetadataId: field.fieldMetadataItem.id,
+          position: field.position,
+          size: DEFAULT_VIEW_FIELD_SIZE,
+          isVisible: field.isVisible,
+        }));
+
+      const fieldsToUpdate = draftFields
+        .filter((field) => isDefined(field.viewFieldId))
+        .map((field) => ({
+          input: {
+            id: field.viewFieldId!,
+            update: {
+              isVisible: field.isVisible,
+              position: field.position,
+            },
+          },
+        }));
+
+      if (isNonEmptyArray(fieldsToCreate)) {
+        await performViewFieldAPICreate({ inputs: fieldsToCreate });
+      }
+
+      if (isNonEmptyArray(fieldsToUpdate)) {
+        await performViewFieldAPIUpdate(fieldsToUpdate);
+      }
+    },
+    [store, performViewFieldAPICreate, performViewFieldAPIUpdate],
+  );
 
   const createPendingFieldWidgetTableViews = useCallback(
     async (pageLayoutId: string) => {
@@ -50,7 +104,7 @@ export const useCreatePendingFieldWidgetTableViews = () => {
 
       const objectMetadataItems = store.get(objectMetadataItemsSelector.atom);
 
-      const pendingWidgets = draft.tabs
+      const tableFieldWidgets = draft.tabs
         .flatMap((tab) => tab.widgets)
         .filter((widget) => {
           if (widget.type !== WidgetType.FIELD) {
@@ -63,13 +117,32 @@ export const useCreatePendingFieldWidgetTableViews = () => {
             return false;
           }
 
-          if (!isDefined(config.viewId)) {
-            return false;
-          }
-
-          // Already persisted with the same viewId → view already exists.
-          return persistedViewIdsByWidgetId.get(widget.id) !== config.viewId;
+          return isDefined(config.viewId);
         });
+
+      const pendingWidgets = tableFieldWidgets.filter(
+        (widget) =>
+          persistedViewIdsByWidgetId.get(widget.id) !==
+          (widget.configuration as FieldConfiguration).viewId,
+      );
+
+      const existingWidgetsWithDraft = tableFieldWidgets.filter((widget) => {
+        const config = widget.configuration as FieldConfiguration;
+
+        if (
+          persistedViewIdsByWidgetId.get(widget.id) !== config.viewId
+        ) {
+          return false;
+        }
+
+        const ungroupedDraft = store.get(
+          fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
+            instanceId: pageLayoutId,
+          }),
+        );
+
+        return isNonEmptyArray(ungroupedDraft[widget.id]);
+      });
 
       for (const widget of pendingWidgets) {
         const config = widget.configuration as FieldConfiguration;
@@ -117,6 +190,17 @@ export const useCreatePendingFieldWidgetTableViews = () => {
           );
         }
 
+        const ungroupedDraft = store.get(
+          fieldsWidgetUngroupedFieldsDraftComponentState.atomFamily({
+            instanceId: pageLayoutId,
+          }),
+        );
+
+        if (isNonEmptyArray(ungroupedDraft[widget.id])) {
+          await persistDraftViewFields(widget, viewId, pageLayoutId);
+          continue;
+        }
+
         const eligibleFields = relatedObject.fields.filter(
           filterFieldsForRecordTableViewCreation,
         );
@@ -138,8 +222,24 @@ export const useCreatePendingFieldWidgetTableViews = () => {
 
         await performViewFieldAPICreate({ inputs: viewFieldInputs });
       }
+
+      for (const widget of existingWidgetsWithDraft) {
+        const config = widget.configuration as FieldConfiguration;
+        const viewId = config.viewId;
+
+        if (!isDefined(viewId)) {
+          continue;
+        }
+
+        await persistDraftViewFields(widget, viewId, pageLayoutId);
+      }
     },
-    [performViewAPICreate, performViewFieldAPICreate, store],
+    [
+      performViewAPICreate,
+      performViewFieldAPICreate,
+      persistDraftViewFields,
+      store,
+    ],
   );
 
   return { createPendingFieldWidgetTableViews };

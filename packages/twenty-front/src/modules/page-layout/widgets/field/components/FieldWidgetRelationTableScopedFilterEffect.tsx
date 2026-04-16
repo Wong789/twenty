@@ -20,7 +20,7 @@ export const FieldWidgetRelationTableScopedFilterEffect = ({
   inverseRelationFieldMetadataId,
   targetRecordId,
 }: FieldWidgetRelationTableScopedFilterEffectProps) => {
-  const lastLoadedViewId = useAtomComponentStateValue(
+  const lastLoadedRecordTableWidgetViewId = useAtomComponentStateValue(
     lastLoadedRecordTableWidgetViewIdComponentState,
   );
 
@@ -74,7 +74,7 @@ export const FieldWidgetRelationTableScopedFilterEffect = ({
 
     store.set(currentRecordFiltersAtom, [scopedFilter]);
   }, [
-    lastLoadedViewId,
+    lastLoadedRecordTableWidgetViewId,
     viewId,
     widgetId,
     inverseRelationFieldMetadataId,

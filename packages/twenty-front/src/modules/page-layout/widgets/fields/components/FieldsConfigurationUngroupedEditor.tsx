@@ -6,6 +6,7 @@ import { FieldsConfigurationFieldEditor } from '@/page-layout/widgets/fields/com
 import { type FieldsWidgetGroupField } from '@/page-layout/widgets/fields/types/FieldsWidgetGroup';
 import { styled } from '@linaria/react';
 import { useLingui } from '@lingui/react/macro';
+import { isDefined } from 'twenty-shared/utils';
 import { IconNewSection } from 'twenty-ui/display';
 import { MenuItem } from 'twenty-ui/navigation';
 
@@ -19,7 +20,7 @@ type FieldsConfigurationUngroupedEditorProps = {
   ungroupedFields: FieldsWidgetGroupField[];
   onMoveField: (sourceIndex: number, destinationIndex: number) => void;
   onToggleFieldVisibility: (fieldMetadataId: string) => void;
-  onAddGroup: () => void;
+  onAddGroup?: () => void;
 };
 
 export const FieldsConfigurationUngroupedEditor = ({
@@ -80,13 +81,15 @@ export const FieldsConfigurationUngroupedEditor = ({
             ))}
             {provided.placeholder}
 
-            <MenuItem
-              LeftIcon={IconNewSection}
-              text={t`Add a Group`}
-              onClick={onAddGroup}
-              withIconContainer
-              withIconContainerBackground={false}
-            />
+            {isDefined(onAddGroup) && (
+              <MenuItem
+                LeftIcon={IconNewSection}
+                text={t`Add a Group`}
+                onClick={onAddGroup}
+                withIconContainer
+                withIconContainerBackground={false}
+              />
+            )}
           </StyledFieldsDroppable>
         )}
       </Droppable>

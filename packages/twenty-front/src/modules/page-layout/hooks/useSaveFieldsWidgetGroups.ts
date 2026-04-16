@@ -6,6 +6,7 @@ import { fieldsWidgetGroupsDraftComponentState } from '@/page-layout/states/fiel
 import { fieldsWidgetGroupsPersistedComponentState } from '@/page-layout/states/fieldsWidgetGroupsPersistedComponentState';
 import { fieldsWidgetUngroupedFieldsDraftComponentState } from '@/page-layout/states/fieldsWidgetUngroupedFieldsDraftComponentState';
 import { fieldsWidgetUngroupedFieldsPersistedComponentState } from '@/page-layout/states/fieldsWidgetUngroupedFieldsPersistedComponentState';
+import { pageLayoutDraftComponentState } from '@/page-layout/states/pageLayoutDraftComponentState';
 import { useMutation } from '@apollo/client/react';
 import { useStore } from 'jotai';
 import { useCallback } from 'react';
@@ -13,6 +14,7 @@ import { isDefined } from 'twenty-shared/utils';
 import {
   type UpsertFieldsWidgetInput,
   type ViewFragmentFragment,
+  WidgetType,
 } from '~/generated-metadata/graphql';
 
 export const useSaveFieldsWidgetGroups = () => {
@@ -52,11 +54,28 @@ export const useSaveFieldsWidgetGroups = () => {
         }),
       );
 
-      const widgetIds = new Set([
+      const allWidgetIds = new Set([
         ...Object.keys(allDraftGroups),
         ...Object.keys(allPersistedGroups),
         ...Object.keys(allUngroupedFieldsDraft),
       ]);
+
+      const pageLayoutDraft = store.get(
+        pageLayoutDraftComponentState.atomFamily({
+          instanceId: pageLayoutId,
+        }),
+      );
+
+      const fieldWidgetIds = new Set(
+        pageLayoutDraft.tabs
+          .flatMap((tab) => tab.widgets)
+          .filter((widget) => widget.type === WidgetType.FIELD)
+          .map((widget) => widget.id),
+      );
+
+      const widgetIds = [...allWidgetIds].filter(
+        (widgetId) => !fieldWidgetIds.has(widgetId),
+      );
 
       for (const widgetId of widgetIds) {
         const editorMode = allEditorModes[widgetId] ?? 'ungrouped';

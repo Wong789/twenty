@@ -1,4 +1,3 @@
-import { WidgetActionFieldTableFields } from '@/page-layout/widgets/field/components/WidgetActionFieldTableFields';
 import { useCurrentWidget } from '@/page-layout/widgets/hooks/useCurrentWidget';
 import { type WidgetAction } from '@/page-layout/widgets/types/WidgetAction';
 import { CustomError } from 'twenty-shared/utils';
@@ -19,10 +18,6 @@ export const WidgetActionRenderer = ({ action }: WidgetActionRendererProps) => {
 
   if (action.id === 'see-all' && widget.type === WidgetType.FIELD) {
     return <WidgetActionFieldSeeAll />;
-  }
-
-  if (action.id === 'fields' && widget.type === WidgetType.FIELD) {
-    return <WidgetActionFieldTableFields />;
   }
 
   throw new CustomError(

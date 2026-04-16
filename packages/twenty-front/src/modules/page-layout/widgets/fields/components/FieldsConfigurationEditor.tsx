@@ -41,11 +41,13 @@ const StyledAddGroupButtonContainer = styled.div`
 type FieldsConfigurationEditorProps = {
   pageLayoutId: string;
   widgetId: string;
+  hideAddGroup?: boolean;
 };
 
 export const FieldsConfigurationEditor = ({
   pageLayoutId,
   widgetId,
+  hideAddGroup = false,
 }: FieldsConfigurationEditorProps) => {
   const { t } = useLingui();
   const { objectMetadataItem } = useContextStoreObjectMetadataItemOrThrow();
@@ -207,7 +209,7 @@ export const FieldsConfigurationEditor = ({
         ungroupedFields={ungroupedFields}
         onMoveField={moveUngroupedField}
         onToggleFieldVisibility={toggleUngroupedFieldVisibility}
-        onAddGroup={() => handleAddGroup({})}
+        onAddGroup={hideAddGroup ? undefined : () => handleAddGroup({})}
       />
     );
   }

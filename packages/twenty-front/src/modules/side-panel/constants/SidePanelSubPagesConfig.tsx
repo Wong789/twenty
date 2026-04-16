@@ -7,6 +7,7 @@ import { SidePanelNewSidebarItemViewObjectPickerSubPage } from '@/navigation-men
 import { SidePanelNewSidebarItemViewPickerSubPage } from '@/navigation-menu-item/edit/side-panel/components/SidePanelNewSidebarItemViewPickerSubPage';
 import { SidePanelNewSidebarItemViewSystemPickerSubPage } from '@/navigation-menu-item/edit/side-panel/components/SidePanelNewSidebarItemViewSystemPickerSubPage';
 import { SidePanelChartFilterSubPage } from '@/side-panel/pages/page-layout/components/SidePanelChartFilterSubPage';
+import { SidePanelFieldWidgetTableFieldsSubPage } from '@/side-panel/pages/page-layout/components/SidePanelFieldWidgetTableFieldsSubPage';
 import { SidePanelFieldsLayoutSubPage } from '@/side-panel/pages/page-layout/components/SidePanelFieldsLayoutSubPage';
 import { SidePanelRecordTableFilterSubPage } from '@/side-panel/pages/page-layout/components/record-table-settings/SidePanelRecordTableFilterSubPage';
 import { SidePanelRecordTableSortSubPage } from '@/side-panel/pages/page-layout/components/record-table-settings/SidePanelRecordTableSortSubPage';
@@ -19,6 +20,10 @@ export const SIDE_PANEL_SUB_PAGES_CONFIG = new Map<
 >([
   [SidePanelSubPages.PageLayoutGraphFilter, <SidePanelChartFilterSubPage />],
   [SidePanelSubPages.PageLayoutFieldsLayout, <SidePanelFieldsLayoutSubPage />],
+  [
+    SidePanelSubPages.PageLayoutFieldWidgetTableFields,
+    <SidePanelFieldWidgetTableFieldsSubPage />,
+  ],
   [SidePanelSubPages.NewSidebarItemMainMenu, <SidePanelNewSidebarItemPage />],
   [
     SidePanelSubPages.PageLayoutRecordTableFilter,

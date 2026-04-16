@@ -48,8 +48,7 @@ export const RecordTableWidgetViewLoadEffect = ({
 
     if (
       viewId === lastLoaded?.viewId &&
-      objectMetadataItem.updatedAt ===
-        lastLoaded?.objectMetadataItemUpdatedAt
+      objectMetadataItem.updatedAt === lastLoaded?.objectMetadataItemUpdatedAt
     ) {
       return;
     }
