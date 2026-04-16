@@ -9,6 +9,7 @@ jest.mock('ai', () => {
 
 import { generateText, type ToolSet } from 'ai';
 
+import { type ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { type LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
 import { type ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
@@ -95,6 +96,10 @@ describe('AgentAsyncExecutorService', () => {
       getToolsByCategories: jest.fn().mockResolvedValue(nativeModelTools),
     } as unknown as jest.Mocked<ToolRegistryService>;
 
+    const exceptionHandlerService = {
+      captureExceptions: jest.fn(),
+    } as unknown as jest.Mocked<ExceptionHandlerService>;
+
     const roleTargetRepository = {
       findOne: jest.fn().mockResolvedValue({ roleId: 'agent-role-id' }),
     };
@@ -109,6 +114,7 @@ describe('AgentAsyncExecutorService', () => {
       agentModelConfigService,
       lazyToolRuntimeService,
       toolRegistry,
+      exceptionHandlerService,
       roleTargetRepository as never,
       workspaceRepository as never,
     );
@@ -167,6 +173,13 @@ describe('AgentAsyncExecutorService', () => {
         tools: runtimeTools,
         system: expect.stringContaining('`find_people`'),
       }),
+    );
+
+    const firstGenerateTextCall = mockedGenerateText.mock.calls[0]?.[0];
+
+    expect(firstGenerateTextCall).toBeDefined();
+    expect(Object.keys(firstGenerateTextCall?.tools ?? {})).not.toEqual(
+      expect.arrayContaining(['find_people', 'send_email']),
     );
   });
 });

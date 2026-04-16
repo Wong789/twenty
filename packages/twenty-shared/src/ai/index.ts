@@ -7,8 +7,8 @@
  *                              |___/
  */
 
-export { AI_SDK_PACKAGE_LABELS } from './constants/ai-sdk-package-labels.const';
 export { AGENT_CAPABILITY_DEFAULTS } from './constants/agent-capability-defaults.const';
+export { AI_SDK_PACKAGE_LABELS } from './constants/ai-sdk-package-labels.const';
 export type { AiSdkPackage } from './constants/ai-sdk-packages.const';
 export { AI_SDK_PACKAGES } from './constants/ai-sdk-packages.const';
 export type { DataResidency } from './constants/data-residency.const';
@@ -16,11 +16,11 @@ export { DATA_RESIDENCY_KEYS } from './constants/data-residency.const';
 export type { NativeAiSdkProviderId } from './constants/native-ai-sdk-provider-ids.const';
 export { NATIVE_AI_SDK_PROVIDER_IDS } from './constants/native-ai-sdk-provider-ids.const';
 export { ToolCategory } from './constants/tool-category.const';
+export type { AgentCapability } from './types/agent-capability.type';
 export type {
   AgentResponseFieldType,
   AgentResponseSchema,
 } from './types/agent-response-schema.type';
-export type { AgentCapability } from './types/agent-capability.type';
 export type { AgentChatSubscriptionEvent } from './types/AgentChatSubscriptionEvent';
 export type {
   CodeExecutionFile,

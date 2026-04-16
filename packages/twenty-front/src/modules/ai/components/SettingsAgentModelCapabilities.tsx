@@ -5,19 +5,14 @@ import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomState
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
 import {
+  type AgentCapability,
   isAgentCapabilityEnabled,
   type ModelConfiguration,
 } from 'twenty-shared/ai';
-import { isDefined } from 'twenty-shared/utils';
 import { IconBrandX, IconCode, IconWorld } from 'twenty-ui/display';
 import { Section } from 'twenty-ui/layout';
 import { MenuItemToggle } from 'twenty-ui/navigation';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
-
-type AgentCapabilityKey = keyof Pick<
-  ModelConfiguration,
-  'webSearch' | 'twitterSearch' | 'codeInterpreter'
->;
 
 const StyledCapabilitiesContainer = styled.div`
   display: flex;
@@ -46,10 +41,6 @@ export const SettingsAgentModelCapabilities = ({
   const selectedModel = aiModels.find((m) => m.modelId === selectedModelId);
   const modelCapabilities = selectedModel?.capabilities;
 
-  if (!isDefined(modelCapabilities) && !isCodeInterpreterEnabled) {
-    return null;
-  }
-
   if (
     !modelCapabilities?.webSearch &&
     !modelCapabilities?.twitterSearch &&
@@ -59,7 +50,7 @@ export const SettingsAgentModelCapabilities = ({
   }
 
   const handleCapabilityToggle = (
-    capability: AgentCapabilityKey,
+    capability: AgentCapability,
     enabled: boolean,
   ) => {
     if (disabled) {
@@ -75,10 +66,6 @@ export const SettingsAgentModelCapabilities = ({
     });
   };
 
-  const isCapabilityEnabled = (capability: AgentCapabilityKey) => {
-    return isAgentCapabilityEnabled(modelConfiguration, capability);
-  };
-
   const capabilityItems = [
     ...(modelCapabilities?.webSearch
       ? [
@@ -86,7 +73,7 @@ export const SettingsAgentModelCapabilities = ({
             key: 'webSearch' as const,
             label: t`Web Search`,
             Icon: IconWorld,
-            enabled: isCapabilityEnabled('webSearch'),
+            enabled: isAgentCapabilityEnabled(modelConfiguration, 'webSearch'),
           },
         ]
       : []),
@@ -96,7 +83,10 @@ export const SettingsAgentModelCapabilities = ({
             key: 'twitterSearch' as const,
             label: t`Twitter/X Search`,
             Icon: IconBrandX,
-            enabled: isCapabilityEnabled('twitterSearch'),
+            enabled: isAgentCapabilityEnabled(
+              modelConfiguration,
+              'twitterSearch',
+            ),
           },
         ]
       : []),
@@ -106,7 +96,10 @@ export const SettingsAgentModelCapabilities = ({
             key: 'codeInterpreter' as const,
             label: t`Code Interpreter`,
             Icon: IconCode,
-            enabled: isCapabilityEnabled('codeInterpreter'),
+            enabled: isAgentCapabilityEnabled(
+              modelConfiguration,
+              'codeInterpreter',
+            ),
           },
         ]
       : []),

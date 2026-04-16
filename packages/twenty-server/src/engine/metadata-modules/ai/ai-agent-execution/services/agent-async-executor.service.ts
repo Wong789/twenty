@@ -18,6 +18,7 @@ import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/in
 
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
+import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
@@ -35,10 +36,7 @@ import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
-import {
-  countNativeWebSearchCallsFromSteps,
-  NATIVE_SEARCH_TOOL_NAMES,
-} from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
+import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
@@ -51,14 +49,6 @@ import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-t
 import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
 import { ToolCategory } from 'twenty-shared/ai';
 
-type AgentExecutionErrorLogContext = {
-  agentId?: string;
-  workspaceId?: string;
-  modelId?: string;
-  sdkPackage?: string;
-  toolNames: string[];
-};
-
 const WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES = [
   ToolCategory.DATABASE_CRUD,
   ToolCategory.ACTION,
@@ -66,7 +56,7 @@ const WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES = [
 
 const toToolProviderAgent = (agent: AgentEntity): ToolProviderAgent => ({
   modelId: agent.modelId,
-  modelConfiguration: agent.modelConfiguration ?? null,
+  modelConfiguration: agent.modelConfiguration,
 });
 
 // Agent execution within workflows uses database and action tools only.
@@ -81,6 +71,7 @@ export class AgentAsyncExecutorService {
     private readonly agentModelConfigService: AgentModelConfigService,
     private readonly lazyToolRuntimeService: LazyToolRuntimeService,
     private readonly toolRegistry: ToolRegistryService,
+    private readonly exceptionHandlerService: ExceptionHandlerService,
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
     @InjectRepository(WorkspaceEntity)
@@ -130,76 +121,6 @@ export class AgentAsyncExecutorService {
     }
 
     return { intersectionOf: allRoleIds };
-  }
-
-  private getApiCallErrorDetailsForLog(
-    error: unknown,
-  ): Record<string, unknown> | undefined {
-    const cause =
-      error instanceof Error
-        ? (error as Error & { cause?: unknown }).cause
-        : undefined;
-
-    if (APICallError.isInstance(error)) {
-      return {
-        name: error.name,
-        message: error.message,
-        url: error.url,
-        statusCode: error.statusCode,
-        responseBody: error.responseBody,
-        isRetryable: error.isRetryable,
-      };
-    }
-
-    if (APICallError.isInstance(cause)) {
-      return {
-        name: cause.name,
-        message: cause.message,
-        url: cause.url,
-        statusCode: cause.statusCode,
-        responseBody: cause.responseBody,
-        isRetryable: cause.isRetryable,
-      };
-    }
-
-    return undefined;
-  }
-
-  private getErrorDetailsForLog(error: unknown): Record<string, unknown> {
-    const apiCallErrorDetails = this.getApiCallErrorDetailsForLog(error);
-
-    if (apiCallErrorDetails) {
-      return apiCallErrorDetails;
-    }
-
-    if (error instanceof Error) {
-      return {
-        name: error.name,
-        message: error.message,
-      };
-    }
-
-    return {
-      message: String(error),
-    };
-  }
-
-  private getAgentExecutionErrorLogPayload(
-    error: unknown,
-    context: AgentExecutionErrorLogContext,
-  ): Record<string, unknown> {
-    return {
-      agentId: context.agentId,
-      workspaceId: context.workspaceId,
-      modelId: context.modelId,
-      sdkPackage: context.sdkPackage,
-      toolCount: context.toolNames.length,
-      toolNames: context.toolNames,
-      nativeSearchToolNames: context.toolNames.filter((toolName) =>
-        NATIVE_SEARCH_TOOL_NAMES.has(toolName),
-      ),
-      error: this.getErrorDetailsForLog(error),
-    };
   }
 
   private buildWorkflowToolCatalogPrompt({
@@ -420,19 +341,29 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
         throw error;
       }
 
+      const cause =
+        error instanceof Error
+          ? (error as Error & { cause?: unknown }).cause
+          : undefined;
+      const apiCallError = APICallError.isInstance(error)
+        ? error
+        : APICallError.isInstance(cause)
+          ? cause
+          : undefined;
+      const statusSuffix = apiCallError?.statusCode
+        ? ` status=${apiCallError.statusCode}`
+        : '';
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       this.logger.error(
-        `Workflow agent execution failed: ${JSON.stringify(
-          this.getAgentExecutionErrorLogPayload(error, {
-            agentId: agent?.id,
-            workspaceId: agent?.workspaceId,
-            modelId: registeredModelForErrorLog?.modelId,
-            sdkPackage: registeredModelForErrorLog?.sdkPackage,
-            toolNames: generatedToolNamesForErrorLog,
-          }),
-          null,
-          2,
-        )}`,
+        `Workflow agent execution failed [workspace=${agent?.workspaceId} agent=${agent?.id} model=${registeredModelForErrorLog?.modelId}${statusSuffix}]: ${errorMessage}`,
         error instanceof Error ? error.stack : undefined,
+      );
+
+      this.exceptionHandlerService.captureExceptions(
+        [error],
+        agent ? { workspace: { id: agent.workspaceId } } : undefined,
       );
 
       throw new AgentException(

@@ -1,7 +1,7 @@
 import { type StepResult, type ToolSet } from 'ai';
 
-// x_search is billed alongside web_search because both represent
-// provider-native search tool calls.
+// Shared by billing and workflow execution logging because both treat these
+// as provider-native search tool calls.
 export const NATIVE_SEARCH_TOOL_NAMES = new Set(['web_search', 'x_search']);
 
 export const countNativeWebSearchCallsFromSteps = (
