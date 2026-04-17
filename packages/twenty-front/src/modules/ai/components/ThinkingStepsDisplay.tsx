@@ -2,7 +2,6 @@ import { styled } from '@linaria/react';
 import { plural, t } from '@lingui/core/macro';
 import { useState } from 'react';
 import { type ToolUIPart } from 'ai';
-import { isDefined } from 'twenty-shared/utils';
 import {
   IconChevronRight,
   IconCpu,
@@ -20,6 +19,7 @@ import {
   getToolDisplayMessage,
   resolveToolInput,
 } from '@/ai/utils/getToolDisplayMessage';
+import { isToolOutputInspectable } from '@/ai/utils/isToolOutputInspectable';
 import { getActiveReasoningContent } from '@/ai/utils/getActiveReasoningContent';
 import { getLastReasoningContent } from '@/ai/utils/getLastReasoningContent';
 import { isThinkingStepPartActive } from '@/ai/utils/isThinkingStepPartActive';
@@ -271,8 +271,8 @@ const ThinkingToolStepRow = ({
 
   const ToolIcon = getToolIcon(resolvedToolName);
   const label = getToolDisplayMessage(part.input, rawToolName, !isActive);
-  const hasError = isDefined(part.errorText);
-  const isExpandable = isDefined(part.output) || hasError;
+  const hasError = (part.errorText?.trim().length ?? 0) > 0;
+  const isExpandable = isToolOutputInspectable(part.output) || hasError;
 
   const outputObj =
     typeof part.output === 'object' && part.output !== null

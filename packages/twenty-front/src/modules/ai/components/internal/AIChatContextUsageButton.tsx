@@ -14,6 +14,7 @@ import {
   type AgentChatLastMessageUsage,
 } from '@/ai/states/agentChatUsageComponentFamilyState';
 import { currentAIChatThreadState } from '@/ai/states/currentAIChatThreadState';
+import { formatAiDisplayCost } from '@/ai/utils/formatAiDisplayCost';
 import { SettingsBillingLabelValueItem } from '@/settings/billing/components/internal/SettingsBillingLabelValueItem';
 import { billingState } from '@/client-config/states/billingState';
 import { useAtomComponentFamilyStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomComponentFamilyStateValue';
@@ -103,17 +104,6 @@ export const AIChatContextUsageButton = () => {
   );
   const billing = useAtomStateValue(billingState);
   const isBillingEnabled = billing?.isBillingEnabled ?? false;
-
-  // Values from the streaming API arrive as display credits (micro-credits / 1000).
-  // 1000 display credits = $1. Convert accordingly.
-  const formatChatCost = (displayCredits: number): string => {
-    if (isBillingEnabled) {
-      return `${formatNumber(displayCredits, { decimals: 1 })} credits`;
-    }
-    const dollars = displayCredits / 1000;
-
-    return `$${formatNumber(dollars, { decimals: 2 })}`;
-  };
 
   const hasMessages = useAtomComponentSelectorValue(
     agentChatHasMessageComponentSelector,
@@ -211,8 +201,9 @@ export const AIChatContextUsageButton = () => {
                 />
                 <SettingsBillingLabelValueItem
                   label={t`Cost`}
-                  value={formatChatCost(
+                  value={formatAiDisplayCost(
                     lastMessage.inputCredits + lastMessage.outputCredits,
+                    { isBillingEnabled },
                   )}
                 />
               </StyledSection>
@@ -241,7 +232,7 @@ export const AIChatContextUsageButton = () => {
             />
             <SettingsBillingLabelValueItem
               label={t`Total cost`}
-              value={formatChatCost(totalCredits)}
+              value={formatAiDisplayCost(totalCredits, { isBillingEnabled })}
             />
           </StyledSection>
         </StyledHoverCard>

@@ -7,6 +7,13 @@ export const GET_WORKFLOW_AGENT_TRACE = gql`
       workflowStepId: $workflowStepId
     ) {
       id
+      thread {
+        id
+        totalInputTokens
+        totalOutputTokens
+        totalInputCredits
+        totalOutputCredits
+      }
       messages {
         id
         threadId

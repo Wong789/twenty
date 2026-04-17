@@ -102,6 +102,15 @@ describe('thinkingStepsDisplayState', () => {
       expect(isThinkingStepPartActive(toolPart, false)).toBe(false);
     });
 
+    it('should not treat empty persisted error text as a tool error', () => {
+      const toolPart = createToolPart({
+        output: undefined,
+        errorText: '',
+      });
+
+      expect(isThinkingStepPartActive(toolPart, true)).toBe(true);
+    });
+
     it('should mark tool parts with output or error as inactive', () => {
       const completedToolPart = createToolPart({
         output: { result: { ok: true } },

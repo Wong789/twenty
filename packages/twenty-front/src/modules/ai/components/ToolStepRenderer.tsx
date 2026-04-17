@@ -13,9 +13,9 @@ import {
   resolveToolInput,
 } from '@/ai/utils/getToolDisplayMessage';
 import { getToolIcon } from '@/ai/utils/getToolIcon';
+import { isToolOutputInspectable } from '@/ai/utils/isToolOutputInspectable';
 import { useLingui } from '@lingui/react/macro';
 import { type ToolUIPart } from 'ai';
-import { isDefined } from 'twenty-shared/utils';
 import { type JsonValue } from 'type-fest';
 import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 
@@ -146,8 +146,8 @@ export const ToolStepRenderer = ({
   const { resolvedInput: toolInput, resolvedToolName: toolName } =
     resolveToolInput(input, rawToolName);
 
-  const hasError = isDefined(errorText);
-  const isExpandable = isDefined(output) || hasError;
+  const hasError = (errorText?.trim().length ?? 0) > 0;
+  const isExpandable = isToolOutputInspectable(output) || hasError;
   const ToolIcon = getToolIcon(toolName);
 
   const outputObj =
@@ -228,7 +228,13 @@ export const ToolStepRenderer = ({
   return (
     <StyledContainer>
       <StyledToggleButton
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => {
+          if (!isExpandable) {
+            return;
+          }
+
+          setIsExpanded(!isExpanded);
+        }}
         isExpandable={isExpandable}
       >
         <StyledLeftContent>

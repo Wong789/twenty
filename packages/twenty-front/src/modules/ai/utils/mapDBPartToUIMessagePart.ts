@@ -93,8 +93,8 @@ export const mapDBPartToUIMessagePart = (
             toolCallId: part.toolCallId ?? '',
             input: part.toolInput ?? {},
             output: part.toolOutput,
-            errorText: part.errorMessage ?? '',
             state: part.state,
+            ...(part.errorMessage ? { errorText: part.errorMessage } : {}),
             ...(approval ? { approval } : {}),
           } as ToolUIPart;
         }

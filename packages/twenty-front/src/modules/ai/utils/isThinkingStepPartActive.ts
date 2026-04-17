@@ -10,9 +10,7 @@ export const isThinkingStepPartActive = (
     return part.state === 'streaming';
   }
 
-  return (
-    isLastMessageStreaming &&
-    !isDefined(part.output) &&
-    !isDefined(part.errorText)
-  );
+  const hasError = (part.errorText?.trim().length ?? 0) > 0;
+
+  return isLastMessageStreaming && !isDefined(part.output) && !hasError;
 };

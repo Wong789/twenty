@@ -68,7 +68,7 @@ export class AgentTurnResolver {
   ): Promise<AgentTurnEntity | null> {
     return this.turnRepository
       .createQueryBuilder('turn')
-      .innerJoin('turn.thread', 'thread')
+      .innerJoinAndSelect('turn.thread', 'thread')
       .leftJoinAndSelect('turn.evaluations', 'evaluation')
       .leftJoinAndSelect('turn.messages', 'message')
       .leftJoinAndSelect('message.parts', 'part')

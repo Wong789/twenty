@@ -14,6 +14,7 @@ import { AgentTurnEvaluationEntity } from './entities/agent-turn-evaluation.enti
 import { EvaluateAgentTurnJob } from './jobs/evaluate-agent-turn.job';
 import { RunEvaluationInputJob } from './jobs/run-evaluation-input.job';
 import { AgentTurnResolver } from './resolvers/agent-turn.resolver';
+import { AgentTurnThreadSummaryResolver } from './resolvers/agent-turn-thread-summary.resolver';
 import { AgentTurnGraderService } from './services/agent-turn-grader.service';
 
 @Module({
@@ -33,6 +34,7 @@ import { AgentTurnGraderService } from './services/agent-turn-grader.service';
   providers: [
     AgentTurnGraderService,
     AgentTurnResolver,
+    AgentTurnThreadSummaryResolver,
     EvaluateAgentTurnJob,
     RunEvaluationInputJob,
   ],
