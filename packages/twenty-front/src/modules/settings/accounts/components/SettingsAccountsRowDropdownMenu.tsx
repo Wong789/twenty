@@ -7,7 +7,10 @@ import {
   SettingsPath,
 } from 'twenty-shared/types';
 
-import { useTriggerProviderReconnect } from '@/settings/accounts/hooks/useTriggerProviderReconnect';
+import {
+  isReconnectableProvider,
+  useTriggerProviderReconnect,
+} from '@/settings/accounts/hooks/useTriggerProviderReconnect';
 import { Dropdown } from '@/ui/layout/dropdown/components/Dropdown';
 import { DropdownContent } from '@/ui/layout/dropdown/components/DropdownContent';
 import { DropdownMenuItemsContainer } from '@/ui/layout/dropdown/components/DropdownMenuItemsContainer';
@@ -121,16 +124,17 @@ export const SettingsAccountsRowDropdownMenu = ({
                   closeDropdown(dropdownId);
                 }}
               />
-              {account.authFailedAt && (
-                <MenuItem
-                  LeftIcon={IconRefresh}
-                  text={t`Reconnect`}
-                  onClick={() => {
-                    triggerProviderReconnect(account.provider, account.id);
-                    closeDropdown(dropdownId);
-                  }}
-                />
-              )}
+              {account.authFailedAt &&
+                isReconnectableProvider(account.provider) && (
+                  <MenuItem
+                    LeftIcon={IconRefresh}
+                    text={t`Reconnect`}
+                    onClick={() => {
+                      triggerProviderReconnect(account.provider, account.id);
+                      closeDropdown(dropdownId);
+                    }}
+                  />
+                )}
               <MenuItem
                 accent="danger"
                 LeftIcon={IconTrash}

@@ -227,6 +227,47 @@ describe('useTriggerProviderReconnect', () => {
     });
   });
 
+  describe('unsupported providers', () => {
+    it('should not trigger OAuth for OIDC provider', async () => {
+      const { result } = renderHook(() => useTriggerProviderReconnect());
+
+      await act(async () => {
+        await result.current.triggerProviderReconnect(
+          ConnectedAccountProvider.OIDC,
+        );
+      });
+
+      expect(mockTriggerApisOAuth).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('should not trigger OAuth for SAML provider', async () => {
+      const { result } = renderHook(() => useTriggerProviderReconnect());
+
+      await act(async () => {
+        await result.current.triggerProviderReconnect(
+          ConnectedAccountProvider.SAML,
+        );
+      });
+
+      expect(mockTriggerApisOAuth).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('should not trigger OAuth for unknown provider values', async () => {
+      const { result } = renderHook(() => useTriggerProviderReconnect());
+
+      await act(async () => {
+        await result.current.triggerProviderReconnect(
+          'EmailEngine' as ConnectedAccountProvider,
+        );
+      });
+
+      expect(mockTriggerApisOAuth).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('error handling', () => {
     it('should handle triggerApisOAuth errors gracefully', async () => {
       const { result } = renderHook(() => useTriggerProviderReconnect());
