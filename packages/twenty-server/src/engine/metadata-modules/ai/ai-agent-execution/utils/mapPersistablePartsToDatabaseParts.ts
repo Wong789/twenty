@@ -11,7 +11,7 @@ const assertUnreachable = (value: never): never => {
   throw new Error(`Unsupported persistable part: ${JSON.stringify(value)}`);
 };
 
-export const mapPersistablePartsToDBParts = (
+export const mapPersistablePartsToDatabaseParts = (
   parts: PersistableAgentMessagePart[],
   messageId: string,
   workspaceId: string,

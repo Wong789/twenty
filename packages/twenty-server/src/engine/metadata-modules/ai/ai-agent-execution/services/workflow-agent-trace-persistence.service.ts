@@ -12,11 +12,44 @@ import {
 import { AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message-part.entity';
 import { AgentTurnEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-turn.entity';
 import { mapGenerateTextStepsToPersistableParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapGenerateTextStepsToPersistableParts';
-import { mapPersistablePartsToDBParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapPersistablePartsToDBParts';
+import { mapPersistablePartsToDatabaseParts } from 'src/engine/metadata-modules/ai/ai-agent-execution/utils/mapPersistablePartsToDatabaseParts';
 import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
 import { FileAIChatService } from 'src/engine/core-modules/file/file-ai-chat/services/file-ai-chat.service';
 
 const MAX_THREAD_TITLE_LENGTH = 100;
+const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
+
+type WorkflowTraceThreadKey = {
+  workspaceId: string;
+  workflowRunId: string;
+  workflowStepId: string;
+};
+
+type WorkflowTraceThreadStats = {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalInputCredits: number;
+  totalOutputCredits: number;
+  contextWindowTokens: number;
+  conversationSize: number;
+};
+
+type PersistTraceParams = WorkflowTraceThreadKey &
+  WorkflowTraceThreadStats & {
+    steps: StepResult<ToolSet>[];
+    userPrompt: string;
+    agentId: string | null;
+  };
+
+const isUniqueViolationError = (error: unknown): error is { code: string } =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  (error as { code: unknown }).code === POSTGRES_UNIQUE_VIOLATION_CODE;
+
+const buildColumnIncrementExpression =
+  (columnName: string, delta: number) => () =>
+    `"${columnName}" + ${delta}`;
 
 @Injectable()
 export class WorkflowAgentTracePersistenceService {
@@ -30,36 +63,11 @@ export class WorkflowAgentTracePersistenceService {
     private readonly fileAIChatService: FileAIChatService,
   ) {}
 
-  async persistTrace({
-    steps,
-    userPrompt,
-    agentId,
-    workspaceId,
-    workflowRunId,
-    workflowStepId,
-    totalInputTokens,
-    totalOutputTokens,
-    totalInputCredits,
-    totalOutputCredits,
-    contextWindowTokens,
-    conversationSize,
-  }: {
-    steps: StepResult<ToolSet>[];
-    userPrompt: string;
-    agentId: string | null;
-    workspaceId: string;
-    workflowRunId: string;
-    workflowStepId: string;
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalInputCredits: number;
-    totalOutputCredits: number;
-    contextWindowTokens: number;
-    conversationSize: number;
-  }): Promise<{ turnId: string; threadId: string }> {
-    const title = userPrompt.substring(0, MAX_THREAD_TITLE_LENGTH);
+  async persistTrace(
+    params: PersistTraceParams,
+  ): Promise<{ turnId: string; threadId: string }> {
     const persistableParts = await mapGenerateTextStepsToPersistableParts({
-      steps,
+      steps: params.steps,
       uploadGeneratedFile: async ({ file, filename }) => {
         // Files are uploaded before the DB transaction; a later transaction
         // failure can leave orphan uploads, which is acceptable here because
@@ -68,7 +76,7 @@ export class WorkflowAgentTracePersistenceService {
         const uploadedFile = await this.fileAIChatService.uploadFile({
           file,
           filename,
-          workspaceId,
+          workspaceId: params.workspaceId,
         });
 
         return {
@@ -78,220 +86,201 @@ export class WorkflowAgentTracePersistenceService {
       },
     });
 
-    const persistedTrace = await this.threadRepository.manager.transaction(
+    const threadId = await this.ensureWorkflowTraceThread(params);
+
+    const turnId = await this.threadRepository.manager.transaction(
       async (entityManager) => {
-        const threadId = await this.getOrCreateWorkflowTraceThread({
-          entityManager,
-          workspaceId,
-          title,
-          workflowRunId,
-          workflowStepId,
-          totalInputTokens,
-          totalOutputTokens,
-          totalInputCredits,
-          totalOutputCredits,
-          contextWindowTokens,
-          conversationSize,
-        });
-        const turnId = await this.insertTurn({
-          entityManager,
+        await this.applyThreadAggregates(entityManager, threadId, params);
+
+        return this.insertTurnWithMessages(entityManager, {
           threadId,
-          agentId,
-          workspaceId,
+          persistableParts,
+          userPrompt: params.userPrompt,
+          agentId: params.agentId,
+          workspaceId: params.workspaceId,
         });
-        const userMessageId = await this.insertUserMessage({
-          entityManager,
-          threadId,
-          turnId,
-          workspaceId,
-        });
-
-        await entityManager.getRepository(AgentMessagePartEntity).insert({
-          messageId: userMessageId,
-          orderIndex: 0,
-          type: 'text',
-          textContent: userPrompt,
-          workspaceId,
-        });
-
-        const assistantMessageId = await this.insertAssistantMessage({
-          entityManager,
-          threadId,
-          turnId,
-          agentId,
-          workspaceId,
-        });
-
-        if (persistableParts.length > 0) {
-          const dbParts = mapPersistablePartsToDBParts(
-            persistableParts,
-            assistantMessageId,
-            workspaceId,
-          );
-
-          if (dbParts.length > 0) {
-            await entityManager
-              .getRepository(AgentMessagePartEntity)
-              .insert(
-                dbParts as QueryDeepPartialEntity<AgentMessagePartEntity>[],
-              );
-          }
-        }
-
-        return { turnId, threadId };
       },
     );
 
     this.logger.log(
-      `Persisted workflow agent trace: turnId=${persistedTrace.turnId} threadId=${persistedTrace.threadId} steps=${steps.length} parts=${persistableParts.length}`,
+      `Persisted workflow agent trace: turnId=${turnId} threadId=${threadId} steps=${params.steps.length} parts=${persistableParts.length}`,
     );
 
-    return persistedTrace;
+    return { turnId, threadId };
   }
 
-  private async getOrCreateWorkflowTraceThread({
-    entityManager,
-    workspaceId,
-    title,
-    workflowRunId,
-    workflowStepId,
-    totalInputTokens,
-    totalOutputTokens,
-    totalInputCredits,
-    totalOutputCredits,
-    contextWindowTokens,
-    conversationSize,
-  }: {
-    entityManager: EntityManager;
-    workspaceId: string;
-    title: string;
-    workflowRunId: string;
-    workflowStepId: string;
-    totalInputTokens: number;
-    totalOutputTokens: number;
-    totalInputCredits: number;
-    totalOutputCredits: number;
-    contextWindowTokens: number;
-    conversationSize: number;
-  }) {
-    const threadRepository = entityManager.getRepository(AgentChatThreadEntity);
-    // Workflow actions currently execute sequentially for a given
-    // (workspaceId, workflowRunId, workflowStepId), so this read-then-insert
-    // flow is sufficient despite the usual TOCTOU caveat.
-    const existingThread = await threadRepository.findOne({
-      where: {
-        workspaceId,
-        workflowRunId,
-        workflowStepId,
-      },
-      select: ['id'],
+  private async ensureWorkflowTraceThread(
+    params: WorkflowTraceThreadKey & { userPrompt: string },
+  ): Promise<string> {
+    const { workspaceId, workflowRunId, workflowStepId } = params;
+    const existingThread = await this.findWorkflowTraceThread({
+      workspaceId,
+      workflowRunId,
+      workflowStepId,
     });
 
-    const threadInsertPayload = {
-      title,
-      totalInputTokens,
-      totalOutputTokens,
-      totalInputCredits,
-      totalOutputCredits,
-      contextWindowTokens,
-      conversationSize,
-    };
-
     if (existingThread) {
-      await threadRepository.update(existingThread.id, {
-        title,
-        totalInputTokens: () => `"totalInputTokens" + ${totalInputTokens}`,
-        totalOutputTokens: () => `"totalOutputTokens" + ${totalOutputTokens}`,
-        totalInputCredits: () => `"totalInputCredits" + ${totalInputCredits}`,
-        totalOutputCredits: () =>
-          `"totalOutputCredits" + ${totalOutputCredits}`,
-        contextWindowTokens,
-        conversationSize,
-      });
-
       return existingThread.id;
     }
 
-    const insertResult = await threadRepository.insert({
+    try {
+      const insertResult = await this.threadRepository.insert({
+        workspaceId,
+        userWorkspaceId: null,
+        workflowRunId,
+        workflowStepId,
+        title: params.userPrompt.substring(0, MAX_THREAD_TITLE_LENGTH),
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalInputCredits: 0,
+        totalOutputCredits: 0,
+      });
+
+      return insertResult.identifiers[0].id as string;
+    } catch (error) {
+      // A concurrent persistTrace for the same (workspaceId, workflowRunId,
+      // workflowStepId) can race past findOne and hit the partial unique
+      // index. Re-read to get the winning thread id instead of failing.
+      if (!isUniqueViolationError(error)) {
+        throw error;
+      }
+
+      const winningThread = await this.findWorkflowTraceThread({
+        workspaceId,
+        workflowRunId,
+        workflowStepId,
+      });
+
+      if (!winningThread) {
+        throw error;
+      }
+
+      return winningThread.id;
+    }
+  }
+
+  private findWorkflowTraceThread(key: WorkflowTraceThreadKey) {
+    return this.threadRepository.findOne({
+      where: key,
+      select: ['id'],
+    });
+  }
+
+  private async applyThreadAggregates(
+    entityManager: EntityManager,
+    threadId: string,
+    params: WorkflowTraceThreadStats & { userPrompt: string },
+  ): Promise<void> {
+    await entityManager.getRepository(AgentChatThreadEntity).update(threadId, {
+      title: params.userPrompt.substring(0, MAX_THREAD_TITLE_LENGTH),
+      totalInputTokens: buildColumnIncrementExpression(
+        'totalInputTokens',
+        params.totalInputTokens,
+      ),
+      totalOutputTokens: buildColumnIncrementExpression(
+        'totalOutputTokens',
+        params.totalOutputTokens,
+      ),
+      totalInputCredits: buildColumnIncrementExpression(
+        'totalInputCredits',
+        params.totalInputCredits,
+      ),
+      totalOutputCredits: buildColumnIncrementExpression(
+        'totalOutputCredits',
+        params.totalOutputCredits,
+      ),
+      contextWindowTokens: params.contextWindowTokens,
+      conversationSize: params.conversationSize,
+    });
+  }
+
+  private async insertTurnWithMessages(
+    entityManager: EntityManager,
+    params: {
+      threadId: string;
+      persistableParts: Awaited<
+        ReturnType<typeof mapGenerateTextStepsToPersistableParts>
+      >;
+      userPrompt: string;
+      agentId: string | null;
+      workspaceId: string;
+    },
+  ): Promise<string> {
+    const { threadId, persistableParts, userPrompt, agentId, workspaceId } =
+      params;
+    const turnId = await this.insertAndGetId(
+      entityManager.getRepository(AgentTurnEntity),
+      { threadId, agentId, workspaceId },
+    );
+    const userMessageId = await this.insertMessage(entityManager, {
+      threadId,
+      turnId,
+      role: AgentMessageRole.USER,
+      agentId: null,
       workspaceId,
-      userWorkspaceId: null,
-      workflowRunId,
-      workflowStepId,
-      ...threadInsertPayload,
     });
 
-    return insertResult.identifiers[0].id as string;
-  }
+    await entityManager.getRepository(AgentMessagePartEntity).insert({
+      messageId: userMessageId,
+      orderIndex: 0,
+      type: 'text',
+      textContent: userPrompt,
+      workspaceId,
+    });
 
-  private async insertTurn({
-    entityManager,
-    threadId,
-    agentId,
-    workspaceId,
-  }: {
-    entityManager: EntityManager;
-    threadId: string;
-    agentId: string | null;
-    workspaceId: string;
-  }) {
-    const insertResult = await entityManager
-      .getRepository(AgentTurnEntity)
-      .insert({
-        threadId,
-        agentId,
+    const assistantMessageId = await this.insertMessage(entityManager, {
+      threadId,
+      turnId,
+      role: AgentMessageRole.ASSISTANT,
+      agentId,
+      workspaceId,
+    });
+
+    if (persistableParts.length > 0) {
+      const databaseParts = mapPersistablePartsToDatabaseParts(
+        persistableParts,
+        assistantMessageId,
         workspaceId,
-      });
+      );
 
-    return insertResult.identifiers[0].id as string;
+      await entityManager
+        .getRepository(AgentMessagePartEntity)
+        .insert(
+          databaseParts as QueryDeepPartialEntity<AgentMessagePartEntity>[],
+        );
+    }
+
+    return turnId;
   }
 
-  private async insertUserMessage({
-    entityManager,
-    threadId,
-    turnId,
-    workspaceId,
-  }: {
-    entityManager: EntityManager;
-    threadId: string;
-    turnId: string;
-    workspaceId: string;
-  }) {
-    const insertResult = await entityManager
-      .getRepository(AgentMessageEntity)
-      .insert({
-        threadId,
-        turnId,
-        role: AgentMessageRole.USER,
+  private insertMessage(
+    entityManager: EntityManager,
+    params: {
+      threadId: string;
+      turnId: string;
+      role: AgentMessageRole;
+      agentId: string | null;
+      workspaceId: string;
+    },
+  ): Promise<string> {
+    return this.insertAndGetId(
+      entityManager.getRepository(AgentMessageEntity),
+      {
+        threadId: params.threadId,
+        turnId: params.turnId,
+        role: params.role,
+        agentId: params.agentId,
         processedAt: new Date(),
-        workspaceId,
-      });
-
-    return insertResult.identifiers[0].id as string;
+        workspaceId: params.workspaceId,
+      },
+    );
   }
 
-  private async insertAssistantMessage({
-    entityManager,
-    threadId,
-    turnId,
-    agentId,
-    workspaceId,
-  }: {
-    entityManager: EntityManager;
-    threadId: string;
-    turnId: string;
-    agentId: string | null;
-    workspaceId: string;
-  }) {
-    const insertResult = await entityManager
-      .getRepository(AgentMessageEntity)
-      .insert({
-        threadId,
-        turnId,
-        role: AgentMessageRole.ASSISTANT,
-        agentId,
-        processedAt: new Date(),
-        workspaceId,
-      });
+  private async insertAndGetId<T extends { id: string }>(
+    repository: Repository<T>,
+    payload: QueryDeepPartialEntity<T>,
+  ): Promise<string> {
+    const insertResult = await repository.insert(payload);
 
     return insertResult.identifiers[0].id as string;
   }

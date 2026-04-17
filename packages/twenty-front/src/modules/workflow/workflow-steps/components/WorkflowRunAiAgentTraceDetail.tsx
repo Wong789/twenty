@@ -4,7 +4,7 @@ import { mapDBMessagesToUIMessages } from '@/ai/utils/mapDBMessagesToUIMessages'
 import { useQuery } from '@apollo/client/react';
 import { styled } from '@linaria/react';
 import { t } from '@lingui/core/macro';
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { IconChevronRight } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
@@ -24,13 +24,13 @@ const StyledContainer = styled.div`
   gap: ${themeCssVariables.spacing[2]};
 `;
 
-const StyledCollapsibleSection = styled.div`
+const StyledPromptSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${themeCssVariables.spacing[1]};
 `;
 
-const StyledSectionToggle = styled.button`
+const StyledPromptToggle = styled.button`
   align-items: center;
   background: none;
   border: none;
@@ -69,11 +69,6 @@ const StyledChevron = styled.span<{ isExpanded: boolean }>`
     ease-in-out;
 `;
 
-const StyledSectionBody = styled.div`
-  color: ${themeCssVariables.font.color.primary};
-  padding-top: ${themeCssVariables.spacing[1]};
-`;
-
 const StyledPromptBody = styled.div`
   background: ${themeCssVariables.background.transparent.lighter};
   border: 1px solid ${themeCssVariables.border.color.light};
@@ -81,6 +76,7 @@ const StyledPromptBody = styled.div`
   color: ${themeCssVariables.font.color.tertiary};
   font-size: ${themeCssVariables.font.size.md};
   line-height: ${themeCssVariables.text.lineHeight.lg};
+  margin-top: ${themeCssVariables.spacing[1]};
   padding: ${themeCssVariables.spacing[3]};
   white-space: pre-wrap;
 `;
@@ -99,38 +95,6 @@ const StyledTraceUnavailable = styled.div`
   color: ${themeCssVariables.font.color.tertiary};
   font-size: ${themeCssVariables.font.size.md};
 `;
-
-type CollapsibleSectionProps = {
-  label: string;
-  defaultOpen?: boolean;
-  children: ReactNode;
-};
-
-const CollapsibleSection = ({
-  label,
-  defaultOpen = false,
-  children,
-}: CollapsibleSectionProps) => {
-  const [isExpanded, setIsExpanded] = useState(defaultOpen);
-
-  return (
-    <StyledCollapsibleSection>
-      <StyledSectionToggle
-        type="button"
-        aria-expanded={isExpanded}
-        onClick={() => setIsExpanded((previous) => !previous)}
-      >
-        <StyledChevron isExpanded={isExpanded}>
-          <IconChevronRight size={14} />
-        </StyledChevron>
-        {label}
-      </StyledSectionToggle>
-      <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
-        <StyledSectionBody>{children}</StyledSectionBody>
-      </AnimatedExpandableContainer>
-    </StyledCollapsibleSection>
-  );
-};
 
 const extractPromptText = (userMessage: AgentMessage | undefined): string => {
   if (!userMessage) return '';
@@ -157,6 +121,7 @@ export const WorkflowRunAiAgentTraceDetail = ({
       variables: { workflowRunId, workflowStepId },
     },
   );
+  const [isPromptExpanded, setIsPromptExpanded] = useState(false);
 
   if (loading) {
     return <Skeleton height={100} />;
@@ -180,9 +145,24 @@ export const WorkflowRunAiAgentTraceDetail = ({
   return (
     <StyledContainer>
       {promptText.length > 0 && (
-        <CollapsibleSection label={t`Prompt`}>
-          <StyledPromptBody>{promptText}</StyledPromptBody>
-        </CollapsibleSection>
+        <StyledPromptSection>
+          <StyledPromptToggle
+            type="button"
+            aria-expanded={isPromptExpanded}
+            onClick={() => setIsPromptExpanded((previous) => !previous)}
+          >
+            <StyledChevron isExpanded={isPromptExpanded}>
+              <IconChevronRight size={14} />
+            </StyledChevron>
+            {t`Prompt`}
+          </StyledPromptToggle>
+          <AnimatedExpandableContainer
+            isExpanded={isPromptExpanded}
+            mode="fit-content"
+          >
+            <StyledPromptBody>{promptText}</StyledPromptBody>
+          </AnimatedExpandableContainer>
+        </StyledPromptSection>
       )}
       <StyledMessagesList>
         {uiMessages.map((message) => (

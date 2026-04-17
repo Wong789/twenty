@@ -1,6 +1,7 @@
 import {
   type ExtendedFileUIPart,
   type ExtendedUIMessagePart,
+  getToolApproval,
 } from 'twenty-shared/ai';
 
 import { type AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-agent-execution/entities/agent-message-part.entity';
@@ -8,36 +9,6 @@ import { type AgentMessagePartEntity } from 'src/engine/metadata-modules/ai/ai-a
 // Maps TypeORM entity fields to UI message parts.
 // A parallel mapping for GraphQL DTOs exists in the frontend at:
 // packages/twenty-front/src/modules/ai/utils/mapDBPartToUIMessagePart.ts
-
-const getToolApproval = (
-  errorDetails: Record<string, unknown> | null,
-):
-  | {
-      id: string;
-      approved?: boolean;
-      reason?: string;
-    }
-  | undefined => {
-  const approval =
-    errorDetails &&
-    typeof errorDetails === 'object' &&
-    'approval' in errorDetails &&
-    typeof errorDetails.approval === 'object' &&
-    errorDetails.approval !== null
-      ? (errorDetails.approval as Record<string, unknown>)
-      : null;
-
-  if (!approval || typeof approval.id !== 'string') {
-    return undefined;
-  }
-
-  return {
-    id: approval.id,
-    approved:
-      typeof approval.approved === 'boolean' ? approval.approved : undefined,
-    reason: typeof approval.reason === 'string' ? approval.reason : undefined,
-  };
-};
 
 export const mapDBPartToUIMessagePart = (
   part: AgentMessagePartEntity,

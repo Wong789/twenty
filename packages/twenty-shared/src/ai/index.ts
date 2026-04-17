@@ -38,7 +38,10 @@ export type {
 export type { ExtendedUIMessagePart } from './types/ExtendedUIMessagePart';
 export type { ModelConfiguration } from './types/model-configuration.type';
 export type { NavigateAppToolOutput } from './types/NavigateAppToolOutput';
+export type { ToolApproval } from './utils/get-tool-approval.util';
+export { getToolApproval } from './utils/get-tool-approval.util';
 export { inferAiSdkPackage } from './utils/infer-ai-sdk-package.util';
 export { isAgentCapabilityEnabled } from './utils/is-agent-capability-enabled.util';
 export { isAiSdkPackage } from './utils/is-ai-sdk-package.util';
 export { isDataResidency } from './utils/is-data-residency.util';
+export { isToolPartErrored } from './utils/is-tool-part-errored.util';

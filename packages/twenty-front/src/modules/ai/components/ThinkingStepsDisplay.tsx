@@ -2,6 +2,7 @@ import { styled } from '@linaria/react';
 import { plural, t } from '@lingui/core/macro';
 import { useState } from 'react';
 import { type ToolUIPart } from 'ai';
+import { isToolPartErrored } from 'twenty-shared/ai';
 import {
   IconChevronRight,
   IconCpu,
@@ -271,7 +272,7 @@ const ThinkingToolStepRow = ({
 
   const ToolIcon = getToolIcon(resolvedToolName);
   const label = getToolDisplayMessage(part.input, rawToolName, !isActive);
-  const hasError = (part.errorText?.trim().length ?? 0) > 0;
+  const hasError = isToolPartErrored(part.state);
   const isExpandable = isToolOutputInspectable(part.output) || hasError;
 
   const outputObj =
@@ -329,7 +330,12 @@ const ThinkingToolStepRow = ({
         <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
           <StyledToolDetailsContainer>
             {hasError ? (
-              <StyledToolErrorText>{part.errorText}</StyledToolErrorText>
+              // Legacy persisted tool parts can have an empty errorText while
+              // state === 'output-error' (old mapper stored errorMessage ?? '').
+              // Show a fallback label so the expanded panel isn't blank.
+              <StyledToolErrorText>
+                {part.errorText?.trim() || t`Unknown error`}
+              </StyledToolErrorText>
             ) : (
               <StyledToolDetailsContent>
                 <StyledToolTabListContainer>

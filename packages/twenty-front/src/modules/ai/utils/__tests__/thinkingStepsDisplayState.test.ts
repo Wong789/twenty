@@ -23,12 +23,14 @@ const createToolPart = ({
   errorText,
   input = {},
   output,
+  state = 'output-available',
   type = 'tool-web_search',
 }: {
   type?: `tool-${string}`;
   input?: Record<string, unknown>;
   output?: unknown;
   errorText?: string;
+  state?: string;
 } = {}): ThinkingStepPart =>
   ({
     type,
@@ -36,7 +38,7 @@ const createToolPart = ({
     input,
     output,
     errorText,
-    state: 'output-available',
+    state,
   }) as ThinkingStepPart;
 
 describe('thinkingStepsDisplayState', () => {
@@ -102,8 +104,9 @@ describe('thinkingStepsDisplayState', () => {
       expect(isThinkingStepPartActive(toolPart, false)).toBe(false);
     });
 
-    it('should not treat empty persisted error text as a tool error', () => {
+    it('should treat non-error states as active regardless of errorText', () => {
       const toolPart = createToolPart({
+        state: 'input-available',
         output: undefined,
         errorText: '',
       });
@@ -111,17 +114,24 @@ describe('thinkingStepsDisplayState', () => {
       expect(isThinkingStepPartActive(toolPart, true)).toBe(true);
     });
 
-    it('should mark tool parts with output or error as inactive', () => {
+    it('should mark tool parts with output or error state as inactive', () => {
       const completedToolPart = createToolPart({
+        state: 'output-available',
         output: { result: { ok: true } },
       });
       const failedToolPart = createToolPart({
+        state: 'output-error',
         output: undefined,
         errorText: 'Tool failed',
+      });
+      const deniedToolPart = createToolPart({
+        state: 'output-denied',
+        output: undefined,
       });
 
       expect(isThinkingStepPartActive(completedToolPart, true)).toBe(false);
       expect(isThinkingStepPartActive(failedToolPart, true)).toBe(false);
+      expect(isThinkingStepPartActive(deniedToolPart, true)).toBe(false);
     });
   });
 

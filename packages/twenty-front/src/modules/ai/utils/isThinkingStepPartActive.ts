@@ -1,3 +1,4 @@
+import { isToolPartErrored } from 'twenty-shared/ai';
 import { isDefined } from 'twenty-shared/utils';
 
 import { type ThinkingStepPart } from '@/ai/utils/thinkingStepPart';
@@ -10,7 +11,9 @@ export const isThinkingStepPartActive = (
     return part.state === 'streaming';
   }
 
-  const hasError = (part.errorText?.trim().length ?? 0) > 0;
-
-  return isLastMessageStreaming && !isDefined(part.output) && !hasError;
+  return (
+    isLastMessageStreaming &&
+    !isDefined(part.output) &&
+    !isToolPartErrored(part.state)
+  );
 };

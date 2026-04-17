@@ -16,6 +16,7 @@ import { getToolIcon } from '@/ai/utils/getToolIcon';
 import { isToolOutputInspectable } from '@/ai/utils/isToolOutputInspectable';
 import { useLingui } from '@lingui/react/macro';
 import { type ToolUIPart } from 'ai';
+import { isToolPartErrored } from 'twenty-shared/ai';
 import { type JsonValue } from 'type-fest';
 import { useCopyToClipboard } from '~/hooks/useCopyToClipboard';
 
@@ -146,7 +147,7 @@ export const ToolStepRenderer = ({
   const { resolvedInput: toolInput, resolvedToolName: toolName } =
     resolveToolInput(input, rawToolName);
 
-  const hasError = (errorText?.trim().length ?? 0) > 0;
+  const hasError = isToolPartErrored(toolPart.state);
   const isExpandable = isToolOutputInspectable(output) || hasError;
   const ToolIcon = getToolIcon(toolName);
 
@@ -258,7 +259,10 @@ export const ToolStepRenderer = ({
         <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
           <StyledContentContainer>
             {hasError ? (
-              errorText
+              // Legacy persisted tool parts can have an empty errorText while
+              // state === 'output-error' (old mapper stored errorMessage ?? '').
+              // Show a fallback label so the expanded panel isn't blank.
+              errorText?.trim() || t`Unknown error`
             ) : (
               <>
                 <StyledTabContainer>
