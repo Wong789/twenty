@@ -84,10 +84,14 @@ export const mapUIMessagePartsToDBParts = (
           {
             if (isToolPart(part)) {
               const { toolCallId, input, output, errorText, state } = part;
+              const toolName = part.type.startsWith('tool-')
+                ? part.type.slice('tool-'.length)
+                : null;
 
               return {
                 ...basePart,
-                toolCallId: toolCallId,
+                toolName,
+                toolCallId,
                 toolInput: input,
                 toolOutput: output,
                 errorMessage: errorText,

@@ -15,12 +15,15 @@ import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-t
 import { UserRoleModule } from 'src/engine/metadata-modules/user-role/user-role.module';
 import { WorkspaceCacheModule } from 'src/engine/workspace-cache/workspace-cache.module';
 
+import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/entities/agent-chat-thread.entity';
+
 import { AgentMessagePartEntity } from './entities/agent-message-part.entity';
 import { AgentMessageEntity } from './entities/agent-message.entity';
 import { AgentTurnEntity } from './entities/agent-turn.entity';
 import { AgentMessagePartResolver } from './resolvers/agent-message-part.resolver';
 import { AgentActorContextService } from './services/agent-actor-context.service';
 import { AgentAsyncExecutorService } from './services/agent-async-executor.service';
+import { WorkflowAgentTracePersistenceService } from './services/workflow-agent-trace-persistence.service';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { AgentAsyncExecutorService } from './services/agent-async-executor.servi
     WorkspaceCacheModule,
     forwardRef(() => ToolProviderModule),
     TypeOrmModule.forFeature([
+      AgentChatThreadEntity,
       AgentEntity,
       AgentMessageEntity,
       AgentMessagePartEntity,
@@ -47,10 +51,12 @@ import { AgentAsyncExecutorService } from './services/agent-async-executor.servi
     AgentAsyncExecutorService,
     AgentActorContextService,
     AgentMessagePartResolver,
+    WorkflowAgentTracePersistenceService,
   ],
   exports: [
     AgentAsyncExecutorService,
     AgentActorContextService,
+    WorkflowAgentTracePersistenceService,
     TypeOrmModule.forFeature([
       AgentMessageEntity,
       AgentMessagePartEntity,

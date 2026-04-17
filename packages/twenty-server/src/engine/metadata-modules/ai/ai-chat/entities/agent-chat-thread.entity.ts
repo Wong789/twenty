@@ -1,4 +1,5 @@
 import {
+  Check,
   Column,
   CreateDateColumn,
   Entity,
@@ -17,6 +18,10 @@ import type { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspac
 import { EntityRelation } from 'src/engine/workspace-manager/workspace-migration/types/entity-relation.interface';
 
 @Entity({ name: 'agentChatThread', schema: 'core' })
+@Check(
+  'CHK_agent_chat_thread_source',
+  '("userWorkspaceId" IS NOT NULL AND "workflowRunId" IS NULL AND "workflowStepId" IS NULL) OR ("userWorkspaceId" IS NULL AND "workflowRunId" IS NOT NULL AND "workflowStepId" IS NOT NULL)',
+)
 export class AgentChatThreadEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -29,15 +34,21 @@ export class AgentChatThreadEntity {
   @JoinColumn({ name: 'workspaceId' })
   workspace: EntityRelation<WorkspaceEntity>;
 
-  @Column({ nullable: false, type: 'uuid' })
+  @Column({ nullable: true, type: 'uuid' })
   @Index()
-  userWorkspaceId: string;
+  userWorkspaceId: string | null;
 
   @ManyToOne(() => UserWorkspaceEntity, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userWorkspaceId' })
   userWorkspace: EntityRelation<UserWorkspaceEntity>;
+
+  @Column({ nullable: true, type: 'uuid' })
+  workflowRunId: string | null;
+
+  @Column({ nullable: true, type: 'varchar' })
+  workflowStepId: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
   title: string;

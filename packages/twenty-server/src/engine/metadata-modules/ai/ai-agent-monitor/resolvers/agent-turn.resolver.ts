@@ -1,4 +1,4 @@
-import { Logger, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query } from '@nestjs/graphql';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -27,8 +27,6 @@ import { AgentChatThreadEntity } from 'src/engine/metadata-modules/ai/ai-chat/en
 @UseGuards(WorkspaceAuthGuard, SettingsPermissionGuard(PermissionFlagType.AI))
 @MetadataResolver()
 export class AgentTurnResolver {
-  private readonly logger = new Logger(AgentTurnResolver.name);
-
   constructor(
     @InjectRepository(AgentTurnEntity)
     private readonly turnRepository: Repository<AgentTurnEntity>,
@@ -42,12 +40,51 @@ export class AgentTurnResolver {
   @Query(() => [AgentTurnDTO])
   async agentTurns(
     @Args('agentId', { type: () => UUIDScalarType }) agentId: string,
+    @AuthWorkspace() workspace: WorkspaceEntity,
   ): Promise<AgentTurnEntity[]> {
-    return this.turnRepository.find({
-      where: { agentId },
-      relations: ['evaluations', 'messages', 'messages.parts'],
-      order: { createdAt: 'DESC' },
-    });
+    return this.turnRepository
+      .createQueryBuilder('turn')
+      .innerJoin('turn.thread', 'thread')
+      .leftJoinAndSelect('turn.evaluations', 'evaluation')
+      .leftJoinAndSelect('turn.messages', 'message')
+      .leftJoinAndSelect('message.parts', 'part')
+      .where('turn.agentId = :agentId', { agentId })
+      .andWhere('turn.workspaceId = :workspaceId', {
+        workspaceId: workspace.id,
+      })
+      .andWhere('thread.workflowRunId IS NULL')
+      .orderBy('turn.createdAt', 'DESC')
+      .addOrderBy('message.processedAt', 'ASC', 'NULLS LAST')
+      .addOrderBy('part.orderIndex', 'ASC', 'NULLS LAST')
+      .getMany();
+  }
+
+  @Query(() => AgentTurnDTO, { nullable: true })
+  async workflowAgentTrace(
+    @Args('workflowRunId', { type: () => UUIDScalarType })
+    workflowRunId: string,
+    @Args('workflowStepId') workflowStepId: string,
+    @AuthWorkspace() workspace: WorkspaceEntity,
+  ): Promise<AgentTurnEntity | null> {
+    return this.turnRepository
+      .createQueryBuilder('turn')
+      .innerJoin('turn.thread', 'thread')
+      .leftJoinAndSelect('turn.evaluations', 'evaluation')
+      .leftJoinAndSelect('turn.messages', 'message')
+      .leftJoinAndSelect('message.parts', 'part')
+      .where('thread.workspaceId = :workspaceId', {
+        workspaceId: workspace.id,
+      })
+      .andWhere('thread.workflowRunId = :workflowRunId', {
+        workflowRunId,
+      })
+      .andWhere('thread.workflowStepId = :workflowStepId', {
+        workflowStepId,
+      })
+      .orderBy('turn.createdAt', 'DESC')
+      .addOrderBy('message.processedAt', 'ASC', 'NULLS LAST')
+      .addOrderBy('part.orderIndex', 'ASC', 'NULLS LAST')
+      .getOne();
   }
 
   @Mutation(() => AgentTurnEvaluationDTO)

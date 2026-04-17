@@ -304,6 +304,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           usage: textResponse.usage,
           cacheCreationTokens,
           nativeWebSearchCallCount,
+          steps: textResponse.steps,
         };
       }
 
@@ -334,6 +335,7 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
         ),
         cacheCreationTokens,
         nativeWebSearchCallCount,
+        steps: textResponse.steps,
       };
     } catch (error) {
       if (error instanceof AgentException) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { resolveInput } from 'twenty-shared/utils';
@@ -7,8 +7,12 @@ import { type Repository } from 'typeorm';
 import { type WorkflowAction } from 'src/modules/workflow/workflow-executor/interfaces/workflow-action.interface';
 
 import { AgentAsyncExecutorService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/agent-async-executor.service';
+import { WorkflowAgentTracePersistenceService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/workflow-agent-trace-persistence.service';
 import { AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { AiBillingService } from 'src/engine/metadata-modules/ai/ai-billing/services/ai-billing.service';
+import { computeCostBreakdown } from 'src/engine/metadata-modules/ai/ai-billing/utils/compute-cost-breakdown.util';
+import { convertDollarsToBillingCredits } from 'src/engine/metadata-modules/ai/ai-billing/utils/convert-dollars-to-billing-credits.util';
+import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { UsageOperationType } from 'src/engine/core-modules/usage/enums/usage-operation-type.enum';
 import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { AUTO_SELECT_SMART_MODEL_ID } from 'twenty-shared/constants';
@@ -25,11 +29,15 @@ import { isWorkflowAiAgentAction } from './guards/is-workflow-ai-agent-action.gu
 
 @Injectable()
 export class AiAgentWorkflowAction implements WorkflowAction {
+  private readonly logger = new Logger(AiAgentWorkflowAction.name);
+
   constructor(
     private readonly aiAgentExecutionService: AgentAsyncExecutorService,
     private readonly aiBillingService: AiBillingService,
+    private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly webSearchService: WebSearchService,
     private readonly workflowExecutionContextService: WorkflowExecutionContextService,
+    private readonly tracePersistenceService: WorkflowAgentTracePersistenceService,
     @InjectRepository(AgentEntity)
     private readonly agentRepository: Repository<AgentEntity>,
   ) {}
@@ -53,7 +61,7 @@ export class AiAgentWorkflowAction implements WorkflowAction {
     }
 
     const { agentId, prompt } = step.settings.input;
-    const workspaceId = context.workspaceId as string;
+    const workspaceId = runInfo.workspaceId;
 
     let agent: AgentEntity | null = null;
 
@@ -73,6 +81,8 @@ export class AiAgentWorkflowAction implements WorkflowAction {
       );
     }
 
+    const modelId = agent?.modelId ?? AUTO_SELECT_SMART_MODEL_ID;
+
     const executionContext =
       await this.workflowExecutionContextService.getExecutionContext(runInfo);
 
@@ -81,19 +91,26 @@ export class AiAgentWorkflowAction implements WorkflowAction {
         ? executionContext.authContext.userWorkspaceId
         : null;
 
-    const { result, usage, cacheCreationTokens, nativeWebSearchCallCount } =
-      await this.aiAgentExecutionService.executeAgent({
-        agent,
-        userPrompt: resolveInput(prompt, context) as string,
-        actorContext: executionContext.isActingOnBehalfOfUser
-          ? executionContext.initiator
-          : undefined,
-        rolePermissionConfig: executionContext.rolePermissionConfig,
-        authContext: executionContext.authContext,
-      });
+    const resolvedPrompt = resolveInput(prompt, context) as string;
+
+    const {
+      result,
+      usage,
+      cacheCreationTokens,
+      nativeWebSearchCallCount,
+      steps: executionSteps,
+    } = await this.aiAgentExecutionService.executeAgent({
+      agent,
+      userPrompt: resolvedPrompt,
+      actorContext: executionContext.isActingOnBehalfOfUser
+        ? executionContext.initiator
+        : undefined,
+      rolePermissionConfig: executionContext.rolePermissionConfig,
+      authContext: executionContext.authContext,
+    });
 
     await this.aiBillingService.calculateAndBillUsage(
-      agent?.modelId ?? AUTO_SELECT_SMART_MODEL_ID,
+      modelId,
       { usage, cacheCreationTokens },
       workspaceId,
       UsageOperationType.AI_WORKFLOW_TOKEN,
@@ -107,6 +124,44 @@ export class AiAgentWorkflowAction implements WorkflowAction {
         workspaceId,
         userWorkspaceId,
       );
+    }
+
+    if (executionSteps) {
+      try {
+        const modelConfiguration =
+          this.aiModelRegistryService.getEffectiveModelConfig(modelId);
+        const usageBreakdown = computeCostBreakdown(modelConfiguration, {
+          inputTokens: usage.inputTokens,
+          outputTokens: usage.outputTokens,
+          cachedInputTokens: usage.inputTokenDetails?.cacheReadTokens,
+          reasoningTokens: usage.outputTokenDetails?.reasoningTokens,
+          cacheCreationTokens,
+        });
+
+        await this.tracePersistenceService.persistTrace({
+          steps: executionSteps,
+          userPrompt: resolvedPrompt,
+          agentId: agent?.id ?? null,
+          workspaceId,
+          workflowRunId: runInfo.workflowRunId,
+          workflowStepId: currentStepId,
+          totalInputTokens: usageBreakdown.tokenCounts.totalInputTokens,
+          totalOutputTokens: usage.outputTokens ?? 0,
+          totalInputCredits: Math.round(
+            convertDollarsToBillingCredits(usageBreakdown.inputCostInDollars),
+          ),
+          totalOutputCredits: Math.round(
+            convertDollarsToBillingCredits(usageBreakdown.outputCostInDollars),
+          ),
+          contextWindowTokens: modelConfiguration.contextWindowTokens,
+          conversationSize: usageBreakdown.tokenCounts.totalInputTokens,
+        });
+      } catch (error) {
+        this.logger.error(
+          `Failed to persist workflow agent trace for run ${runInfo.workflowRunId} step ${currentStepId}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
     }
 
     return {
