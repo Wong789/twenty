@@ -32,4 +32,19 @@ describe('agentGraphqlApiExceptionHandler', () => {
     );
     expect(graphqlError.extensions.userFriendlyMessage).toBeDefined();
   });
+
+  it('maps AGENT_NOT_FOUND to NOT_FOUND so missing threads return 404', () => {
+    const error = new AgentException(
+      'Thread not found',
+      AgentExceptionCode.AGENT_NOT_FOUND,
+    );
+
+    const graphqlError = catchGraphqlError(error);
+
+    expect(graphqlError.extensions.code).toBe(ErrorCode.NOT_FOUND);
+    expect(graphqlError.extensions.subCode).toBe(
+      AgentExceptionCode.AGENT_NOT_FOUND,
+    );
+    expect(graphqlError.extensions.userFriendlyMessage).toBeDefined();
+  });
 });
