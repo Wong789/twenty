@@ -3001,6 +3001,14 @@ type AgentChatThreadConnection {
   edges: [AgentChatThreadEdge!]!
 }
 
+type AgentTurnThreadSummary {
+  id: UUID!
+  totalInputTokens: Int!
+  totalOutputTokens: Int!
+  totalInputCredits: Float!
+  totalOutputCredits: Float!
+}
+
 type AgentTurnEvaluation {
   id: UUID!
   turnId: UUID!
@@ -3015,6 +3023,7 @@ type AgentTurn {
   agentId: UUID
   evaluations: [AgentTurnEvaluation!]!
   messages: [AgentMessage!]!
+  thread: AgentTurnThreadSummary
   createdAt: DateTime!
 }
 
@@ -3334,6 +3343,7 @@ type Query {
     sorting: [AgentChatThreadSort!]! = [{field: updatedAt, direction: DESC}]
   ): AgentChatThreadConnection!
   agentTurns(agentId: UUID!): [AgentTurn!]!
+  workflowAgentTrace(workflowRunId: UUID!, workflowStepId: String!): AgentTurn
   eventLogs(input: EventLogQueryInput!): EventLogQueryResult!
   pieChartData(input: PieChartDataInput!): PieChartData!
   lineChartData(input: LineChartDataInput!): LineChartData!

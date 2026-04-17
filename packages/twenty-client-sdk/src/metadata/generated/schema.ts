@@ -2676,6 +2676,15 @@ export interface AgentChatThreadConnection {
     __typename: 'AgentChatThreadConnection'
 }
 
+export interface AgentTurnThreadSummary {
+    id: Scalars['UUID']
+    totalInputTokens: Scalars['Int']
+    totalOutputTokens: Scalars['Int']
+    totalInputCredits: Scalars['Float']
+    totalOutputCredits: Scalars['Float']
+    __typename: 'AgentTurnThreadSummary'
+}
+
 export interface AgentTurnEvaluation {
     id: Scalars['UUID']
     turnId: Scalars['UUID']
@@ -2691,6 +2700,7 @@ export interface AgentTurn {
     agentId?: Scalars['UUID']
     evaluations: AgentTurnEvaluation[]
     messages: AgentMessage[]
+    thread?: AgentTurnThreadSummary
     createdAt: Scalars['DateTime']
     __typename: 'AgentTurn'
 }
@@ -2896,6 +2906,7 @@ export interface Query {
     skill?: Skill
     chatThreads: AgentChatThreadConnection
     agentTurns: AgentTurn[]
+    workflowAgentTrace?: AgentTurn
     eventLogs: EventLogQueryResult
     pieChartData: PieChartData
     lineChartData: LineChartData
@@ -6048,6 +6059,16 @@ export interface AgentChatThreadConnectionGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface AgentTurnThreadSummaryGenqlSelection{
+    id?: boolean | number
+    totalInputTokens?: boolean | number
+    totalOutputTokens?: boolean | number
+    totalInputCredits?: boolean | number
+    totalOutputCredits?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface AgentTurnEvaluationGenqlSelection{
     id?: boolean | number
     turnId?: boolean | number
@@ -6064,6 +6085,7 @@ export interface AgentTurnGenqlSelection{
     agentId?: boolean | number
     evaluations?: AgentTurnEvaluationGenqlSelection
     messages?: AgentMessageGenqlSelection
+    thread?: AgentTurnThreadSummaryGenqlSelection
     createdAt?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -6276,6 +6298,7 @@ export interface QueryGenqlSelection{
     /** Specify to sort results. */
     sorting: AgentChatThreadSort[]} })
     agentTurns?: (AgentTurnGenqlSelection & { __args: {agentId: Scalars['UUID']} })
+    workflowAgentTrace?: (AgentTurnGenqlSelection & { __args: {workflowRunId: Scalars['UUID'], workflowStepId: Scalars['String']} })
     eventLogs?: (EventLogQueryResultGenqlSelection & { __args: {input: EventLogQueryInput} })
     pieChartData?: (PieChartDataGenqlSelection & { __args: {input: PieChartDataInput} })
     lineChartData?: (LineChartDataGenqlSelection & { __args: {input: LineChartDataInput} })
@@ -9027,6 +9050,14 @@ export interface LogicFunctionLogsInput {applicationId?: (Scalars['UUID'] | null
     export const isAgentChatThreadConnection = (obj?: { __typename?: any } | null): obj is AgentChatThreadConnection => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isAgentChatThreadConnection"')
       return AgentChatThreadConnection_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const AgentTurnThreadSummary_possibleTypes: string[] = ['AgentTurnThreadSummary']
+    export const isAgentTurnThreadSummary = (obj?: { __typename?: any } | null): obj is AgentTurnThreadSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isAgentTurnThreadSummary"')
+      return AgentTurnThreadSummary_possibleTypes.includes(obj.__typename)
     }
     
 
