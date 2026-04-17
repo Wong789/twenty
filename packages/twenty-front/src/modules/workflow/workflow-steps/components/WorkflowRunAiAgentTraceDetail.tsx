@@ -9,6 +9,7 @@ import Skeleton from 'react-loading-skeleton';
 import { IconChevronRight } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 import { themeCssVariables } from 'twenty-ui/theme-constants';
+import { StepStatus } from 'twenty-shared/workflow';
 import { type AgentMessage } from '~/generated-metadata/graphql';
 
 type GetWorkflowAgentTraceResult = {
@@ -109,16 +110,25 @@ const extractPromptText = (userMessage: AgentMessage | undefined): string => {
 type WorkflowRunAiAgentTraceDetailProps = {
   workflowRunId: string;
   workflowStepId: string;
+  status: StepStatus;
 };
+
+const shouldQueryTraceForStatus = (status: StepStatus) =>
+  status !== StepStatus.NOT_STARTED &&
+  status !== StepStatus.PENDING &&
+  status !== StepStatus.RUNNING;
 
 export const WorkflowRunAiAgentTraceDetail = ({
   workflowRunId,
   workflowStepId,
+  status,
 }: WorkflowRunAiAgentTraceDetailProps) => {
   const { data, loading } = useQuery<GetWorkflowAgentTraceResult>(
     GET_WORKFLOW_AGENT_TRACE,
     {
       variables: { workflowRunId, workflowStepId },
+      fetchPolicy: 'cache-and-network',
+      skip: !shouldQueryTraceForStatus(status),
     },
   );
   const [isPromptExpanded, setIsPromptExpanded] = useState(false);

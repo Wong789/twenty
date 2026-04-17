@@ -112,6 +112,7 @@ const WorkflowRunAiAgentOutputDetail = ({
           <WorkflowRunAiAgentTraceDetail
             workflowRunId={workflowRunId}
             workflowStepId={workflowStepId}
+            status={status}
           />
         </WorkflowStepBody>
       ) : null}

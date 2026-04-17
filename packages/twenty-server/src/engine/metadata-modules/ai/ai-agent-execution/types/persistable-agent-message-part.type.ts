@@ -1,4 +1,4 @@
-import { JSONValue } from 'ai';
+import { type JSONValue } from 'ai';
 
 type PersistableProviderMetadata = Record<
   string,

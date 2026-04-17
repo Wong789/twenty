@@ -22,6 +22,14 @@ import { EntityRelation } from 'src/engine/workspace-manager/workspace-migration
   'CHK_agent_chat_thread_source',
   '("userWorkspaceId" IS NOT NULL AND "workflowRunId" IS NULL AND "workflowStepId" IS NULL) OR ("userWorkspaceId" IS NULL AND "workflowRunId" IS NOT NULL AND "workflowStepId" IS NOT NULL)',
 )
+@Index(
+  'IDX_AGENT_CHAT_THREAD_WORKFLOW',
+  ['workspaceId', 'workflowRunId', 'workflowStepId'],
+  {
+    unique: true,
+    where: '"workflowRunId" IS NOT NULL',
+  },
+)
 export class AgentChatThreadEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

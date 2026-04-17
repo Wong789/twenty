@@ -1,4 +1,4 @@
-import { GET_WORKFLOW_AGENT_TRACE } from '@/ai/graphql/queries/getWorkflowAgentTrace';
+import { GET_WORKFLOW_AGENT_TRACE_SUMMARY } from '@/ai/graphql/queries/getWorkflowAgentTrace';
 import { formatAiDisplayCost } from '@/ai/utils/formatAiDisplayCost';
 import { billingState } from '@/client-config/states/billingState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
@@ -78,16 +78,22 @@ const getTokenCountLabel = (tokenCount: number) => {
     : t`${formattedTokenCount} tokens`;
 };
 
+const shouldQueryTraceForStatus = (status: StepStatus) =>
+  status !== StepStatus.NOT_STARTED &&
+  status !== StepStatus.PENDING &&
+  status !== StepStatus.RUNNING;
+
 export const WorkflowRunAiAgentExecutionSummary = ({
   workflowRunId,
   workflowStepId,
   status,
 }: WorkflowRunAiAgentExecutionSummaryProps) => {
   const { data } = useQuery<WorkflowAgentTraceSummaryResult>(
-    GET_WORKFLOW_AGENT_TRACE,
+    GET_WORKFLOW_AGENT_TRACE_SUMMARY,
     {
       variables: { workflowRunId, workflowStepId },
-      fetchPolicy: 'cache-first',
+      fetchPolicy: 'cache-and-network',
+      skip: !shouldQueryTraceForStatus(status),
     },
   );
 
