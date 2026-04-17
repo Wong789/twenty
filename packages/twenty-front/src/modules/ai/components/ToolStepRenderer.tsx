@@ -259,9 +259,7 @@ export const ToolStepRenderer = ({
         <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
           <StyledContentContainer>
             {hasError ? (
-              // Legacy persisted tool parts can have an empty errorText while
-              // state === 'output-error' (old mapper stored errorMessage ?? '').
-              // Show a fallback label so the expanded panel isn't blank.
+              // Trim legacy empty errorText values so the fallback is visible.
               errorText?.trim() || t`Unknown error`
             ) : (
               <>

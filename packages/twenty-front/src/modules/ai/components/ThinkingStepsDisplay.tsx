@@ -330,9 +330,7 @@ const ThinkingToolStepRow = ({
         <AnimatedExpandableContainer isExpanded={isExpanded} mode="fit-content">
           <StyledToolDetailsContainer>
             {hasError ? (
-              // Legacy persisted tool parts can have an empty errorText while
-              // state === 'output-error' (old mapper stored errorMessage ?? '').
-              // Show a fallback label so the expanded panel isn't blank.
+              // Trim legacy empty errorText values so the fallback is visible.
               <StyledToolErrorText>
                 {part.errorText?.trim() || t`Unknown error`}
               </StyledToolErrorText>

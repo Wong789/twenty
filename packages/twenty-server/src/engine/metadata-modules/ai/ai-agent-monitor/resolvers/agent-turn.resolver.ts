@@ -66,6 +66,7 @@ export class AgentTurnResolver {
     @Args('workflowStepId') workflowStepId: string,
     @AuthWorkspace() workspace: WorkspaceEntity,
   ): Promise<AgentTurnEntity | null> {
+    // Workflow traces are latest-only until turns can be addressed by execution.
     return this.turnRepository
       .createQueryBuilder('turn')
       .innerJoinAndSelect('turn.thread', 'thread')
