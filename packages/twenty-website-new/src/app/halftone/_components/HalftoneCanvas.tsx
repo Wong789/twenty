@@ -22,6 +22,7 @@ import type {
 import { styled } from '@linaria/react';
 import { type MutableRefObject, useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { createSiteWebGlRenderer } from '@/lib/webgl';
 
 const passThroughVertexShader = `
   varying vec2 vUv;
@@ -111,6 +112,7 @@ const halftoneFragmentShader = `
   uniform float tile;
   uniform float s_3;
   uniform float s_4;
+  uniform float applyToDarkAreas;
   uniform vec3 dashColor;
   uniform vec3 hoverDashColor;
   uniform float time;
@@ -229,16 +231,13 @@ const halftoneFragmentShader = `
       hoverLightMask *
       mix(0.78, 1.18, motionBias) *
       0.22;
+    float toneValue =
+      (sceneSample.r + sceneSample.g + sceneSample.b) * (1.0 / 3.0);
+    if (applyToDarkAreas > 0.5) {
+      toneValue = 1.0 - toneValue;
+    }
     float bandRadius = clamp(
-      (
-        (
-          sceneSample.r +
-          sceneSample.g +
-          sceneSample.b +
-          localPower * length(vec2(0.5))
-        ) *
-        (1.0 / 3.0)
-      ) + lightLift,
+      toneValue + localPower * length(vec2(0.5)) + lightLift,
       0.0,
       1.0
     ) * 1.86 * 0.5;
@@ -472,7 +471,7 @@ function getCanvasCursor(
   isDragging: boolean,
 ) {
   if (settings.sourceMode === 'image') {
-    return 'crosshair';
+    return 'default';
   }
 
   if (settings.animation.followDragEnabled) {
@@ -527,6 +526,8 @@ function updateHalftone(
   resources.halftoneMaterial.uniforms.tile.value = settings.halftone.scale;
   resources.halftoneMaterial.uniforms.s_3.value = settings.halftone.power;
   resources.halftoneMaterial.uniforms.s_4.value = settings.halftone.width;
+  resources.halftoneMaterial.uniforms.applyToDarkAreas.value =
+    settings.halftone.toneTarget === 'dark' ? 1 : 0;
   (resources.halftoneMaterial.uniforms.dashColor.value as THREE.Color).set(
     settings.halftone.dashColor,
   );
@@ -738,7 +739,7 @@ export function HalftoneCanvas({
     const getRenderWidth = () =>
       Math.max(Math.round(getVirtualWidth() * getRenderScale()), 1);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+    const renderer = createSiteWebGlRenderer({ antialias: false, alpha: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(1);
     renderer.setClearColor(0x000000, 0);
@@ -883,6 +884,9 @@ export function HalftoneCanvas({
           tile: { value: initialSettings.halftone.scale },
           s_3: { value: initialSettings.halftone.power },
           s_4: { value: initialSettings.halftone.width },
+          applyToDarkAreas: {
+            value: initialSettings.halftone.toneTarget === 'dark' ? 1 : 0,
+          },
           dashColor: {
             value: new THREE.Color(initialSettings.halftone.dashColor),
           },
