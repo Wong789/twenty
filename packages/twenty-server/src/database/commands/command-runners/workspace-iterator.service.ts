@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import chalk from 'chalk';
 import { isNonEmptyString } from '@sniptt/guards';
 import { WorkspaceActivationStatus } from 'twenty-shared/workspace';
+import { isDefined } from 'twenty-shared/utils';
 import { In, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
@@ -113,7 +114,7 @@ export class WorkspaceIteratorService {
 
       if (error instanceof WorkspaceMigrationRunnerException && error.errors) {
         for (const [label, innerError] of Object.entries(error.errors)) {
-          if (innerError === undefined || innerError === null) continue;
+          if (!isDefined(innerError)) continue;
 
           if (innerError instanceof Error) {
             this.logger.error(
