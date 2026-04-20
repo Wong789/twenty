@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client/react';
 
+import { useHasAccessTokenPair } from '@/auth/hooks/useHasAccessTokenPair';
 import { useApolloCoreClient } from '@/object-metadata/hooks/useApolloCoreClient';
 import { useObjectMetadataItem } from '@/object-metadata/hooks/useObjectMetadataItem';
 import { type RecordGqlFieldsAggregate } from '@/object-record/graphql/types/RecordGqlFieldsAggregate';
@@ -45,10 +46,16 @@ export const useAggregateRecords = <T extends AggregateRecordsData>({
 
   const hasReadPermission = objectPermissions.canReadObjectRecords;
 
+  const hasAccessTokenPair = useHasAccessTokenPair();
+
   const { data, loading, error } = useQuery<RecordGqlOperationFindManyResult>(
     aggregateQuery,
     {
-      skip: skip || !isDefined(objectMetadataItem) || !hasReadPermission,
+      skip:
+        skip ||
+        !isDefined(objectMetadataItem) ||
+        !hasReadPermission ||
+        !hasAccessTokenPair,
       variables: {
         filter,
       },
