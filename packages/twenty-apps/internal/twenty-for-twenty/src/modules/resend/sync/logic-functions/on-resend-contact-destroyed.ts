@@ -1,17 +1,17 @@
 import { isNonEmptyString } from '@sniptt/guards';
-import { defineLogicFunction, type DatabaseEventPayload, type ObjectRecordDeleteEvent } from 'twenty-sdk/define';
+import { defineLogicFunction, type DatabaseEventPayload, type ObjectRecordDestroyEvent } from 'twenty-sdk/define';
 import { isDefined } from '@utils/is-defined';
 
-import { ON_RESEND_CONTACT_DELETED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
+import { ON_RESEND_CONTACT_DESTROYED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
 import type { ResendContactRecord } from '@modules/resend/shared/types/resend-contact-record';
 import { getResendClient } from '@modules/resend/shared/utils/get-resend-client';
 
-type ContactDeleteEvent = DatabaseEventPayload<
-  ObjectRecordDeleteEvent<ResendContactRecord>
+type ContactDestroyEvent = DatabaseEventPayload<
+  ObjectRecordDestroyEvent<ResendContactRecord>
 >;
 
 const handler = async (
-  event: ContactDeleteEvent,
+  event: ContactDestroyEvent,
 ): Promise<object | undefined> => {
   const resendId = event.properties.before?.resendId;
 
@@ -19,9 +19,9 @@ const handler = async (
     return { skipped: true, reason: 'no resendId on record' };
   }
 
-  const resendClient = getResendClient();
+  const resend = getResendClient();
 
-  const { error } = await resendClient.contacts.remove({ id: resendId });
+  const { error } = await resend.contacts.remove({ id: resendId });
 
   if (isDefined(error)) {
     const errorString = JSON.stringify(error);
@@ -35,17 +35,17 @@ const handler = async (
     );
   }
 
-  return { synced: true, resendId, action: 'deleted' };
+  return { synced: true, resendId, action: 'destroyed' };
 };
 
 export default defineLogicFunction({
-  universalIdentifier: ON_RESEND_CONTACT_DELETED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
-  name: 'on-resend-contact-deleted',
+  universalIdentifier: ON_RESEND_CONTACT_DESTROYED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+  name: 'on-resend-contact-destroyed',
   description:
-    'Removes a contact from Resend when a resendContact record is deleted in Twenty',
+    'Removes a contact from Resend when a resendContact record is permanently destroyed in Twenty',
   timeoutSeconds: 30,
   handler,
   databaseEventTriggerSettings: {
-    eventName: 'resendContact.deleted',
+    eventName: 'resendContact.destroyed',
   },
 });
