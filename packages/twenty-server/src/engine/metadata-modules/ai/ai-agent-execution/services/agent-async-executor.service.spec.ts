@@ -12,6 +12,7 @@ import { generateText, type ToolSet } from 'ai';
 import { type ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AgentAsyncExecutorService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/agent-async-executor.service';
+import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { type AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
 import {
@@ -95,7 +96,7 @@ describe('AgentAsyncExecutorService', () => {
     } as never);
   });
 
-  it('does not load workflow tools when the agent has no explicit role', async () => {
+  it('does not load any tools when the agent has no explicit role', async () => {
     const { service, toolRegistry } = createService({
       roleId: undefined,
     });
@@ -109,7 +110,35 @@ describe('AgentAsyncExecutorService', () => {
     expect(toolRegistry.getToolsByCategories).not.toHaveBeenCalled();
     expect(mockedGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
+        system: `${WORKFLOW_SYSTEM_PROMPTS.BASE}\n\n${agent.prompt}`,
         tools: {},
+      }),
+    );
+  });
+
+  it('uses a workflow system prompt that guards against unverified claims', async () => {
+    const { service } = createService({
+      roleId: undefined,
+    });
+
+    await service.executeAgent({
+      agent,
+      userPrompt: 'Find the latest news.',
+      rolePermissionConfig: { unionOf: ['workflow-role-id'] },
+    });
+
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: expect.stringContaining(
+          'If recent or external information cannot be verified with the available tools, say so',
+        ),
+      }),
+    );
+    expect(mockedGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: expect.stringContaining(
+          'Never invent search results, news, X posts, URLs, handles, or record data',
+        ),
       }),
     );
   });
@@ -140,6 +169,7 @@ describe('AgentAsyncExecutorService', () => {
         rolePermissionConfig: {
           intersectionOf: ['agent-role-id', 'workflow-role-id'],
         },
+        executionScope: 'workflow_agent',
         agent: {
           modelId: 'xai/grok',
           modelConfiguration: agent.modelConfiguration,

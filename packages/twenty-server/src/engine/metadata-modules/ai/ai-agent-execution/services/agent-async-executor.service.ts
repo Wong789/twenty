@@ -12,30 +12,32 @@ import { type ActorMetadata } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { type Repository } from 'typeorm';
 
-import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
-import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
-import { ToolCategory } from 'twenty-shared/ai';
+import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
+import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { type AgentExecutionResult } from 'src/engine/metadata-modules/ai/ai-agent-execution/types/agent-execution-result.type';
-import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
-import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
-import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
-import {
-  AiException,
-  AiExceptionCode,
-} from 'src/engine/metadata-modules/ai/ai.exception';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
+import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
+import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
+import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
-import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
-import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import {
+  AiModelRegistryService,
+  RegisteredAiModel,
+} from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import {
+  AiException,
+  AiExceptionCode,
+} from 'src/engine/metadata-modules/ai/ai.exception';
 import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-target.entity';
 import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
+import { ToolCategory } from 'twenty-shared/ai';
 
 type EffectiveAgentPermissions = {
   agentRoleId: string;
@@ -193,6 +195,7 @@ export class AgentAsyncExecutorService {
               roleId: effectiveAgentPermissions.agentRoleId,
               rolePermissionConfig:
                 effectiveAgentPermissions.rolePermissionConfig,
+              executionScope: 'workflow_agent',
               authContext,
               actorContext,
               agent: toToolProviderAgent(agent),
@@ -216,9 +219,8 @@ export class AgentAsyncExecutorService {
           );
         }
 
-        providerOptions = this.aiModelConfigService.getProviderOptions(
-          registeredModel,
-        );
+        providerOptions =
+          this.aiModelConfigService.getProviderOptions(registeredModel);
 
         generatedToolNames = Object.keys(tools).sort();
 
@@ -325,8 +327,7 @@ export class AgentAsyncExecutorService {
           ? {
               name: 'name' in error ? error.name : undefined,
               message: 'message' in error ? error.message : undefined,
-              statusCode:
-                'statusCode' in error ? error.statusCode : undefined,
+              statusCode: 'statusCode' in error ? error.statusCode : undefined,
               responseBody:
                 'responseBody' in error ? error.responseBody : undefined,
               cause: 'cause' in error ? error.cause : undefined,
