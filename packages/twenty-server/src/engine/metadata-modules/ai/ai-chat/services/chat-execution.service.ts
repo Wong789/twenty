@@ -23,7 +23,7 @@ import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { COMMON_PRELOAD_TOOLS } from 'src/engine/core-modules/tool-provider/constants/common-preload-tools.const';
-import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
+import { WEB_SEARCH_TOOL_ID } from 'src/engine/core-modules/tool-provider/constants/search-tool-ids.const';
 import { wrapToolsWithOutputSerialization } from 'src/engine/core-modules/tool-provider/output-serialization/wrap-tools-with-output-serialization.util';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
@@ -159,23 +159,18 @@ export class ChatExecutionService {
       registeredModel.modelId,
     );
 
-    const nativeSearchTools =
-      this.aiModelConfigService.getChatNativeSearchTools(registeredModel, {
-        useProviderNativeWebSearch: useNativeSearch,
-      });
-    const hasNativeWebSearch = Object.prototype.hasOwnProperty.call(
-      nativeSearchTools,
-      SEARCH_TOOL_NAMES.webSearch,
-    );
-    const hasNativeXSearch = Object.prototype.hasOwnProperty.call(
-      nativeSearchTools,
-      SEARCH_TOOL_NAMES.xSearch,
-    );
+    const {
+      tools: nativeSearchTools,
+      hasWebSearch: hasNativeWebSearch,
+      hasXSearch: hasNativeXSearch,
+    } = this.aiModelConfigService.getChatNativeSearchPlan(registeredModel, {
+      useProviderNativeWebSearch: useNativeSearch,
+    });
 
     const toolNamesToPreload = [
       ...COMMON_PRELOAD_TOOLS,
       ...(!hasNativeWebSearch && externalWebSearchEnabled
-        ? [SEARCH_TOOL_NAMES.webSearch]
+        ? [WEB_SEARCH_TOOL_ID]
         : []),
     ];
 
@@ -196,10 +191,10 @@ export class ChatExecutionService {
       ...Object.keys(nativeSearchTools),
     ];
     const excludedChatToolNames = hasNativeWebSearch
-      ? new Set([SEARCH_TOOL_NAMES.webSearch])
+      ? new Set([WEB_SEARCH_TOOL_ID])
       : undefined;
     const toolCatalogForPrompt = hasNativeWebSearch
-      ? toolCatalog.filter((tool) => tool.name !== SEARCH_TOOL_NAMES.webSearch)
+      ? toolCatalog.filter((tool) => tool.name !== WEB_SEARCH_TOOL_ID)
       : toolCatalog;
 
     // ToolSet is constant for the entire conversation — no mutation.

@@ -9,7 +9,7 @@ jest.mock('ai', () => {
 
 import { generateText, type ToolSet } from 'ai';
 
-import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
+import { WEB_SEARCH_TOOL_ID } from 'src/engine/core-modules/tool-provider/constants/search-tool-ids.const';
 import { type ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import { type WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
@@ -296,7 +296,7 @@ describe('AgentAsyncExecutorService', () => {
       },
     } as unknown as ToolSet;
     const nativeModelTools = {
-      [SEARCH_TOOL_NAMES.webSearch]: {
+      [WEB_SEARCH_TOOL_ID]: {
         description: 'Native search the web',
         inputSchema: {},
         execute: jest.fn(),

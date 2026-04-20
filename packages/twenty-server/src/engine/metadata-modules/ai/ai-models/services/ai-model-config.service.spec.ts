@@ -1,6 +1,10 @@
 import { AiModelConfigService } from './ai-model-config.service';
 
 import {
+  WEB_SEARCH_TOOL_ID,
+  X_SEARCH_TOOL_ID,
+} from 'src/engine/core-modules/tool-provider/constants/search-tool-ids.const';
+import {
   AI_SDK_OPENAI,
   AI_SDK_XAI,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
@@ -26,7 +30,7 @@ describe('AiModelConfigService', () => {
       }),
     });
 
-    const result = service.getChatNativeSearchTools(
+    const result = service.getChatNativeSearchPlan(
       {
         sdkPackage: AI_SDK_XAI,
         providerName: 'xai',
@@ -35,7 +39,11 @@ describe('AiModelConfigService', () => {
     );
 
     expect(result).toEqual({
-      x_search: xSearchTool,
+      tools: {
+        [X_SEARCH_TOOL_ID]: xSearchTool,
+      },
+      hasWebSearch: false,
+      hasXSearch: true,
     });
   });
 
@@ -49,7 +57,7 @@ describe('AiModelConfigService', () => {
       }),
     });
 
-    const result = service.getChatNativeSearchTools(
+    const result = service.getChatNativeSearchPlan(
       {
         sdkPackage: AI_SDK_XAI,
         providerName: 'xai',
@@ -58,8 +66,12 @@ describe('AiModelConfigService', () => {
     );
 
     expect(result).toEqual({
-      web_search: webSearchTool,
-      x_search: xSearchTool,
+      tools: {
+        [WEB_SEARCH_TOOL_ID]: webSearchTool,
+        [X_SEARCH_TOOL_ID]: xSearchTool,
+      },
+      hasWebSearch: true,
+      hasXSearch: true,
     });
   });
 
@@ -68,7 +80,7 @@ describe('AiModelConfigService', () => {
       getRawOpenAIProvider: jest.fn(),
     });
 
-    const result = service.getChatNativeSearchTools(
+    const result = service.getChatNativeSearchPlan(
       {
         sdkPackage: AI_SDK_OPENAI,
         providerName: 'openai',
@@ -76,6 +88,10 @@ describe('AiModelConfigService', () => {
       { useProviderNativeWebSearch: false },
     );
 
-    expect(result).toEqual({});
+    expect(result).toEqual({
+      tools: {},
+      hasWebSearch: false,
+      hasXSearch: false,
+    });
   });
 });

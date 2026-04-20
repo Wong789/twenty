@@ -14,7 +14,7 @@ import { type Repository } from 'typeorm';
 
 import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
-import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
+import { WEB_SEARCH_TOOL_ID } from 'src/engine/core-modules/tool-provider/constants/search-tool-ids.const';
 import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
@@ -51,7 +51,7 @@ const toToolProviderAgent = (agent: AgentEntity): ToolProviderAgent => ({
 
 const WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES = [
   'code_interpreter',
-  SEARCH_TOOL_NAMES.webSearch,
+  WEB_SEARCH_TOOL_ID,
 ] as const;
 const WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES_SET: ReadonlySet<string> = new Set(
   WORKFLOW_NO_ROLE_FALLBACK_TOOL_NAMES,

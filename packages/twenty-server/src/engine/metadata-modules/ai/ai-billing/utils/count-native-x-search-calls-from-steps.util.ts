@@ -1,6 +1,6 @@
 import { type StepResult, type ToolSet } from 'ai';
 
-import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
+import { X_SEARCH_TOOL_ID } from 'src/engine/core-modules/tool-provider/constants/search-tool-ids.const';
 
 export const countNativeXSearchCallsFromSteps = (
   steps: StepResult<ToolSet>[],
@@ -9,7 +9,7 @@ export const countNativeXSearchCallsFromSteps = (
     (count, step) =>
       count +
       step.toolCalls.filter(
-        (toolCall) => toolCall.toolName === SEARCH_TOOL_NAMES.xSearch,
+        (toolCall) => toolCall.toolName === X_SEARCH_TOOL_ID,
       ).length,
     0,
   );
