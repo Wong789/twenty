@@ -62,9 +62,11 @@ export const RecordTableFieldsDropdownHiddenFieldsContent = ({
     if (isDefined(existingRecordField)) {
       updateRecordField(fieldMetadataId, { isVisible: true });
     } else {
+      const sortedFields = currentRecordFields.toSorted(
+        sortByProperty('position', 'desc'),
+      );
       const lastPosition =
-        currentRecordFields.toSorted(sortByProperty('position', 'desc'))?.[0]
-          ?.position ?? 0;
+        sortedFields.length > 0 ? sortedFields[0].position : 0;
 
       const newRecordField: RecordField = {
         id: v4(),

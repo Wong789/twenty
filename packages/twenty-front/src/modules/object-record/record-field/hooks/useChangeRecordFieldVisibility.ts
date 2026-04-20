@@ -33,9 +33,11 @@ export const useChangeRecordFieldVisibility = (
     fieldMetadataId: string;
     isVisible: boolean;
   }) => {
+    const sortedFields = currentRecordFields.toSorted(
+      sortByProperty('position', 'desc'),
+    );
     const lastPosition =
-      currentRecordFields.toSorted(sortByProperty('position', 'desc'))?.[0]
-        ?.position ?? 0;
+      sortedFields.length > 0 ? sortedFields[0].position : 0;
 
     const shouldShowFieldMetadataItem = isVisible === true;
     const correspondingRecordField = currentRecordFields.find(
