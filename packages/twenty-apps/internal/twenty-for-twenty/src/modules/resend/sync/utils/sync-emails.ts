@@ -2,6 +2,8 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
+import type { EnqueueDetailFetchInput } from '@modules/resend/details/utils/enqueue-detail-fetch';
+import { enqueueDetailFetches } from '@modules/resend/details/utils/enqueue-detail-fetches';
 import type { CreateEmailDto } from '@modules/resend/sync/types/create-email.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
@@ -37,33 +39,19 @@ export const syncEmails = async (
         const pageOutcome = await upsertRecords({
           items: pageEmails,
           getId: (email) => email.id,
-          fetchDetail: async (id) => {
-            const { data: detail, error } = await resend.emails.get(id);
-
-            if (isDefined(error) || !isDefined(detail)) {
-              throw new Error(
-                `Failed to fetch email ${id}: ${JSON.stringify(error)}`,
-              );
-            }
-
-            return detail;
-          },
-          mapCreateData: (detail): CreateEmailDto => {
-            const mappedLastEvent = mapLastEvent(detail.last_event);
+          mapCreateData: (_detail, email): CreateEmailDto => {
+            const mappedLastEvent = mapLastEvent(email.last_event);
 
             return {
-              subject: detail.subject,
-              fromAddress: toEmailsField(detail.from),
-              toAddresses: toEmailsField(detail.to),
-              htmlBody: detail.html ?? '',
-              textBody: detail.text ?? '',
-              ccAddresses: toEmailsField(detail.cc),
-              bccAddresses: toEmailsField(detail.bcc),
-              replyToAddresses: toEmailsField(detail.reply_to),
+              subject: email.subject,
+              fromAddress: toEmailsField(email.from),
+              toAddresses: toEmailsField(email.to),
+              ccAddresses: toEmailsField(email.cc),
+              bccAddresses: toEmailsField(email.bcc),
+              replyToAddresses: toEmailsField(email.reply_to),
               ...(isDefined(mappedLastEvent) && { lastEvent: mappedLastEvent }),
-              createdAt: toIsoString(detail.created_at),
-              scheduledAt: toIsoStringOrNull(detail.scheduled_at),
-              tags: detail.tags,
+              createdAt: toIsoString(email.created_at),
+              scheduledAt: toIsoStringOrNull(email.scheduled_at),
               lastSyncedFromResend: syncedAt,
             };
           },
@@ -82,7 +70,6 @@ export const syncEmails = async (
               lastSyncedFromResend: syncedAt,
             };
           },
-          fetchDetailOnlyForCreate: true,
           client,
           objectNameSingular: 'resendEmail',
           objectNamePlural: 'resendEmails',
@@ -112,6 +99,8 @@ export const syncEmails = async (
           })),
         );
 
+        const enqueueInputs: EnqueueDetailFetchInput[] = [];
+
         for (const email of pageEmails) {
           const twentyId = pageOutcome.twentyIdByResendId.get(email.id);
 
@@ -121,30 +110,45 @@ export const syncEmails = async (
 
           const primaryTo = primaryToByEmail.get(email.id);
 
-          if (!isDefined(primaryTo)) continue;
+          if (isDefined(primaryTo)) {
+            const personId = personIdByEmail.get(primaryTo.trim().toLowerCase());
 
-          const personId = personIdByEmail.get(primaryTo.trim().toLowerCase());
+            if (isDefined(personId)) {
+              try {
+                await client.mutation({
+                  updateResendEmail: {
+                    __args: { id: twentyId, data: { personId } },
+                    id: true,
+                  },
+                });
+              } catch (error) {
+                const message = getErrorMessage(error);
 
-          if (!isDefined(personId)) continue;
-
-          try {
-            await client.mutation({
-              updateResendEmail: {
-                __args: { id: twentyId, data: { personId } },
-                id: true,
-              },
-            });
-          } catch (error) {
-            const message = getErrorMessage(error);
-
-            aggregate.errors.push(
-              `resendEmail ${email.id} person link: ${message}`,
-            );
-            personLinkOk = false;
+                aggregate.errors.push(
+                  `resendEmail ${email.id} person link: ${message}`,
+                );
+                personLinkOk = false;
+              }
+            }
           }
+
+          enqueueInputs.push({
+            entityType: 'EMAIL',
+            resendId: email.id,
+            twentyRecordId: twentyId,
+          });
         }
 
-        return { ok: pageOutcome.ok && personLinkOk };
+        const enqueueOutcome = await enqueueDetailFetches(client, enqueueInputs);
+
+        aggregate.errors.push(...enqueueOutcome.errors);
+
+        return {
+          ok:
+            pageOutcome.ok &&
+            personLinkOk &&
+            enqueueOutcome.errors.length === 0,
+        };
       },
       'emails',
       { startCursor: resumeCursor, onCursorAdvance },

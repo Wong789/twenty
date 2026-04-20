@@ -2,12 +2,13 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
+import type { EnqueueDetailFetchInput } from '@modules/resend/details/utils/enqueue-detail-fetch';
+import { enqueueDetailFetches } from '@modules/resend/details/utils/enqueue-detail-fetches';
 import type { CreateTemplateDto } from '@modules/resend/sync/types/create-template.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateTemplateDto } from '@modules/resend/sync/types/update-template.dto';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
-import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
   toIsoString,
   toIsoStringOrNull,
@@ -33,39 +34,18 @@ export const syncTemplates = async (
         const pageOutcome = await upsertRecords({
           items: pageTemplates,
           getId: (template) => template.id,
-          fetchDetail: async (id) => {
-            const { data: detail, error } = await resend.templates.get(id);
-
-            if (isDefined(error) || !isDefined(detail)) {
-              throw new Error(
-                `Failed to fetch template ${id}: ${JSON.stringify(error)}`,
-              );
-            }
-
-            return detail;
-          },
-          mapCreateData: (detail): CreateTemplateDto => ({
-            name: detail.name,
-            alias: detail.alias ?? '',
-            status: detail.status.toUpperCase(),
-            fromAddress: toEmailsField(detail.from),
-            subject: detail.subject ?? '',
-            replyTo: toEmailsField(detail.reply_to),
-            htmlBody: detail.html ?? '',
-            textBody: detail.text ?? '',
-            createdAt: toIsoString(detail.created_at),
-            resendUpdatedAt: toIsoString(detail.updated_at),
-            publishedAt: toIsoStringOrNull(detail.published_at),
-          }),
-          mapUpdateData: (detail, template): UpdateTemplateDto => ({
+          mapCreateData: (_detail, template): CreateTemplateDto => ({
             name: template.name,
             alias: template.alias ?? '',
             status: template.status.toUpperCase(),
-            fromAddress: toEmailsField(detail.from),
-            subject: detail.subject ?? '',
-            replyTo: toEmailsField(detail.reply_to),
-            htmlBody: detail.html ?? '',
-            textBody: detail.text ?? '',
+            createdAt: toIsoString(template.created_at),
+            resendUpdatedAt: toIsoString(template.updated_at),
+            publishedAt: toIsoStringOrNull(template.published_at),
+          }),
+          mapUpdateData: (_detail, template): UpdateTemplateDto => ({
+            name: template.name,
+            alias: template.alias ?? '',
+            status: template.status.toUpperCase(),
             resendUpdatedAt: toIsoString(template.updated_at),
             publishedAt: toIsoStringOrNull(template.published_at),
           }),
@@ -79,7 +59,25 @@ export const syncTemplates = async (
         aggregate.updated += pageOutcome.result.updated;
         aggregate.errors.push(...pageOutcome.result.errors);
 
-        return { ok: pageOutcome.ok };
+        const enqueueInputs: EnqueueDetailFetchInput[] = [];
+
+        for (const template of pageTemplates) {
+          const twentyId = pageOutcome.twentyIdByResendId.get(template.id);
+
+          if (!isDefined(twentyId)) continue;
+
+          enqueueInputs.push({
+            entityType: 'TEMPLATE',
+            resendId: template.id,
+            twentyRecordId: twentyId,
+          });
+        }
+
+        const enqueueOutcome = await enqueueDetailFetches(client, enqueueInputs);
+
+        aggregate.errors.push(...enqueueOutcome.errors);
+
+        return { ok: pageOutcome.ok && enqueueOutcome.errors.length === 0 };
       },
       'templates',
       { startCursor: resumeCursor, onCursorAdvance },

@@ -6,7 +6,7 @@ import {
 } from '@modules/resend/sync/utils/run-sync-step';
 import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
 
-export type SyncResendDependencies = {
+export type ListSyncDependencies = {
   syncSegments: () => Promise<SyncStepResult<SegmentIdMap>>;
   syncTemplates: () => Promise<SyncStepResult>;
   syncContacts: () => Promise<SyncStepResult>;
@@ -14,8 +14,8 @@ export type SyncResendDependencies = {
   syncBroadcasts: (segmentMap: SegmentIdMap) => Promise<SyncStepResult>;
 };
 
-export const orchestrateSyncResend = async (
-  dependencies: SyncResendDependencies,
+export const orchestrateListSync = async (
+  dependencies: ListSyncDependencies,
 ): Promise<ReadonlyArray<StepOutcome<unknown>>> => {
   const [segments, templates, contacts, emails] = await Promise.all([
     runSyncStep('SEGMENTS', dependencies.syncSegments),

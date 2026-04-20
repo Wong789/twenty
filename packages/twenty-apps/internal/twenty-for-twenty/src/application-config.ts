@@ -7,6 +7,7 @@ import {
   DEFAULT_ROLE_UNIVERSAL_IDENTIFIER,
 } from '@constants/universal-identifiers';
 import {
+  INITIAL_SYNC_MODE_APP_VARIABLE_UNIVERSAL_IDENTIFIER,
   RESEND_API_KEY_UNIVERSAL_IDENTIFIER,
   RESEND_WEBHOOK_SECRET_UNIVERSAL_IDENTIFIER,
 } from '@modules/resend/constants/universal-identifiers';
@@ -26,6 +27,13 @@ export default defineApplication({
       universalIdentifier: RESEND_WEBHOOK_SECRET_UNIVERSAL_IDENTIFIER,
       description: 'Signing secret for verifying Resend webhook payloads',
       isSecret: true,
+    },
+    INITIAL_SYNC_MODE: {
+      universalIdentifier: INITIAL_SYNC_MODE_APP_VARIABLE_UNIVERSAL_IDENTIFIER,
+      description:
+        "When 'true', the list-only initial-sync cron runs and the detail-fetch cron is paused. Flipped to 'false' once every list has completed.",
+      isSecret: false,
+      value: 'false',
     },
   },
   defaultRoleUniversalIdentifier: DEFAULT_ROLE_UNIVERSAL_IDENTIFIER,

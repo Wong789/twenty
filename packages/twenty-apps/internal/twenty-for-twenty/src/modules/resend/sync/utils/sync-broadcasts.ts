@@ -2,13 +2,14 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
+import type { EnqueueDetailFetchInput } from '@modules/resend/details/utils/enqueue-detail-fetch';
+import { enqueueDetailFetches } from '@modules/resend/details/utils/enqueue-detail-fetches';
 import type { CreateBroadcastDto } from '@modules/resend/sync/types/create-broadcast.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateBroadcastDto } from '@modules/resend/sync/types/update-broadcast.dto';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
-import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
   toIsoString,
   toIsoStringOrNull,
@@ -35,36 +36,21 @@ export const syncBroadcasts = async (
         const pageOutcome = await upsertRecords({
           items: pageBroadcasts,
           getId: (broadcast) => broadcast.id,
-          fetchDetail: async (id) => {
-            const { data: detail, error } = await resend.broadcasts.get(id);
-
-            if (isDefined(error) || !isDefined(detail)) {
-              throw new Error(
-                `Failed to fetch broadcast ${id}: ${JSON.stringify(error)}`,
-              );
-            }
-
-            return detail;
-          },
-          mapCreateData: (detail, broadcast): CreateBroadcastDto => {
-            const segmentId = isDefined(broadcast.segment_id)
-              ? segmentMap.get(broadcast.segment_id)
-              : undefined;
-
+          mapCreateData: (_detail, broadcast): CreateBroadcastDto => {
             const data: CreateBroadcastDto = {
-              name: detail.name,
-              subject: detail.subject,
-              fromAddress: toEmailsField(detail.from),
-              replyTo: toEmailsField(detail.reply_to),
-              previewText: detail.preview_text ?? '',
-              status: detail.status.toUpperCase(),
-              createdAt: toIsoString(detail.created_at),
-              scheduledAt: toIsoStringOrNull(detail.scheduled_at),
-              sentAt: toIsoStringOrNull(detail.sent_at),
+              name: broadcast.name,
+              status: broadcast.status.toUpperCase(),
+              createdAt: toIsoString(broadcast.created_at),
+              scheduledAt: toIsoStringOrNull(broadcast.scheduled_at),
+              sentAt: toIsoStringOrNull(broadcast.sent_at),
             };
 
-            if (isDefined(segmentId)) {
-              data.segmentId = segmentId;
+            if (isDefined(broadcast.segment_id)) {
+              const segmentId = segmentMap.get(broadcast.segment_id);
+
+              if (isDefined(segmentId)) {
+                data.segmentId = segmentId;
+              }
             }
 
             return data;
@@ -92,7 +78,6 @@ export const syncBroadcasts = async (
 
             return data;
           },
-          fetchDetailOnlyForCreate: true,
           client,
           objectNameSingular: 'resendBroadcast',
           objectNamePlural: 'resendBroadcasts',
@@ -103,7 +88,25 @@ export const syncBroadcasts = async (
         aggregate.updated += pageOutcome.result.updated;
         aggregate.errors.push(...pageOutcome.result.errors);
 
-        return { ok: pageOutcome.ok };
+        const enqueueInputs: EnqueueDetailFetchInput[] = [];
+
+        for (const broadcast of pageBroadcasts) {
+          const twentyId = pageOutcome.twentyIdByResendId.get(broadcast.id);
+
+          if (!isDefined(twentyId)) continue;
+
+          enqueueInputs.push({
+            entityType: 'BROADCAST',
+            resendId: broadcast.id,
+            twentyRecordId: twentyId,
+          });
+        }
+
+        const enqueueOutcome = await enqueueDetailFetches(client, enqueueInputs);
+
+        aggregate.errors.push(...enqueueOutcome.errors);
+
+        return { ok: pageOutcome.ok && enqueueOutcome.errors.length === 0 };
       },
       'broadcasts',
       { startCursor: resumeCursor, onCursorAdvance },

@@ -12,8 +12,17 @@ type CursorRow = {
   lastRunStatus: 'SUCCESS' | 'FAILED' | 'IN_PROGRESS' | null;
 };
 
+type DetailToFetchStatus = 'PENDING' | 'DONE' | 'FAILED';
+
+type DetailMetrics = {
+  pending: number;
+  done: number;
+  failed: number;
+};
+
 type FetchState = {
   rows: CursorRow[];
+  detailMetrics: DetailMetrics | null;
   loading: boolean;
   error: string | null;
 };
@@ -22,6 +31,22 @@ const STATUS_COLORS: Record<NonNullable<CursorRow['lastRunStatus']>, string> = {
   SUCCESS: '#1f9d55',
   FAILED: '#c53030',
   IN_PROGRESS: '#b7791f',
+};
+
+const RESEND_DETAILS_TO_FETCH_PLURAL: string = 'resendDetailsToFetch';
+
+const fetchDetailCount = async (
+  client: CoreApiClient,
+  status: DetailToFetchStatus,
+): Promise<number> => {
+  const result = (await client.query({
+    [RESEND_DETAILS_TO_FETCH_PLURAL]: {
+      __args: { filter: { status: { eq: status } }, first: 0 },
+      totalCount: true,
+    },
+  })) as unknown as Record<string, { totalCount?: number | null } | undefined>;
+
+  return result[RESEND_DETAILS_TO_FETCH_PLURAL]?.totalCount ?? 0;
 };
 
 const formatTimestamp = (value: string | null): string => {
@@ -41,6 +66,7 @@ const formatTimestamp = (value: string | null): string => {
 export const ResendSyncStatus = () => {
   const [state, setState] = useState<FetchState>({
     rows: [],
+    detailMetrics: null,
     loading: true,
     error: null,
   });
@@ -50,29 +76,37 @@ export const ResendSyncStatus = () => {
 
     const load = async () => {
       try {
-        const result = await new CoreApiClient().query({
-          resendSyncCursors: {
-            __args: { first: 50 },
-            edges: {
-              node: {
-                id: true,
-                step: true,
-                cursor: true,
-                lastRunAt: true,
-                lastRunStatus: true,
+        const client = new CoreApiClient();
+
+        const [cursorResult, pending, done, failed] = await Promise.all([
+          client.query({
+            resendSyncCursors: {
+              __args: { first: 50 },
+              edges: {
+                node: {
+                  id: true,
+                  step: true,
+                  cursor: true,
+                  lastRunAt: true,
+                  lastRunStatus: true,
+                },
               },
             },
-          },
-        });
+          }),
+          fetchDetailCount(client, 'PENDING'),
+          fetchDetailCount(client, 'DONE'),
+          fetchDetailCount(client, 'FAILED'),
+        ]);
 
         const connection = extractConnection<CursorRow>(
-          result,
+          cursorResult,
           'resendSyncCursors',
         );
 
         if (!cancelled) {
           setState({
             rows: connection.edges.map((edge) => edge.node),
+            detailMetrics: { pending, done, failed },
             loading: false,
             error: null,
           });
@@ -81,6 +115,7 @@ export const ResendSyncStatus = () => {
         if (!cancelled) {
           setState({
             rows: [],
+            detailMetrics: null,
             loading: false,
             error:
               fetchError instanceof Error
@@ -128,21 +163,6 @@ export const ResendSyncStatus = () => {
     );
   }
 
-  if (state.rows.length === 0) {
-    return (
-      <div
-        style={{
-          padding: '16px',
-          fontFamily: 'sans-serif',
-          fontSize: '13px',
-          color: '#666',
-        }}
-      >
-        No sync runs yet.
-      </div>
-    );
-  }
-
   const sortedRows = [...state.rows].sort((a, b) =>
     a.step.localeCompare(b.step),
   );
@@ -159,6 +179,37 @@ export const ResendSyncStatus = () => {
         gap: '8px',
       }}
     >
+      {isDefined(state.detailMetrics) && (
+        <div
+          style={{
+            padding: '12px',
+            borderRadius: '6px',
+            background: '#f7f7f7',
+            border: '1px solid #ececec',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}
+        >
+          <strong>Detail queue</strong>
+          <div style={{ color: '#555' }}>
+            <span style={{ color: STATUS_COLORS.IN_PROGRESS, fontWeight: 600 }}>
+              Pending: {state.detailMetrics.pending}
+            </span>
+            {' · '}
+            <span style={{ color: STATUS_COLORS.SUCCESS, fontWeight: 600 }}>
+              Done: {state.detailMetrics.done}
+            </span>
+            {' · '}
+            <span style={{ color: STATUS_COLORS.FAILED, fontWeight: 600 }}>
+              Failed: {state.detailMetrics.failed}
+            </span>
+          </div>
+        </div>
+      )}
+      {state.rows.length === 0 && (
+        <div style={{ color: '#666' }}>No sync runs yet.</div>
+      )}
       {sortedRows.map((row) => {
         const statusLabel = row.lastRunStatus ?? 'NEVER';
         const statusColor =

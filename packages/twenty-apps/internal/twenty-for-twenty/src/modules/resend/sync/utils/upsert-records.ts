@@ -1,11 +1,8 @@
-import { isDefined } from '@utils/is-defined';
-
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { UpsertRecordsOptions } from '@modules/resend/sync/types/upsert-records-options';
 import { fetchExistingTwentyIdsByResendIds } from '@modules/resend/sync/utils/fetch-existing-twenty-ids';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
 import { upsertRecord } from '@modules/resend/sync/utils/upsert-record';
-import { withRateLimitRetry } from '@modules/resend/shared/utils/with-rate-limit-retry';
 
 export type UpsertRecordsPageOutcome = {
   result: SyncResult;
@@ -15,17 +12,14 @@ export type UpsertRecordsPageOutcome = {
 
 export const upsertRecords = async <
   TListItem,
-  TDetail = TListItem,
   TCreateDto extends Record<string, unknown> = Record<string, unknown>,
   TUpdateDto extends Record<string, unknown> = Record<string, unknown>,
 >(
-  options: UpsertRecordsOptions<TListItem, TDetail, TCreateDto, TUpdateDto>,
+  options: UpsertRecordsOptions<TListItem, TCreateDto, TUpdateDto>,
 ): Promise<UpsertRecordsPageOutcome> => {
   const {
     items,
     getId,
-    fetchDetail,
-    fetchDetailOnlyForCreate,
     mapCreateData,
     mapUpdateData,
     client,
@@ -54,16 +48,8 @@ export const upsertRecords = async <
     try {
       const isNew = !twentyIdByResendId.has(resendId);
 
-      const shouldFetchDetail =
-        isDefined(fetchDetail) &&
-        (!fetchDetailOnlyForCreate || isNew);
-
-      const detail = shouldFetchDetail
-        ? await withRateLimitRetry(() => fetchDetail(resendId))
-        : (item as unknown as TDetail);
-
       if (isNew) {
-        const data = mapCreateData(detail, item);
+        const data = mapCreateData(item, item);
         await upsertRecord(
           client,
           objectNameSingular,
@@ -73,7 +59,7 @@ export const upsertRecords = async <
         );
         result.created++;
       } else {
-        const data = mapUpdateData(detail, item);
+        const data = mapUpdateData(item, item);
         await upsertRecord(
           client,
           objectNameSingular,
