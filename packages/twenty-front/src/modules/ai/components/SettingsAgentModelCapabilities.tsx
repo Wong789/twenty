@@ -1,5 +1,5 @@
 import { aiModelsState } from '@/client-config/states/aiModelsState';
-import { isCodeInterpreterEnabledState } from '@/client-config/states/isCodeInterpreterEnabledState';
+import { isCodeInterpreterAvailableState } from '@/client-config/states/isCodeInterpreterAvailableState';
 import { InputLabel } from '@/ui/input/components/InputLabel';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { styled } from '@linaria/react';
@@ -35,7 +35,7 @@ export const SettingsAgentModelCapabilities = ({
 }: SettingsAgentModelCapabilitiesProps) => {
   const aiModels = useAtomStateValue(aiModelsState);
   const isCodeInterpreterAvailable = useAtomStateValue(
-    isCodeInterpreterEnabledState,
+    isCodeInterpreterAvailableState,
   );
 
   const selectedModel = aiModels.find((m) => m.modelId === selectedModelId);

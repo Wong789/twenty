@@ -1,4 +1,5 @@
 import { aiModelsState } from '@/client-config/states/aiModelsState';
+import { allowRequestsToTwentyIconsState } from '@/client-config/states/allowRequestsToTwentyIcons';
 import { apiConfigState } from '@/client-config/states/apiConfigState';
 import { appVersionState } from '@/client-config/states/appVersionState';
 import { authProvidersState } from '@/client-config/states/authProvidersState';
@@ -6,15 +7,15 @@ import { billingState } from '@/client-config/states/billingState';
 import { calendarBookingPageIdState } from '@/client-config/states/calendarBookingPageIdState';
 import { canManageFeatureFlagsState } from '@/client-config/states/canManageFeatureFlagsState';
 import { captchaState } from '@/client-config/states/captchaState';
+import { clientConfigApiStatusState } from '@/client-config/states/clientConfigApiStatusState';
 import { isAnalyticsEnabledState } from '@/client-config/states/isAnalyticsEnabledState';
 import { isAttachmentPreviewEnabledState } from '@/client-config/states/isAttachmentPreviewEnabledState';
-import { isCodeInterpreterEnabledState } from '@/client-config/states/isCodeInterpreterEnabledState';
-import { isConfigVariablesInDbEnabledState } from '@/client-config/states/isConfigVariablesInDbEnabledState';
-import { isDeveloperDefaultSignInPrefilledState } from '@/client-config/states/isDeveloperDefaultSignInPrefilledState';
 import { isClickHouseConfiguredState } from '@/client-config/states/isClickHouseConfiguredState';
 import { isCloudflareIntegrationEnabledState } from '@/client-config/states/isCloudflareIntegrationEnabledState';
+import { isCodeInterpreterAvailableState } from '@/client-config/states/isCodeInterpreterAvailableState';
+import { isConfigVariablesInDbEnabledState } from '@/client-config/states/isConfigVariablesInDbEnabledState';
 import { isDDLLockedState } from '@/client-config/states/isDDLLockedState';
-import { maintenanceModeState } from '@/client-config/states/maintenanceModeState';
+import { isDeveloperDefaultSignInPrefilledState } from '@/client-config/states/isDeveloperDefaultSignInPrefilledState';
 import { isEmailingDomainsEnabledState } from '@/client-config/states/isEmailingDomainsEnabledState';
 import { isEmailVerificationRequiredState } from '@/client-config/states/isEmailVerificationRequiredState';
 import { isGoogleCalendarEnabledState } from '@/client-config/states/isGoogleCalendarEnabledState';
@@ -24,16 +25,15 @@ import { isMicrosoftCalendarEnabledState } from '@/client-config/states/isMicros
 import { isMicrosoftMessagingEnabledState } from '@/client-config/states/isMicrosoftMessagingEnabledState';
 import { isMultiWorkspaceEnabledState } from '@/client-config/states/isMultiWorkspaceEnabledState';
 import { labPublicFeatureFlagsState } from '@/client-config/states/labPublicFeatureFlagsState';
+import { maintenanceModeState } from '@/client-config/states/maintenanceModeState';
 import { sentryConfigState } from '@/client-config/states/sentryConfigState';
 import { supportChatState } from '@/client-config/states/supportChatState';
 import { type ClientConfig } from '@/client-config/types/ClientConfig';
-import { domainConfigurationState } from '@/domain-manager/states/domainConfigurationState';
-import { useCallback } from 'react';
-import { clientConfigApiStatusState } from '@/client-config/states/clientConfigApiStatusState';
 import { getClientConfig } from '@/client-config/utils/getClientConfig';
-import { allowRequestsToTwentyIconsState } from '@/client-config/states/allowRequestsToTwentyIcons';
-import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
+import { domainConfigurationState } from '@/domain-manager/states/domainConfigurationState';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
+import { useSetAtomState } from '@/ui/utilities/state/jotai/hooks/useSetAtomState';
+import { useCallback } from 'react';
 
 type UseClientConfigResult = {
   data: { clientConfig: ClientConfig } | undefined;
@@ -94,8 +94,8 @@ export const useClientConfig = (): UseClientConfigResult => {
   const setIsAttachmentPreviewEnabled = useSetAtomState(
     isAttachmentPreviewEnabledState,
   );
-  const setIsCodeInterpreterEnabled = useSetAtomState(
-    isCodeInterpreterEnabledState,
+  const setIsCodeInterpreterAvailable = useSetAtomState(
+    isCodeInterpreterAvailableState,
   );
 
   const setIsConfigVariablesInDbEnabled = useSetAtomState(
@@ -189,7 +189,7 @@ export const useClientConfig = (): UseClientConfigResult => {
       setIsGoogleMessagingEnabled(clientConfig?.isGoogleMessagingEnabled);
       setIsGoogleCalendarEnabled(clientConfig?.isGoogleCalendarEnabled);
       setIsAttachmentPreviewEnabled(clientConfig?.isAttachmentPreviewEnabled);
-      setIsCodeInterpreterEnabled(clientConfig?.isCodeInterpreterEnabled);
+      setIsCodeInterpreterAvailable(clientConfig?.isCodeInterpreterEnabled);
       setIsConfigVariablesInDbEnabled(
         clientConfig?.isConfigVariablesInDbEnabled,
       );
@@ -234,7 +234,7 @@ export const useClientConfig = (): UseClientConfigResult => {
     setIsGoogleMessagingEnabled,
     setIsAnalyticsEnabled,
     setIsAttachmentPreviewEnabled,
-    setIsCodeInterpreterEnabled,
+    setIsCodeInterpreterAvailable,
     setIsConfigVariablesInDbEnabled,
     setIsDeveloperDefaultSignInPrefilled,
     setIsEmailVerificationRequired,
