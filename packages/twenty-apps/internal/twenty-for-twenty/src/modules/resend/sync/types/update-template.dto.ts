@@ -1,4 +1,4 @@
-import type { EmailsField } from 'src/modules/resend/shared/types/emails-field';
+import type { EmailsField } from '@modules/resend/shared/types/emails-field';
 
 export type UpdateTemplateDto = {
   name: string;

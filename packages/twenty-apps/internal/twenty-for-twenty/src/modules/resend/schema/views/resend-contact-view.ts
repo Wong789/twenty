@@ -15,7 +15,7 @@ import {
   RESEND_EMAILS_ON_CONTACT_FIELD_UNIVERSAL_IDENTIFIER,
   SEGMENT_ON_RESEND_CONTACT_FIELD_UNIVERSAL_IDENTIFIER,
   UNSUBSCRIBED_FIELD_UNIVERSAL_IDENTIFIER,
-} from 'src/modules/resend/constants/universal-identifiers';
+} from '@modules/resend/constants/universal-identifiers';
 import { defineView } from 'twenty-sdk/define';
 
 export default defineView({

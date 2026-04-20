@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { StepOutcome } from 'src/modules/resend/sync/types/step-outcome';
-import type { SyncResult } from 'src/modules/resend/sync/types/sync-result';
-import type { SyncStepResult } from 'src/modules/resend/sync/types/sync-step-result';
-import { orchestrateSyncResend } from 'src/modules/resend/sync/utils/orchestrate-sync-resend';
+import type { StepOutcome } from '@modules/resend/sync/types/step-outcome';
+import type { SyncResult } from '@modules/resend/sync/types/sync-result';
+import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
+import { orchestrateSyncResend } from '@modules/resend/sync/utils/orchestrate-sync-resend';
 import {
   MAX_ERRORS_IN_THROWN_MESSAGE,
   reportAndThrowIfErrors,
-} from 'src/modules/resend/sync/utils/report-and-throw-if-errors';
-import type { SegmentIdMap } from 'src/modules/resend/sync/utils/sync-segments';
+} from '@modules/resend/sync/utils/report-and-throw-if-errors';
+import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
 
 const emptyResult = (): SyncResult => ({
   fetched: 0,
@@ -19,13 +19,13 @@ const emptyResult = (): SyncResult => ({
 
 const emptySegmentMap: SegmentIdMap = new Map();
 
-const okSegments = (): Promise<SyncStepResult<SegmentIdMap>> =>
+const successfulSegmentsStep = (): Promise<SyncStepResult<SegmentIdMap>> =>
   Promise.resolve({ result: emptyResult(), value: emptySegmentMap });
 
-const okTemplates = (): Promise<SyncStepResult> =>
+const successfulTemplatesStep = (): Promise<SyncStepResult> =>
   Promise.resolve({ result: emptyResult(), value: undefined });
 
-const okStep = (): Promise<SyncStepResult> =>
+const successfulStep = (): Promise<SyncStepResult> =>
   Promise.resolve({ result: emptyResult(), value: undefined });
 
 describe('orchestrateSyncResend', () => {
@@ -46,83 +46,83 @@ describe('orchestrateSyncResend', () => {
       };
 
     await orchestrateSyncResend({
-      syncSegments: trackStart('segments', emptySegmentMap),
-      syncTemplates: trackStart('templates', undefined),
-      syncContacts: trackStart('contacts', undefined),
-      syncEmails: trackStart('emails', undefined),
-      syncBroadcasts: () => okStep(),
+      syncSegments: trackStart('SEGMENTS', emptySegmentMap),
+      syncTemplates: trackStart('TEMPLATES', undefined),
+      syncContacts: trackStart('CONTACTS', undefined),
+      syncEmails: trackStart('EMAILS', undefined),
+      syncBroadcasts: () => successfulStep(),
     });
 
     expect(order.slice(0, 4)).toEqual([
-      'segments:start',
-      'templates:start',
-      'contacts:start',
-      'emails:start',
+      'SEGMENTS:start',
+      'TEMPLATES:start',
+      'CONTACTS:start',
+      'EMAILS:start',
     ]);
   });
 
   it('runs broadcasts after segments resolved', async () => {
-    const broadcastsArgs: SegmentIdMap[] = [];
+    const broadcastsArguments: SegmentIdMap[] = [];
     const segmentMap: SegmentIdMap = new Map([['seg-1', 'twenty-seg-1']]);
 
     const outcomes = await orchestrateSyncResend({
       syncSegments: () =>
         Promise.resolve({ result: emptyResult(), value: segmentMap }),
-      syncTemplates: okTemplates,
-      syncContacts: () => okStep(),
-      syncEmails: () => okStep(),
-      syncBroadcasts: (s) => {
-        broadcastsArgs.push(s);
+      syncTemplates: successfulTemplatesStep,
+      syncContacts: () => successfulStep(),
+      syncEmails: () => successfulStep(),
+      syncBroadcasts: (segmentIdMap) => {
+        broadcastsArguments.push(segmentIdMap);
 
-        return okStep();
+        return successfulStep();
       },
     });
 
-    expect(broadcastsArgs).toHaveLength(1);
-    expect(broadcastsArgs[0]).toBe(segmentMap);
+    expect(broadcastsArguments).toHaveLength(1);
+    expect(broadcastsArguments[0]).toBe(segmentMap);
 
     const broadcasts = outcomes.find(
-      (outcome) => outcome.name === 'broadcasts',
+      (outcome) => outcome.name === 'BROADCASTS',
     );
 
     expect(broadcasts?.status).toBe('ok');
   });
 
   it('runs broadcasts when templates fails but segments succeeds', async () => {
-    const syncBroadcasts = vi.fn(() => okStep());
+    const syncBroadcasts = vi.fn(() => successfulStep());
 
     const outcomes = await orchestrateSyncResend({
-      syncSegments: okSegments,
+      syncSegments: successfulSegmentsStep,
       syncTemplates: () => Promise.reject(new Error('templates boom')),
-      syncContacts: okStep,
-      syncEmails: okStep,
+      syncContacts: successfulStep,
+      syncEmails: successfulStep,
       syncBroadcasts,
     });
 
     expect(syncBroadcasts).toHaveBeenCalledTimes(1);
 
     const broadcasts = outcomes.find(
-      (outcome) => outcome.name === 'broadcasts',
+      (outcome) => outcome.name === 'BROADCASTS',
     );
 
     expect(broadcasts?.status).toBe('ok');
   });
 
   it('skips broadcasts with structured reason when segments fails', async () => {
-    const syncBroadcasts = vi.fn(() => okStep());
+    const syncBroadcasts = vi.fn(() => successfulStep());
 
     const outcomes = await orchestrateSyncResend({
       syncSegments: () => Promise.reject(new Error('segments boom')),
-      syncTemplates: okTemplates,
-      syncContacts: okStep,
-      syncEmails: okStep,
+      syncTemplates: successfulTemplatesStep,
+      syncContacts: successfulStep,
+      syncEmails: successfulStep,
       syncBroadcasts,
     });
 
     expect(syncBroadcasts).not.toHaveBeenCalled();
 
     const broadcasts = outcomes.find(
-      (outcome) => outcome.name === 'broadcasts',
+      (outcome) => outcome.name === 'BROADCASTS',
     );
 
     expect(broadcasts?.status).toBe('skipped');
@@ -198,7 +198,10 @@ describe('reportAndThrowIfErrors', () => {
           fetched: tooMany,
           created: 0,
           updated: 0,
-          errors: Array.from({ length: tooMany }, (_, i) => `err-${i}`),
+          errors: Array.from(
+            { length: tooMany },
+            (_, errorIndex) => `error-${errorIndex}`,
+          ),
         },
         value: undefined,
       },

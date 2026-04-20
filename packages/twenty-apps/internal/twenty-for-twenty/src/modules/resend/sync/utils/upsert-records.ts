@@ -1,8 +1,8 @@
-import type { SyncResult } from 'src/modules/resend/sync/types/sync-result';
-import type { UpsertRecordsOptions } from 'src/modules/resend/sync/types/upsert-records-options';
-import { getErrorMessage } from 'src/modules/resend/shared/utils/get-error-message';
-import { upsertRecord } from 'src/modules/resend/sync/utils/upsert-record';
-import { withRateLimitRetry } from 'src/modules/resend/shared/utils/with-rate-limit-retry';
+import type { SyncResult } from '@modules/resend/sync/types/sync-result';
+import type { UpsertRecordsOptions } from '@modules/resend/sync/types/upsert-records-options';
+import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
+import { upsertRecord } from '@modules/resend/sync/utils/upsert-record';
+import { withRateLimitRetry } from '@modules/resend/shared/utils/with-rate-limit-retry';
 
 export const upsertRecords = async <
   TListItem,

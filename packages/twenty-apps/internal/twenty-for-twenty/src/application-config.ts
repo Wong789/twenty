@@ -5,11 +5,11 @@ import {
   APP_DISPLAY_NAME,
   APPLICATION_UNIVERSAL_IDENTIFIER,
   DEFAULT_ROLE_UNIVERSAL_IDENTIFIER,
-} from 'src/constants/universal-identifiers';
+} from '@constants/universal-identifiers';
 import {
   RESEND_API_KEY_UNIVERSAL_IDENTIFIER,
   RESEND_WEBHOOK_SECRET_UNIVERSAL_IDENTIFIER,
-} from 'src/modules/resend/constants/universal-identifiers';
+} from '@modules/resend/constants/universal-identifiers';
 
 export default defineApplication({
   universalIdentifier: APPLICATION_UNIVERSAL_IDENTIFIER,

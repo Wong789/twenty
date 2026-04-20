@@ -1,90 +1,91 @@
 import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import type { CreateTemplateDto } from 'src/modules/resend/sync/types/create-template.dto';
-import type { SyncStepResult } from 'src/modules/resend/sync/types/sync-step-result';
-import type { UpdateTemplateDto } from 'src/modules/resend/sync/types/update-template.dto';
-import { fetchAllPaginated } from 'src/modules/resend/shared/utils/fetch-all-paginated';
-import { getExistingRecordsMap } from 'src/modules/resend/sync/utils/get-existing-records-map';
-import { toEmailsField } from 'src/modules/resend/shared/utils/to-emails-field';
+import type { CreateTemplateDto } from '@modules/resend/sync/types/create-template.dto';
+import type { SyncResult } from '@modules/resend/sync/types/sync-result';
+import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
+import type { UpdateTemplateDto } from '@modules/resend/sync/types/update-template.dto';
+import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
+import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
+import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
   toIsoString,
   toIsoStringOrNull,
-} from 'src/modules/resend/shared/utils/to-iso-string';
-import { upsertRecords } from 'src/modules/resend/sync/utils/upsert-records';
-import { withRateLimitRetry } from 'src/modules/resend/shared/utils/with-rate-limit-retry';
+} from '@modules/resend/shared/utils/to-iso-string';
+import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
+import { withSyncCursor } from '@modules/resend/sync/cursor/utils/with-sync-cursor';
 
 export const syncTemplates = async (
   resend: Resend,
   client: CoreApiClient,
 ): Promise<SyncStepResult> => {
-  const templates = await fetchAllPaginated(
-    (params) => resend.templates.list(params),
-    'templates',
-  );
   const existingMap = await getExistingRecordsMap(client, 'resendTemplates');
 
-  const detailsMap = new Map<
-    string,
-    NonNullable<Awaited<ReturnType<typeof resend.templates.get>>['data']>
-  >();
+  const aggregate: SyncResult = {
+    fetched: 0,
+    created: 0,
+    updated: 0,
+    errors: [],
+  };
 
-  for (const template of templates) {
-    const { data: detail, error } = await withRateLimitRetry(() =>
-      resend.templates.get(template.id),
+  await withSyncCursor(client, 'TEMPLATES', async ({ resumeCursor, onCursorAdvance }) => {
+    await forEachPage(
+      (paginationParameters) => resend.templates.list(paginationParameters),
+      async (pageTemplates) => {
+        const pageResult = await upsertRecords({
+          items: pageTemplates,
+          getId: (template) => template.id,
+          fetchDetail: async (id) => {
+            const { data: detail, error } = await resend.templates.get(id);
+
+            if (isDefined(error) || !isDefined(detail)) {
+              throw new Error(
+                `Failed to fetch template ${id}: ${JSON.stringify(error)}`,
+              );
+            }
+
+            return detail;
+          },
+          mapCreateData: (detail): CreateTemplateDto => ({
+            name: detail.name,
+            alias: detail.alias ?? '',
+            status: detail.status.toUpperCase(),
+            fromAddress: toEmailsField(detail.from),
+            subject: detail.subject ?? '',
+            replyTo: toEmailsField(detail.reply_to),
+            htmlBody: detail.html ?? '',
+            textBody: detail.text ?? '',
+            createdAt: toIsoString(detail.created_at),
+            resendUpdatedAt: toIsoString(detail.updated_at),
+            publishedAt: toIsoStringOrNull(detail.published_at),
+          }),
+          mapUpdateData: (detail, template): UpdateTemplateDto => ({
+            name: template.name,
+            alias: template.alias ?? '',
+            status: template.status.toUpperCase(),
+            fromAddress: toEmailsField(detail.from),
+            subject: detail.subject ?? '',
+            replyTo: toEmailsField(detail.reply_to),
+            htmlBody: detail.html ?? '',
+            textBody: detail.text ?? '',
+            resendUpdatedAt: toIsoString(template.updated_at),
+            publishedAt: toIsoStringOrNull(template.published_at),
+          }),
+          existingMap,
+          client,
+          objectNameSingular: 'resendTemplate',
+        });
+
+        aggregate.fetched += pageResult.fetched;
+        aggregate.created += pageResult.created;
+        aggregate.updated += pageResult.updated;
+        aggregate.errors.push(...pageResult.errors);
+      },
+      'templates',
+      { startCursor: resumeCursor, onCursorAdvance },
     );
-
-    if (isDefined(error) || !isDefined(detail)) {
-      throw new Error(
-        `Failed to fetch template ${template.id}: ${JSON.stringify(error)}`,
-      );
-    }
-
-    detailsMap.set(template.id, detail);
-  }
-
-  const result = await upsertRecords({
-    items: templates,
-    getId: (template) => template.id,
-    fetchDetail: async (id) => {
-      const detail = detailsMap.get(id);
-
-      if (!isDefined(detail)) {
-        throw new Error(`Template detail for ${id} not found in cache`);
-      }
-
-      return detail;
-    },
-    mapCreateData: (detail): CreateTemplateDto => ({
-      name: detail.name,
-      alias: detail.alias ?? '',
-      status: detail.status.toUpperCase(),
-      fromAddress: toEmailsField(detail.from),
-      subject: detail.subject ?? '',
-      replyTo: toEmailsField(detail.reply_to),
-      htmlBody: detail.html ?? '',
-      textBody: detail.text ?? '',
-      createdAt: toIsoString(detail.created_at),
-      resendUpdatedAt: toIsoString(detail.updated_at),
-      publishedAt: toIsoStringOrNull(detail.published_at),
-    }),
-    mapUpdateData: (detail, template): UpdateTemplateDto => ({
-      name: template.name,
-      alias: template.alias ?? '',
-      status: template.status.toUpperCase(),
-      fromAddress: toEmailsField(detail.from),
-      subject: detail.subject ?? '',
-      replyTo: toEmailsField(detail.reply_to),
-      htmlBody: detail.html ?? '',
-      textBody: detail.text ?? '',
-      resendUpdatedAt: toIsoString(template.updated_at),
-      publishedAt: toIsoStringOrNull(template.published_at),
-    }),
-    existingMap,
-    client,
-    objectNameSingular: 'resendTemplate',
   });
 
-  return { result, value: undefined };
+  return { result: aggregate, value: undefined };
 };

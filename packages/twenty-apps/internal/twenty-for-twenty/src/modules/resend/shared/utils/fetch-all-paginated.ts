@@ -1,10 +1,10 @@
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { withRateLimitRetry } from 'src/modules/resend/shared/utils/with-rate-limit-retry';
+import { withRateLimitRetry } from '@modules/resend/shared/utils/with-rate-limit-retry';
 
 const PAGE_SIZE = 100;
 
-export type ResendListFn<T> = (params: {
+export type ResendListFunction<T> = (paginationParameters: {
   limit: number;
   after?: string;
 }) => Promise<{
@@ -13,22 +13,27 @@ export type ResendListFn<T> = (params: {
 }>;
 
 export const fetchAllPaginated = async <T extends { id: string }>(
-  listFn: ResendListFn<T>,
+  listFunction: ResendListFunction<T>,
   label = 'items',
 ): Promise<T[]> => {
   const items: T[] = [];
   let cursor: string | undefined;
+  let pageNumber = 0;
 
   while (true) {
-    const params = {
+    const paginationParameters = {
       limit: PAGE_SIZE,
       ...(isDefined(cursor) && { after: cursor }),
     };
-    const response = await withRateLimitRetry(() => listFn(params));
+    const response = await withRateLimitRetry(() =>
+      listFunction(paginationParameters),
+    );
 
     if (isDefined(response.error)) {
       throw new Error(
-        `Resend list[${label}] failed at cursor=${cursor ?? 'start'}: ${JSON.stringify(response.error)}`,
+        `Resend list[${label}] failed at cursor=${
+          cursor ?? 'start'
+        }: ${JSON.stringify(response.error)}`,
       );
     }
 
@@ -37,6 +42,11 @@ export const fetchAllPaginated = async <T extends { id: string }>(
     if (!isDefined(page) || page.data.length === 0) break;
 
     items.push(...page.data);
+    pageNumber++;
+
+    console.log(
+      `[resend] fetched ${label} page ${pageNumber} (size=${page.data.length}, total=${items.length}, has_more=${page.has_more})`,
+    );
 
     if (!page.has_more) break;
 

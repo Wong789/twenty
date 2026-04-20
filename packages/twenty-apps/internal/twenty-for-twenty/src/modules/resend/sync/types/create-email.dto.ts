@@ -1,4 +1,4 @@
-import type { UpdateEmailDto } from 'src/modules/resend/sync/types/update-email.dto';
+import type { UpdateEmailDto } from '@modules/resend/sync/types/update-email.dto';
 
 export type CreateEmailDto = UpdateEmailDto & {
   htmlBody: string;

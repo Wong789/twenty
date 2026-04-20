@@ -2,26 +2,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   fetchAllPaginated,
-  type ResendListFn,
-} from 'src/modules/resend/shared/utils/fetch-all-paginated';
+  type ResendListFunction,
+} from '@modules/resend/shared/utils/fetch-all-paginated';
 
 type Item = { id: string };
 
-type ListResponse = Awaited<ReturnType<ResendListFn<Item>>>;
+type ListResponse = Awaited<ReturnType<ResendListFunction<Item>>>;
 
 const page = (ids: string[], hasMore: boolean): ListResponse => ({
   data: { data: ids.map((id) => ({ id })), has_more: hasMore },
   error: null,
 });
 
-const makeListFn = (
+const createMockListFunction = (
   pages: ListResponse[],
-): { fn: ResendListFn<Item>; calls: { limit: number; after?: string }[] } => {
+): {
+  listFunction: ResendListFunction<Item>;
+  calls: { limit: number; after?: string }[];
+} => {
   const calls: { limit: number; after?: string }[] = [];
   let index = 0;
 
-  const fn: ResendListFn<Item> = async (params) => {
-    calls.push(params);
+  const listFunction: ResendListFunction<Item> = async (
+    paginationParameters,
+  ) => {
+    calls.push(paginationParameters);
     const result = pages[index] ?? page([], false);
 
     index++;
@@ -29,7 +34,7 @@ const makeListFn = (
     return result;
   };
 
-  return { fn, calls };
+  return { listFunction, calls };
 };
 
 beforeEach(() => {
@@ -42,9 +47,11 @@ afterEach(() => {
 
 describe('fetchAllPaginated', () => {
   it('returns items from a single page when has_more is false', async () => {
-    const { fn, calls } = makeListFn([page(['a', 'b', 'c'], false)]);
+    const { listFunction, calls } = createMockListFunction([
+      page(['a', 'b', 'c'], false),
+    ]);
 
-    const result = await fetchAllPaginated(fn);
+    const result = await fetchAllPaginated(listFunction);
 
     expect(result.map((item) => item.id)).toEqual(['a', 'b', 'c']);
     expect(calls).toHaveLength(1);
@@ -52,13 +59,13 @@ describe('fetchAllPaginated', () => {
   });
 
   it('follows cursor across pages and concatenates results', async () => {
-    const { fn, calls } = makeListFn([
+    const { listFunction, calls } = createMockListFunction([
       page(['a', 'b'], true),
       page(['c', 'd'], true),
       page(['e'], false),
     ]);
 
-    const result = await fetchAllPaginated(fn);
+    const result = await fetchAllPaginated(listFunction);
 
     expect(result.map((item) => item.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
     expect(calls).toEqual([
@@ -69,47 +76,52 @@ describe('fetchAllPaginated', () => {
   });
 
   it('stops when a page returns an empty array', async () => {
-    const { fn, calls } = makeListFn([
+    const { listFunction, calls } = createMockListFunction([
       page(['a'], true),
       page([], true),
       page(['b'], false),
     ]);
 
-    const result = await fetchAllPaginated(fn);
+    const result = await fetchAllPaginated(listFunction);
 
     expect(result.map((item) => item.id)).toEqual(['a']);
     expect(calls).toHaveLength(2);
   });
 
   it('stops when data is null', async () => {
-    const { fn } = makeListFn([
+    const { listFunction } = createMockListFunction([
       page(['a'], true),
       { data: null, error: null },
     ]);
 
-    const result = await fetchAllPaginated(fn);
+    const result = await fetchAllPaginated(listFunction);
 
     expect(result.map((item) => item.id)).toEqual(['a']);
   });
 
-  it('includes label and cursor in the error message when listFn returns an error', async () => {
-    const fn: ResendListFn<Item> = async (params) => {
-      if (params.after === 'a') {
+  it('includes label and cursor in the error message when listFunction returns an error', async () => {
+    const listFunction: ResendListFunction<Item> = async (
+      paginationParameters,
+    ) => {
+      if (paginationParameters.after === 'a') {
         return { data: null, error: { code: 'boom' } };
       }
 
       return page(['a'], true);
     };
 
-    await expect(fetchAllPaginated(fn, 'broadcasts')).rejects.toThrow(
+    await expect(fetchAllPaginated(listFunction, 'broadcasts')).rejects.toThrow(
       /Resend list\[broadcasts\] failed at cursor=a: .*boom/,
     );
   });
 
   it('throws when the cursor does not advance', async () => {
-    const { fn } = makeListFn([page(['a'], true), page(['a'], true)]);
+    const { listFunction } = createMockListFunction([
+      page(['a'], true),
+      page(['a'], true),
+    ]);
 
-    await expect(fetchAllPaginated(fn, 'segments')).rejects.toThrow(
+    await expect(fetchAllPaginated(listFunction, 'segments')).rejects.toThrow(
       /Resend list\[segments\] cursor stuck at a/,
     );
   });

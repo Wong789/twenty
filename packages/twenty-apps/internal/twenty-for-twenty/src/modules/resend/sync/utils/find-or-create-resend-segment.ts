@@ -1,9 +1,9 @@
 import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { fetchAllPaginated } from 'src/modules/resend/shared/utils/fetch-all-paginated';
-import { findRecordByResendId } from 'src/modules/resend/shared/utils/find-record-by-resend-id';
+import { fetchAllPaginated } from '@modules/resend/shared/utils/fetch-all-paginated';
+import { findRecordByResendId } from '@modules/resend/shared/utils/find-record-by-resend-id';
 
 export const findOrCreateResendSegment = async (
   resend: Resend,
@@ -11,7 +11,7 @@ export const findOrCreateResendSegment = async (
   name: string,
 ): Promise<string> => {
   const existingSegments = await fetchAllPaginated(
-    (params) => resend.segments.list(params),
+    (paginationParameters) => resend.segments.list(paginationParameters),
     'segments',
   );
 

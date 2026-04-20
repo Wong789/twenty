@@ -1,15 +1,15 @@
 import { isNonEmptyString } from '@sniptt/guards';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { defineLogicFunction, type RoutePayload } from 'twenty-sdk/define';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { RESEND_WEBHOOK_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from 'src/modules/resend/constants/universal-identifiers';
-import type { WebhookHandlerResult } from 'src/modules/resend/webhooks/types/webhook-handler-result';
-import { findOrCreatePerson } from 'src/modules/resend/shared/utils/find-or-create-person';
-import { findRecordByResendId } from 'src/modules/resend/shared/utils/find-record-by-resend-id';
-import { getResendClient } from 'src/modules/resend/shared/utils/get-resend-client';
-import { mapLastEvent } from 'src/modules/resend/shared/utils/map-last-event';
-import { toEmailsField } from 'src/modules/resend/shared/utils/to-emails-field';
+import { RESEND_WEBHOOK_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
+import type { WebhookHandlerResult } from '@modules/resend/webhooks/types/webhook-handler-result';
+import { findOrCreatePerson } from '@modules/resend/shared/utils/find-or-create-person';
+import { findRecordByResendId } from '@modules/resend/shared/utils/find-record-by-resend-id';
+import { getResendClient } from '@modules/resend/shared/utils/get-resend-client';
+import { mapLastEvent } from '@modules/resend/shared/utils/map-last-event';
+import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 
 type ContactEventData = {
   id: string;
@@ -169,7 +169,7 @@ const handleEmailEvent = async (
 };
 
 const handler = async (
-  params: RoutePayload<WebhookPayload>,
+  routePayload: RoutePayload<WebhookPayload>,
 ): Promise<WebhookHandlerResult> => {
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
 
@@ -177,9 +177,9 @@ const handler = async (
     throw new Error('RESEND_WEBHOOK_SECRET environment variable is not set');
   }
 
-  const svixId = params.headers['svix-id'];
-  const svixTimestamp = params.headers['svix-timestamp'];
-  const svixSignature = params.headers['svix-signature'];
+  const svixId = routePayload.headers['svix-id'];
+  const svixTimestamp = routePayload.headers['svix-timestamp'];
+  const svixSignature = routePayload.headers['svix-signature'];
 
   if (
     !isDefined(svixId) ||
@@ -189,12 +189,12 @@ const handler = async (
     return { error: 'Missing webhook signature headers' };
   }
 
-  const resend = getResendClient();
+  const resendClient = getResendClient();
 
   let event;
   try {
-    event = resend.webhooks.verify({
-      payload: JSON.stringify(params.body),
+    event = resendClient.webhooks.verify({
+      payload: JSON.stringify(routePayload.body),
       headers: {
         id: svixId,
         timestamp: svixTimestamp,

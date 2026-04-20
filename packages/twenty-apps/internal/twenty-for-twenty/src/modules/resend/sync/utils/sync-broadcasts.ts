@@ -1,96 +1,114 @@
 import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import type { CreateBroadcastDto } from 'src/modules/resend/sync/types/create-broadcast.dto';
-import type { SyncStepResult } from 'src/modules/resend/sync/types/sync-step-result';
-import type { UpdateBroadcastDto } from 'src/modules/resend/sync/types/update-broadcast.dto';
-import { fetchAllPaginated } from 'src/modules/resend/shared/utils/fetch-all-paginated';
-import { getExistingRecordsMap } from 'src/modules/resend/sync/utils/get-existing-records-map';
-import type { SegmentIdMap } from 'src/modules/resend/sync/utils/sync-segments';
-import { toEmailsField } from 'src/modules/resend/shared/utils/to-emails-field';
+import type { CreateBroadcastDto } from '@modules/resend/sync/types/create-broadcast.dto';
+import type { SyncResult } from '@modules/resend/sync/types/sync-result';
+import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
+import type { UpdateBroadcastDto } from '@modules/resend/sync/types/update-broadcast.dto';
+import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
+import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
+import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
+import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
   toIsoString,
   toIsoStringOrNull,
-} from 'src/modules/resend/shared/utils/to-iso-string';
-import { upsertRecords } from 'src/modules/resend/sync/utils/upsert-records';
+} from '@modules/resend/shared/utils/to-iso-string';
+import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
+import { withSyncCursor } from '@modules/resend/sync/cursor/utils/with-sync-cursor';
 
 export const syncBroadcasts = async (
   resend: Resend,
   client: CoreApiClient,
   segmentMap: SegmentIdMap,
 ): Promise<SyncStepResult> => {
-  const broadcasts = await fetchAllPaginated(
-    (params) => resend.broadcasts.list(params),
-    'broadcasts',
-  );
-
   const existingMap = await getExistingRecordsMap(client, 'resendBroadcasts');
 
-  const result = await upsertRecords({
-    items: broadcasts,
-    getId: (broadcast) => broadcast.id,
-    fetchDetail: async (id) => {
-      const { data: detail, error } = await resend.broadcasts.get(id);
+  const aggregate: SyncResult = {
+    fetched: 0,
+    created: 0,
+    updated: 0,
+    errors: [],
+  };
 
-      if (isDefined(error) || !isDefined(detail)) {
-        throw new Error(
-          `Failed to fetch broadcast ${id}: ${JSON.stringify(error)}`,
-        );
-      }
+  await withSyncCursor(client, 'BROADCASTS', async ({ resumeCursor, onCursorAdvance }) => {
+    await forEachPage(
+      (paginationParameters) => resend.broadcasts.list(paginationParameters),
+      async (pageBroadcasts) => {
+        const pageResult = await upsertRecords({
+          items: pageBroadcasts,
+          getId: (broadcast) => broadcast.id,
+          fetchDetail: async (id) => {
+            const { data: detail, error } = await resend.broadcasts.get(id);
 
-      return detail;
-    },
-    mapCreateData: (detail, broadcast): CreateBroadcastDto => {
-      const segmentId = isDefined(broadcast.segment_id)
-        ? segmentMap.get(broadcast.segment_id)
-        : undefined;
+            if (isDefined(error) || !isDefined(detail)) {
+              throw new Error(
+                `Failed to fetch broadcast ${id}: ${JSON.stringify(error)}`,
+              );
+            }
 
-      const data: CreateBroadcastDto = {
-        name: detail.name,
-        subject: detail.subject,
-        fromAddress: toEmailsField(detail.from),
-        replyTo: toEmailsField(detail.reply_to),
-        previewText: detail.preview_text ?? '',
-        status: detail.status.toUpperCase(),
-        createdAt: toIsoString(detail.created_at),
-        scheduledAt: toIsoStringOrNull(detail.scheduled_at),
-        sentAt: toIsoStringOrNull(detail.sent_at),
-      };
+            return detail;
+          },
+          mapCreateData: (detail, broadcast): CreateBroadcastDto => {
+            const segmentId = isDefined(broadcast.segment_id)
+              ? segmentMap.get(broadcast.segment_id)
+              : undefined;
 
-      if (isDefined(segmentId)) {
-        data.segmentId = segmentId;
-      }
+            const data: CreateBroadcastDto = {
+              name: detail.name,
+              subject: detail.subject,
+              fromAddress: toEmailsField(detail.from),
+              replyTo: toEmailsField(detail.reply_to),
+              previewText: detail.preview_text ?? '',
+              status: detail.status.toUpperCase(),
+              createdAt: toIsoString(detail.created_at),
+              scheduledAt: toIsoStringOrNull(detail.scheduled_at),
+              sentAt: toIsoStringOrNull(detail.sent_at),
+            };
 
-      return data;
-    },
-    mapUpdateData: (_detail, broadcast): UpdateBroadcastDto => {
-      const data: UpdateBroadcastDto = {
-        status: broadcast.status.toUpperCase(),
-        scheduledAt: toIsoStringOrNull(broadcast.scheduled_at),
-        sentAt: toIsoStringOrNull(broadcast.sent_at),
-      };
+            if (isDefined(segmentId)) {
+              data.segmentId = segmentId;
+            }
 
-      if (!isDefined(broadcast.segment_id)) {
-        data.segmentId = null;
-      } else {
-        const segmentId = segmentMap.get(broadcast.segment_id);
+            return data;
+          },
+          mapUpdateData: (_detail, broadcast): UpdateBroadcastDto => {
+            const data: UpdateBroadcastDto = {
+              status: broadcast.status.toUpperCase(),
+              scheduledAt: toIsoStringOrNull(broadcast.scheduled_at),
+              sentAt: toIsoStringOrNull(broadcast.sent_at),
+            };
 
-        if (isDefined(segmentId)) {
-          data.segmentId = segmentId;
-        } else {
-          console.warn(
-            `[sync] broadcast ${broadcast.id}: segment ${broadcast.segment_id} not found in lookup map; leaving segmentId untouched`,
-          );
-        }
-      }
+            if (!isDefined(broadcast.segment_id)) {
+              data.segmentId = null;
+            } else {
+              const segmentId = segmentMap.get(broadcast.segment_id);
 
-      return data;
-    },
-    existingMap,
-    client,
-    objectNameSingular: 'resendBroadcast',
+              if (isDefined(segmentId)) {
+                data.segmentId = segmentId;
+              } else {
+                console.warn(
+                  `[sync] broadcast ${broadcast.id}: segment ${broadcast.segment_id} not found in lookup map; leaving segmentId untouched`,
+                );
+              }
+            }
+
+            return data;
+          },
+          existingMap,
+          client,
+          objectNameSingular: 'resendBroadcast',
+        });
+
+        aggregate.fetched += pageResult.fetched;
+        aggregate.created += pageResult.created;
+        aggregate.updated += pageResult.updated;
+        aggregate.errors.push(...pageResult.errors);
+      },
+      'broadcasts',
+      { startCursor: resumeCursor, onCursorAdvance },
+    );
   });
 
-  return { result, value: undefined };
+  return { result: aggregate, value: undefined };
 };

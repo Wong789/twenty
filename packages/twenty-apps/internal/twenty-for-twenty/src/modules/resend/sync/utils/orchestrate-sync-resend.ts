@@ -1,12 +1,12 @@
-import type { StepOutcome } from 'src/modules/resend/sync/types/step-outcome';
-import type { SyncStepResult } from 'src/modules/resend/sync/types/sync-step-result';
+import type { StepOutcome } from '@modules/resend/sync/types/step-outcome';
+import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import {
   runSyncStep,
-  skipDueToFailedDeps,
-} from 'src/modules/resend/sync/utils/run-sync-step';
-import type { SegmentIdMap } from 'src/modules/resend/sync/utils/sync-segments';
+  skipDueToFailedDependencies,
+} from '@modules/resend/sync/utils/run-sync-step';
+import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
 
-export type SyncResendDeps = {
+export type SyncResendDependencies = {
   syncSegments: () => Promise<SyncStepResult<SegmentIdMap>>;
   syncTemplates: () => Promise<SyncStepResult>;
   syncContacts: () => Promise<SyncStepResult>;
@@ -15,19 +15,21 @@ export type SyncResendDeps = {
 };
 
 export const orchestrateSyncResend = async (
-  deps: SyncResendDeps,
+  dependencies: SyncResendDependencies,
 ): Promise<ReadonlyArray<StepOutcome<unknown>>> => {
   const [segments, templates, contacts, emails] = await Promise.all([
-    runSyncStep('segments', deps.syncSegments),
-    runSyncStep('templates', deps.syncTemplates),
-    runSyncStep('contacts', deps.syncContacts),
-    runSyncStep('emails', deps.syncEmails),
+    runSyncStep('SEGMENTS', dependencies.syncSegments),
+    runSyncStep('TEMPLATES', dependencies.syncTemplates),
+    runSyncStep('CONTACTS', dependencies.syncContacts),
+    runSyncStep('EMAILS', dependencies.syncEmails),
   ]);
 
   const broadcasts =
     segments.status === 'ok'
-      ? await runSyncStep('broadcasts', () => deps.syncBroadcasts(segments.value))
-      : skipDueToFailedDeps('broadcasts', { segments });
+      ? await runSyncStep('BROADCASTS', () =>
+          dependencies.syncBroadcasts(segments.value),
+        )
+      : skipDueToFailedDependencies('BROADCASTS', { segments });
 
   return [segments, templates, contacts, emails, broadcasts];
 };

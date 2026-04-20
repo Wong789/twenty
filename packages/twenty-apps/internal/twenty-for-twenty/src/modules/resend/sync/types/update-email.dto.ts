@@ -1,5 +1,5 @@
-import type { EmailsField } from 'src/modules/resend/shared/types/emails-field';
-import type { LastEvent } from 'src/modules/resend/shared/utils/map-last-event';
+import type { EmailsField } from '@modules/resend/shared/types/emails-field';
+import type { LastEvent } from '@modules/resend/shared/utils/map-last-event';
 
 export type UpdateEmailDto = {
   subject: string;

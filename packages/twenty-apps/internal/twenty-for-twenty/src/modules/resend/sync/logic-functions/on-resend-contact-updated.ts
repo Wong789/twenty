@@ -1,12 +1,12 @@
 import { isNonEmptyString } from '@sniptt/guards';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { defineLogicFunction, type DatabaseEventPayload, type ObjectRecordUpdateEvent } from 'twenty-sdk/define';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { ON_RESEND_CONTACT_UPDATED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from 'src/modules/resend/constants/universal-identifiers';
-import type { ResendContactRecord } from 'src/modules/resend/shared/types/resend-contact-record';
-import { findOrCreatePerson } from 'src/modules/resend/shared/utils/find-or-create-person';
-import { getResendClient } from 'src/modules/resend/shared/utils/get-resend-client';
+import { ON_RESEND_CONTACT_UPDATED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
+import type { ResendContactRecord } from '@modules/resend/shared/types/resend-contact-record';
+import { findOrCreatePerson } from '@modules/resend/shared/utils/find-or-create-person';
+import { getResendClient } from '@modules/resend/shared/utils/get-resend-client';
 
 type ContactUpdateEvent = DatabaseEventPayload<
   ObjectRecordUpdateEvent<ResendContactRecord>
@@ -26,7 +26,7 @@ const handler = async (
     return { skipped: true, reason: 'no resendId on record' };
   }
 
-  const resend = getResendClient();
+  const resendClient = getResendClient();
 
   const updatePayload: Record<string, unknown> = { id: resendId };
 
@@ -47,8 +47,8 @@ const handler = async (
     return { skipped: true, reason: 'no relevant fields changed' };
   }
 
-  const { error } = await resend.contacts.update(
-    updatePayload as Parameters<typeof resend.contacts.update>[0],
+  const { error } = await resendClient.contacts.update(
+    updatePayload as Parameters<typeof resendClient.contacts.update>[0],
   );
 
   if (isDefined(error)) {
@@ -81,7 +81,9 @@ const handler = async (
   return {
     synced: true,
     resendId,
-    updatedFields: Object.keys(updatePayload).filter((k) => k !== 'id'),
+    updatedFields: Object.keys(updatePayload).filter(
+      (payloadKey) => payloadKey !== 'id',
+    ),
     personId,
   };
 };

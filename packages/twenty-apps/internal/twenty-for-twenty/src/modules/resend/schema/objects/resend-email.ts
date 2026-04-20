@@ -14,7 +14,7 @@ import {
   TAGS_FIELD_UNIVERSAL_IDENTIFIER,
   TEXT_BODY_FIELD_UNIVERSAL_IDENTIFIER,
   TO_ADDRESSES_FIELD_UNIVERSAL_IDENTIFIER,
-} from 'src/modules/resend/constants/universal-identifiers';
+} from '@modules/resend/constants/universal-identifiers';
 import { defineObject, FieldType } from 'twenty-sdk/define';
 
 export default defineObject({

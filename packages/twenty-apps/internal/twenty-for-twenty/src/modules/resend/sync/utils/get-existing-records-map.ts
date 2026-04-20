@@ -1,5 +1,5 @@
 import { CoreApiClient } from 'twenty-client-sdk/core';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
 const PAGE_SIZE = 100;
 
@@ -29,15 +29,15 @@ export const getExistingRecordsMap = async (
   let afterCursor: string | undefined;
 
   while (hasNextPage) {
-    const args: Record<string, unknown> = { first: PAGE_SIZE };
+    const connectionArguments: Record<string, unknown> = { first: PAGE_SIZE };
 
     if (isDefined(afterCursor)) {
-      args.after = afterCursor;
+      connectionArguments.after = afterCursor;
     }
 
     const result = await client.query({
       [objectNamePlural]: {
-        __args: args,
+        __args: connectionArguments,
         pageInfo: {
           hasNextPage: true,
           endCursor: true,

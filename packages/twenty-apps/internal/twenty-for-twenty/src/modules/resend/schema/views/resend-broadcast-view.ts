@@ -17,7 +17,7 @@ import {
   RESEND_BROADCAST_VIEW_UNIVERSAL_IDENTIFIER,
   RESEND_EMAILS_ON_BROADCAST_FIELD_UNIVERSAL_IDENTIFIER,
   SEGMENT_ON_RESEND_BROADCAST_FIELD_UNIVERSAL_IDENTIFIER,
-} from 'src/modules/resend/constants/universal-identifiers';
+} from '@modules/resend/constants/universal-identifiers';
 import { defineView } from 'twenty-sdk/define';
 
 export default defineView({

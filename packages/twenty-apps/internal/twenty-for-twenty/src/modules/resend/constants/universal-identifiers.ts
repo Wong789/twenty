@@ -43,6 +43,14 @@ export const RESEND_TEMPLATE_OBJECT_UNIVERSAL_IDENTIFIER =
   '85ddb31f-0d1c-4619-bbaf-3d208c1b9fea';
 export const RESEND_BROADCAST_OBJECT_UNIVERSAL_IDENTIFIER =
   'bebc114f-a8f5-455d-8c6f-e33f20f66967';
+export const RESEND_SYNC_CURSOR_OBJECT_UNIVERSAL_IDENTIFIER =
+  '3c0f80dc-4b88-4ef6-b08d-4ddd33ba3875';
+
+// Object fields - Resend sync cursor
+export const SYNC_CURSOR_STEP_FIELD_UNIVERSAL_IDENTIFIER =
+  'cfdfc188-0db3-48f9-a750-c095263e9fbc';
+export const SYNC_CURSOR_CURSOR_FIELD_UNIVERSAL_IDENTIFIER =
+  '18eae3e6-cf5b-4094-9c7f-d2db236e2db1';
 
 // Object fields - Resend email
 export const SUBJECT_FIELD_UNIVERSAL_IDENTIFIER =

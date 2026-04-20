@@ -1,10 +1,10 @@
 import { isNonEmptyString } from '@sniptt/guards';
 import { defineLogicFunction, type DatabaseEventPayload, type ObjectRecordDeleteEvent } from 'twenty-sdk/define';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { ON_RESEND_CONTACT_DELETED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from 'src/modules/resend/constants/universal-identifiers';
-import type { ResendContactRecord } from 'src/modules/resend/shared/types/resend-contact-record';
-import { getResendClient } from 'src/modules/resend/shared/utils/get-resend-client';
+import { ON_RESEND_CONTACT_DELETED_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
+import type { ResendContactRecord } from '@modules/resend/shared/types/resend-contact-record';
+import { getResendClient } from '@modules/resend/shared/utils/get-resend-client';
 
 type ContactDeleteEvent = DatabaseEventPayload<
   ObjectRecordDeleteEvent<ResendContactRecord>
@@ -19,9 +19,9 @@ const handler = async (
     return { skipped: true, reason: 'no resendId on record' };
   }
 
-  const resend = getResendClient();
+  const resendClient = getResendClient();
 
-  const { error } = await resend.contacts.remove({ id: resendId });
+  const { error } = await resendClient.contacts.remove({ id: resendId });
 
   if (isDefined(error)) {
     const errorString = JSON.stringify(error);

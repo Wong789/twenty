@@ -1,5 +1,5 @@
-import type { EmailsField } from 'src/modules/resend/shared/types/emails-field';
-import type { UpdateBroadcastDto } from 'src/modules/resend/sync/types/update-broadcast.dto';
+import type { EmailsField } from '@modules/resend/shared/types/emails-field';
+import type { UpdateBroadcastDto } from '@modules/resend/sync/types/update-broadcast.dto';
 
 export type CreateBroadcastDto = UpdateBroadcastDto & {
   name: string;

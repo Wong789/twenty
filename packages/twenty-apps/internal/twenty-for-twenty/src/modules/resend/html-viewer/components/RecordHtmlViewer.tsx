@@ -1,7 +1,7 @@
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { HtmlPreview } from 'src/modules/resend/html-viewer/components/HtmlPreview';
-import { useRecordHtml } from 'src/modules/resend/html-viewer/hooks/useRecordHtml';
+import { HtmlPreview } from '@modules/resend/html-viewer/components/HtmlPreview';
+import { useRecordHtml } from '@modules/resend/html-viewer/hooks/useRecordHtml';
 
 type RecordHtmlViewerProps = {
   objectName: string;

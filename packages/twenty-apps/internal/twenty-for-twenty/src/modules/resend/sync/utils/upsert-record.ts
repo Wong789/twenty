@@ -1,7 +1,7 @@
 import { CoreApiClient } from 'twenty-client-sdk/core';
-import { isDefined } from 'twenty-shared/utils';
+import { isDefined } from '@utils/is-defined';
 
-import { capitalize } from 'src/modules/resend/shared/utils/capitalize';
+import { capitalize } from '@modules/resend/shared/utils/capitalize';
 
 export const upsertRecord = async (
   client: CoreApiClient,
