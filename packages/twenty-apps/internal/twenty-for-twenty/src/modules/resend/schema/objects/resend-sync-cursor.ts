@@ -15,7 +15,7 @@ export default defineObject({
     'Persisted per-step cursor state for the Resend sync (technical object used to resume failed runs)',
   icon: 'IconBookmark',
   labelIdentifierFieldMetadataUniversalIdentifier:
-    SYNC_CURSOR_STEP_FIELD_UNIVERSAL_IDENTIFIER,
+    SYNC_CURSOR_CURSOR_FIELD_UNIVERSAL_IDENTIFIER,
   fields: [
     {
       universalIdentifier: SYNC_CURSOR_STEP_FIELD_UNIVERSAL_IDENTIFIER,
