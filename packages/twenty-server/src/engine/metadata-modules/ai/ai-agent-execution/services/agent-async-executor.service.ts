@@ -22,6 +22,7 @@ import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/
 import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
 import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
 import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
+import { countNativeXSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-x-search-calls-from-steps.util';
 import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
@@ -222,6 +223,9 @@ export class AgentAsyncExecutorService {
       const nativeWebSearchCallCount = countNativeWebSearchCallsFromSteps(
         textResponse.steps,
       );
+      const nativeXSearchCallCount = countNativeXSearchCallsFromSteps(
+        textResponse.steps,
+      );
 
       const agentSchema =
         agent?.responseFormat?.type === 'json'
@@ -234,6 +238,7 @@ export class AgentAsyncExecutorService {
           usage: textResponse.usage,
           cacheCreationTokens,
           nativeWebSearchCallCount,
+          nativeXSearchCallCount,
         };
       }
 
@@ -264,6 +269,7 @@ export class AgentAsyncExecutorService {
         ),
         cacheCreationTokens,
         nativeWebSearchCallCount,
+        nativeXSearchCallCount,
       };
     } catch (error) {
       if (error instanceof AiException) {

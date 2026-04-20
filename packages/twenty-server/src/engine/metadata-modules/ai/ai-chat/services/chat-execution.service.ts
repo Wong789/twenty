@@ -23,6 +23,7 @@ import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { COMMON_PRELOAD_TOOLS } from 'src/engine/core-modules/tool-provider/constants/common-preload-tools.const';
+import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
 import { wrapToolsWithOutputSerialization } from 'src/engine/core-modules/tool-provider/output-serialization/wrap-tools-with-output-serialization.util';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
@@ -39,6 +40,7 @@ import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/
 import { type BrowsingContextType } from 'src/engine/metadata-modules/ai/ai-agent/types/browsingContext.type';
 import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
 import { AiBillingService } from 'src/engine/metadata-modules/ai/ai-billing/services/ai-billing.service';
+import { countNativeXSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-x-search-calls-from-steps.util';
 import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { MessagePruningService } from 'src/engine/metadata-modules/ai/ai-chat/services/message-pruning.service';
@@ -50,7 +52,6 @@ import {
 import {
   AI_SDK_ANTHROPIC,
   AI_SDK_BEDROCK,
-  AI_SDK_OPENAI,
 } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import {
@@ -166,12 +167,19 @@ export class ChatExecutionService {
         useProviderNativeWebSearch: useNativeSearch,
       },
     );
-    const hasNativeWebSearch = Object.hasOwn(nativeSearchTools, 'web_search');
+    const hasNativeWebSearch = Object.prototype.hasOwnProperty.call(
+      nativeSearchTools,
+      SEARCH_TOOL_NAMES.webSearch,
+    );
+    const hasNativeXSearch = Object.prototype.hasOwnProperty.call(
+      nativeSearchTools,
+      SEARCH_TOOL_NAMES.xSearch,
+    );
 
     const toolNamesToPreload = [
       ...COMMON_PRELOAD_TOOLS,
       ...(!hasNativeWebSearch && externalWebSearchEnabled
-        ? ['web_search']
+        ? [SEARCH_TOOL_NAMES.webSearch]
         : []),
     ];
 
@@ -192,10 +200,12 @@ export class ChatExecutionService {
       ...Object.keys(nativeSearchTools),
     ];
     const excludedChatToolNames = hasNativeWebSearch
-      ? new Set(['web_search'])
+      ? new Set([SEARCH_TOOL_NAMES.webSearch])
       : undefined;
     const toolCatalogForPrompt = hasNativeWebSearch
-      ? toolCatalog.filter((tool) => tool.name !== 'web_search')
+      ? toolCatalog.filter(
+          (tool) => tool.name !== SEARCH_TOOL_NAMES.webSearch,
+        )
       : toolCatalog;
 
     // ToolSet is constant for the entire conversation — no mutation.
@@ -349,6 +359,16 @@ export class ChatExecutionService {
 
         this.aiBillingService.billNativeWebSearchUsage(
           nativeWebSearchCallCount,
+          workspace.id,
+          userWorkspaceId,
+        );
+      }
+
+      if (hasNativeXSearch) {
+        const nativeXSearchCallCount = countNativeXSearchCallsFromSteps(steps);
+
+        this.aiBillingService.billNativeXSearchUsage(
+          nativeXSearchCallCount,
           workspace.id,
           userWorkspaceId,
         );

@@ -5,6 +5,7 @@ import { ToolSet } from 'ai';
 import { isAgentCapabilityEnabled } from 'twenty-shared/ai';
 
 import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
+import { SEARCH_TOOL_NAMES } from 'src/engine/core-modules/tool-provider/constants/search-tool-names.const';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
 import {
   AI_SDK_ANTHROPIC,
@@ -128,7 +129,12 @@ export class AiModelConfigService {
           return [];
         }
 
-        return [['web_search', anthropicProvider.tools.webSearch_20250305()]];
+        return [
+          [
+            SEARCH_TOOL_NAMES.webSearch,
+            anthropicProvider.tools.webSearch_20250305(),
+          ],
+        ];
       }
       case AI_SDK_BEDROCK: {
         if (!options.exposeWebSearch) {
@@ -145,7 +151,7 @@ export class AiModelConfigService {
 
         return [
           [
-            'web_search',
+            SEARCH_TOOL_NAMES.webSearch,
             bedrockProvider.tools.webSearch_20250305() as ToolSet[string],
           ],
         ];
@@ -163,7 +169,7 @@ export class AiModelConfigService {
           return [];
         }
 
-        return [['web_search', openAiProvider.tools.webSearch()]];
+        return [[SEARCH_TOOL_NAMES.webSearch, openAiProvider.tools.webSearch()]];
       }
       case AI_SDK_XAI: {
         const xaiProvider = this.sdkProviderFactory.getRawXaiProvider(
@@ -178,14 +184,14 @@ export class AiModelConfigService {
 
         if (options.exposeWebSearch) {
           toolEntries.push([
-            'web_search',
+            SEARCH_TOOL_NAMES.webSearch,
             xaiProvider.tools.webSearch() as ToolSet[string],
           ]);
         }
 
         if (options.exposeTwitterSearch) {
           toolEntries.push([
-            'x_search',
+            SEARCH_TOOL_NAMES.xSearch,
             xaiProvider.tools.xSearch() as ToolSet[string],
           ]);
         }

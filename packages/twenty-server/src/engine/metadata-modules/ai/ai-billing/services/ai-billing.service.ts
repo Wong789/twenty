@@ -86,18 +86,45 @@ export class AiBillingService {
     workspaceId: string,
     userWorkspaceId?: string | null,
   ): void {
-    if (nativeWebSearchCallCount <= 0) {
+    this.billNativeSearchUsage(
+      nativeWebSearchCallCount,
+      'web search',
+      workspaceId,
+      userWorkspaceId,
+    );
+  }
+
+  billNativeXSearchUsage(
+    nativeXSearchCallCount: number,
+    workspaceId: string,
+    userWorkspaceId?: string | null,
+  ): void {
+    this.billNativeSearchUsage(
+      nativeXSearchCallCount,
+      'X search',
+      workspaceId,
+      userWorkspaceId,
+    );
+  }
+
+  private billNativeSearchUsage(
+    nativeSearchCallCount: number,
+    searchLabel: string,
+    workspaceId: string,
+    userWorkspaceId?: string | null,
+  ): void {
+    if (nativeSearchCallCount <= 0) {
       return;
     }
 
     const costInDollars =
-      nativeWebSearchCallCount * NATIVE_WEB_SEARCH_COST_PER_CALL_DOLLARS;
+      nativeSearchCallCount * NATIVE_WEB_SEARCH_COST_PER_CALL_DOLLARS;
     const creditsUsedMicro = Math.round(
       convertDollarsToBillingCredits(costInDollars),
     );
 
     this.logger.log(
-      `Native web search billing: ${nativeWebSearchCallCount} calls, $${costInDollars.toFixed(4)}`,
+      `Native ${searchLabel} billing: ${nativeSearchCallCount} calls, $${costInDollars.toFixed(4)}`,
     );
 
     this.workspaceEventEmitter.emitCustomBatchEvent<UsageEvent>(
@@ -107,7 +134,7 @@ export class AiBillingService {
           resourceType: UsageResourceType.AI,
           operationType: UsageOperationType.WEB_SEARCH,
           creditsUsedMicro,
-          quantity: nativeWebSearchCallCount,
+          quantity: nativeSearchCallCount,
           unit: UsageUnit.INVOCATION,
           userWorkspaceId: userWorkspaceId || null,
         },

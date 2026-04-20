@@ -81,16 +81,21 @@ export class AiAgentWorkflowAction implements WorkflowAction {
         ? executionContext.authContext.userWorkspaceId
         : null;
 
-    const { result, usage, cacheCreationTokens, nativeWebSearchCallCount } =
-      await this.aiAgentExecutionService.executeAgent({
-        agent,
-        userPrompt: resolveInput(prompt, context) as string,
-        actorContext: executionContext.isActingOnBehalfOfUser
-          ? executionContext.initiator
-          : undefined,
-        rolePermissionConfig: executionContext.rolePermissionConfig,
-        authContext: executionContext.authContext,
-      });
+    const {
+      result,
+      usage,
+      cacheCreationTokens,
+      nativeWebSearchCallCount,
+      nativeXSearchCallCount,
+    } = await this.aiAgentExecutionService.executeAgent({
+      agent,
+      userPrompt: resolveInput(prompt, context) as string,
+      actorContext: executionContext.isActingOnBehalfOfUser
+        ? executionContext.initiator
+        : undefined,
+      rolePermissionConfig: executionContext.rolePermissionConfig,
+      authContext: executionContext.authContext,
+    });
 
     await this.aiBillingService.calculateAndBillUsage(
       agent?.modelId ?? AUTO_SELECT_SMART_MODEL_ID,
@@ -108,6 +113,12 @@ export class AiAgentWorkflowAction implements WorkflowAction {
         userWorkspaceId,
       );
     }
+
+    this.aiBillingService.billNativeXSearchUsage(
+      nativeXSearchCallCount,
+      workspaceId,
+      userWorkspaceId,
+    );
 
     return {
       result,
