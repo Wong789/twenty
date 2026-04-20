@@ -3413,13 +3413,8 @@ export default {
             "outputCostPerMillionTokens": [
                 11
             ],
-<<<<<<< HEAD
             "capabilities": [
-                178
-=======
-            "nativeCapabilities": [
                 171
->>>>>>> upstream/main
             ],
             "isDeprecated": [
                 6
