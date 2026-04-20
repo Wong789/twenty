@@ -1,8 +1,17 @@
+import { isDefined } from '@utils/is-defined';
+
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { UpsertRecordsOptions } from '@modules/resend/sync/types/upsert-records-options';
+import { fetchExistingTwentyIdsByResendIds } from '@modules/resend/sync/utils/fetch-existing-twenty-ids';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
 import { upsertRecord } from '@modules/resend/sync/utils/upsert-record';
 import { withRateLimitRetry } from '@modules/resend/shared/utils/with-rate-limit-retry';
+
+export type UpsertRecordsPageOutcome = {
+  result: SyncResult;
+  ok: boolean;
+  twentyIdByResendId: Map<string, string>;
+};
 
 export const upsertRecords = async <
   TListItem,
@@ -11,16 +20,17 @@ export const upsertRecords = async <
   TUpdateDto extends Record<string, unknown> = Record<string, unknown>,
 >(
   options: UpsertRecordsOptions<TListItem, TDetail, TCreateDto, TUpdateDto>,
-): Promise<SyncResult> => {
+): Promise<UpsertRecordsPageOutcome> => {
   const {
     items,
     getId,
     fetchDetail,
+    fetchDetailOnlyForCreate,
     mapCreateData,
     mapUpdateData,
-    existingMap,
     client,
     objectNameSingular,
+    objectNamePlural,
   } = options;
 
   const result: SyncResult = {
@@ -30,13 +40,25 @@ export const upsertRecords = async <
     errors: [],
   };
 
+  const resendIds = items.map(getId);
+
+  const twentyIdByResendId = await fetchExistingTwentyIdsByResendIds(
+    client,
+    objectNamePlural,
+    resendIds,
+  );
+
   for (const item of items) {
     const resendId = getId(item);
 
     try {
-      const isNew = !existingMap.has(resendId);
+      const isNew = !twentyIdByResendId.has(resendId);
 
-      const detail = fetchDetail
+      const shouldFetchDetail =
+        isDefined(fetchDetail) &&
+        (!fetchDetailOnlyForCreate || isNew);
+
+      const detail = shouldFetchDetail
         ? await withRateLimitRetry(() => fetchDetail(resendId))
         : (item as unknown as TDetail);
 
@@ -45,7 +67,7 @@ export const upsertRecords = async <
         await upsertRecord(
           client,
           objectNameSingular,
-          existingMap,
+          twentyIdByResendId,
           resendId,
           data,
         );
@@ -55,7 +77,7 @@ export const upsertRecords = async <
         await upsertRecord(
           client,
           objectNameSingular,
-          existingMap,
+          twentyIdByResendId,
           resendId,
           data,
         );
@@ -68,5 +90,9 @@ export const upsertRecords = async <
     }
   }
 
-  return result;
+  return {
+    result,
+    ok: result.errors.length === 0,
+    twentyIdByResendId,
+  };
 };

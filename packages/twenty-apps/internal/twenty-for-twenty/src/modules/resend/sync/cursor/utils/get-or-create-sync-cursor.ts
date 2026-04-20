@@ -5,21 +5,21 @@ import type {
   SyncCursorRow,
   SyncCursorStep,
 } from 'src/modules/resend/sync/cursor/types/sync-cursor-step';
+import {
+  extractConnection,
+  extractMutationRecord,
+} from '@modules/resend/shared/utils/typed-client';
 
-type ConnectionResult = {
-  edges: Array<{
-    node: {
-      id: string;
-      step: SyncCursorStep;
-      cursor: string | null;
-    };
-  }>;
+type SyncCursorNode = {
+  id: string;
+  step: SyncCursorStep;
+  cursor: string | null;
 };
 
-export const getOrCreateSyncCursor = async (
+const findExistingCursor = async (
   client: CoreApiClient,
   step: SyncCursorStep,
-): Promise<SyncCursorRow> => {
+): Promise<SyncCursorRow | null> => {
   const queryResult = await client.query({
     resendSyncCursors: {
       __args: {
@@ -38,40 +38,67 @@ export const getOrCreateSyncCursor = async (
     },
   });
 
-  const connection = (queryResult as Record<string, unknown>)
-    .resendSyncCursors as ConnectionResult | undefined;
+  const connection = extractConnection<SyncCursorNode>(
+    queryResult,
+    'resendSyncCursors',
+  );
 
-  const existingNode = connection?.edges[0]?.node;
+  const existingNode = connection.edges[0]?.node;
 
-  if (isDefined(existingNode)) {
-    return {
-      id: existingNode.id,
-      step: existingNode.step,
-      cursor: existingNode.cursor,
-    };
-  }
-
-  const createResult = await client.mutation({
-    createResendSyncCursor: {
-      __args: {
-        data: {
-          step,
-        },
-      },
-      id: true,
-    },
-  });
-
-  const created = (createResult as Record<string, unknown>)
-    .createResendSyncCursor as { id: string } | undefined;
-
-  if (!isDefined(created)) {
-    throw new Error(`Failed to create resendSyncCursor for step ${step}`);
+  if (!isDefined(existingNode)) {
+    return null;
   }
 
   return {
-    id: created.id,
-    step,
-    cursor: null,
+    id: existingNode.id,
+    step: existingNode.step,
+    cursor: existingNode.cursor,
   };
+};
+
+export const getOrCreateSyncCursor = async (
+  client: CoreApiClient,
+  step: SyncCursorStep,
+): Promise<SyncCursorRow> => {
+  const existing = await findExistingCursor(client, step);
+
+  if (isDefined(existing)) {
+    return existing;
+  }
+
+  try {
+    const createResult = await client.mutation({
+      createResendSyncCursor: {
+        __args: {
+          data: {
+            step,
+          },
+        },
+        id: true,
+      },
+    });
+
+    const created = extractMutationRecord<{ id: string }>(
+      createResult,
+      'createResendSyncCursor',
+    );
+
+    if (!isDefined(created)) {
+      throw new Error(`Failed to create resendSyncCursor for step ${step}`);
+    }
+
+    return {
+      id: created.id,
+      step,
+      cursor: null,
+    };
+  } catch (createError) {
+    const raceWinner = await findExistingCursor(client, step);
+
+    if (isDefined(raceWinner)) {
+      return raceWinner;
+    }
+
+    throw createError;
+  }
 };

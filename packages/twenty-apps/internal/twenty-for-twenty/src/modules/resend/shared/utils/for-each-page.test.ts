@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ResendListFunction } from '@modules/resend/shared/utils/fetch-all-paginated';
-import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
+import {
+  forEachPage,
+  type ResendListFunction,
+} from '@modules/resend/shared/utils/for-each-page';
 
 type Item = { id: string };
 
@@ -74,6 +76,18 @@ describe('forEachPage', () => {
     expect(calls[0]).toEqual({ limit: 100, after: 'b' });
   });
 
+  it('omits after when startCursor is an empty string', async () => {
+    const { listFunction, calls } = createMockListFunction([
+      page(['a'], false),
+    ]);
+
+    await forEachPage(listFunction, async () => {}, 'items', {
+      startCursor: '',
+    });
+
+    expect(calls[0]).toEqual({ limit: 100 });
+  });
+
   it('calls onCursorAdvance after each successful page with the last item id', async () => {
     const { listFunction } = createMockListFunction([
       page(['a', 'b'], true),
@@ -122,6 +136,49 @@ describe('forEachPage', () => {
 
     expect(onCursorAdvance).toHaveBeenCalledTimes(1);
     expect(onCursorAdvance).toHaveBeenCalledWith('b');
+  });
+
+  it('aborts iteration on the first page that returns ok=false and leaves the cursor at the last successful page', async () => {
+    const { listFunction, calls } = createMockListFunction([
+      page(['a', 'b'], true),
+      page(['c', 'd'], true),
+      page(['e', 'f'], true),
+    ]);
+
+    const onCursorAdvance = vi.fn(async () => {});
+    const seenPages: string[][] = [];
+
+    await expect(
+      forEachPage(
+        listFunction,
+        async (items, pageNumber) => {
+          seenPages.push(items.map((item) => item.id));
+
+          return { ok: pageNumber !== 2 };
+        },
+        'items',
+        { onCursorAdvance },
+      ),
+    ).rejects.toThrow(/items page 2 reported per-item failures/);
+
+    expect(seenPages).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ]);
+    expect(calls).toHaveLength(2);
+    expect(onCursorAdvance).toHaveBeenCalledTimes(1);
+    expect(onCursorAdvance).toHaveBeenCalledWith('b');
+  });
+
+  it('treats a void onPage return as ok and advances the cursor', async () => {
+    const { listFunction } = createMockListFunction([page(['a'], false)]);
+    const onCursorAdvance = vi.fn(async () => {});
+
+    await forEachPage(listFunction, async () => {}, 'items', {
+      onCursorAdvance,
+    });
+
+    expect(onCursorAdvance).toHaveBeenCalledWith('a');
   });
 
   it('throws when the cursor does not advance across pages', async () => {

@@ -6,10 +6,9 @@ import type { CreateEmailDto } from '@modules/resend/sync/types/create-email.dto
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateEmailDto } from '@modules/resend/sync/types/update-email.dto';
-import { findOrCreatePerson } from '@modules/resend/shared/utils/find-or-create-person';
+import { findOrCreatePeopleByEmail } from '@modules/resend/shared/utils/find-or-create-people-by-email';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
-import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
 import { mapLastEvent } from '@modules/resend/shared/utils/map-last-event';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
@@ -24,8 +23,6 @@ export const syncEmails = async (
   client: CoreApiClient,
   syncedAt: string,
 ): Promise<SyncStepResult> => {
-  const existingMap = await getExistingRecordsMap(client, 'resendEmails');
-
   const aggregate: SyncResult = {
     fetched: 0,
     created: 0,
@@ -37,7 +34,7 @@ export const syncEmails = async (
     await forEachPage(
       (paginationParameters) => resend.emails.list(paginationParameters),
       async (pageEmails) => {
-        const pageResult = await upsertRecords({
+        const pageOutcome = await upsertRecords({
           items: pageEmails,
           getId: (email) => email.id,
           fetchDetail: async (id) => {
@@ -85,44 +82,69 @@ export const syncEmails = async (
               lastSyncedFromResend: syncedAt,
             };
           },
-          existingMap,
+          fetchDetailOnlyForCreate: true,
           client,
           objectNameSingular: 'resendEmail',
+          objectNamePlural: 'resendEmails',
         });
 
-        aggregate.fetched += pageResult.fetched;
-        aggregate.created += pageResult.created;
-        aggregate.updated += pageResult.updated;
-        aggregate.errors.push(...pageResult.errors);
+        aggregate.fetched += pageOutcome.result.fetched;
+        aggregate.created += pageOutcome.result.created;
+        aggregate.updated += pageOutcome.result.updated;
+        aggregate.errors.push(...pageOutcome.result.errors);
+
+        let personLinkOk = true;
+
+        const primaryToByEmail = new Map<string, string>();
 
         for (const email of pageEmails) {
-          const twentyId = existingMap.get(email.id);
+          const primaryTo = Array.isArray(email.to) ? email.to[0] : email.to;
+
+          if (typeof primaryTo === 'string' && primaryTo.length > 0) {
+            primaryToByEmail.set(email.id, primaryTo);
+          }
+        }
+
+        const personIdByEmail = await findOrCreatePeopleByEmail(
+          client,
+          Array.from(primaryToByEmail.values()).map((primaryTo) => ({
+            email: primaryTo,
+          })),
+        );
+
+        for (const email of pageEmails) {
+          const twentyId = pageOutcome.twentyIdByResendId.get(email.id);
 
           if (!isDefined(twentyId)) {
             continue;
           }
 
-          const primaryTo = Array.isArray(email.to) ? email.to[0] : email.to;
+          const primaryTo = primaryToByEmail.get(email.id);
+
+          if (!isDefined(primaryTo)) continue;
+
+          const personId = personIdByEmail.get(primaryTo.trim().toLowerCase());
+
+          if (!isDefined(personId)) continue;
 
           try {
-            const personId = await findOrCreatePerson(client, primaryTo);
-
-            if (isDefined(personId)) {
-              await client.mutation({
-                updateResendEmail: {
-                  __args: { id: twentyId, data: { personId } },
-                  id: true,
-                },
-              });
-            }
+            await client.mutation({
+              updateResendEmail: {
+                __args: { id: twentyId, data: { personId } },
+                id: true,
+              },
+            });
           } catch (error) {
             const message = getErrorMessage(error);
 
             aggregate.errors.push(
               `resendEmail ${email.id} person link: ${message}`,
             );
+            personLinkOk = false;
           }
         }
+
+        return { ok: pageOutcome.ok && personLinkOk };
       },
       'emails',
       { startCursor: resumeCursor, onCursorAdvance },

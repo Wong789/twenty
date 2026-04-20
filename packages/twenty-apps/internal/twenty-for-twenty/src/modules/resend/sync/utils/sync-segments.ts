@@ -5,20 +5,29 @@ import type { SegmentDto } from '@modules/resend/sync/types/segment.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
-import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
 import { toIsoString } from '@modules/resend/shared/utils/to-iso-string';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 import { withSyncCursor } from '@modules/resend/sync/cursor/utils/with-sync-cursor';
 
 export type SegmentIdMap = Map<string, string>;
 
+type RawSegment = {
+  id: string;
+  name: string;
+  created_at: string;
+};
+
+const toSegmentDto = (segment: RawSegment, syncedAt: string): SegmentDto => ({
+  name: segment.name,
+  createdAt: toIsoString(segment.created_at),
+  lastSyncedFromResend: syncedAt,
+});
+
 export const syncSegments = async (
   resend: Resend,
   client: CoreApiClient,
   syncedAt: string,
 ): Promise<SyncStepResult<SegmentIdMap>> => {
-  const existingMap = await getExistingRecordsMap(client, 'resendSegments');
-
   const aggregate: SyncResult = {
     fetched: 0,
     created: 0,
@@ -26,37 +35,37 @@ export const syncSegments = async (
     errors: [],
   };
 
+  const segmentIdMap: SegmentIdMap = new Map();
+
   await withSyncCursor(client, 'SEGMENTS', async ({ resumeCursor, onCursorAdvance }) => {
     await forEachPage(
       (paginationParameters) => resend.segments.list(paginationParameters),
       async (pageSegments) => {
-        const mapData = (
-          segment: (typeof pageSegments)[number],
-        ): SegmentDto => ({
-          name: segment.name,
-          createdAt: toIsoString(segment.created_at),
-          lastSyncedFromResend: syncedAt,
-        });
-
-        const pageResult = await upsertRecords({
+        const pageOutcome = await upsertRecords({
           items: pageSegments,
           getId: (segment) => segment.id,
-          mapCreateData: (_detail, item) => mapData(item),
-          mapUpdateData: (_detail, item) => mapData(item),
-          existingMap,
+          mapCreateData: (_detail, item) => toSegmentDto(item, syncedAt),
+          mapUpdateData: (_detail, item) => toSegmentDto(item, syncedAt),
           client,
           objectNameSingular: 'resendSegment',
+          objectNamePlural: 'resendSegments',
         });
 
-        aggregate.fetched += pageResult.fetched;
-        aggregate.created += pageResult.created;
-        aggregate.updated += pageResult.updated;
-        aggregate.errors.push(...pageResult.errors);
+        aggregate.fetched += pageOutcome.result.fetched;
+        aggregate.created += pageOutcome.result.created;
+        aggregate.updated += pageOutcome.result.updated;
+        aggregate.errors.push(...pageOutcome.result.errors);
+
+        for (const [resendId, twentyId] of pageOutcome.twentyIdByResendId) {
+          segmentIdMap.set(resendId, twentyId);
+        }
+
+        return { ok: pageOutcome.ok };
       },
       'segments',
       { startCursor: resumeCursor, onCursorAdvance },
     );
   });
 
-  return { result: aggregate, value: existingMap };
+  return { result: aggregate, value: segmentIdMap };
 };

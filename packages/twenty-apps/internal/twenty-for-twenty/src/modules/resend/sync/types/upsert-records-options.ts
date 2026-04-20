@@ -9,9 +9,10 @@ export type UpsertRecordsOptions<
   items: TListItem[];
   getId: (item: TListItem) => string;
   fetchDetail?: (id: string) => Promise<TDetail>;
+  fetchDetailOnlyForCreate?: boolean;
   mapCreateData: (detail: TDetail, item: TListItem) => TCreateDto;
   mapUpdateData: (detail: TDetail, item: TListItem) => TUpdateDto;
-  existingMap: Map<string, string>;
   client: CoreApiClient;
   objectNameSingular: string;
+  objectNamePlural: string;
 };

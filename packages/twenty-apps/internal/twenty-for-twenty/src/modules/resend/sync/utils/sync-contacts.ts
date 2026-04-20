@@ -5,22 +5,39 @@ import { isDefined } from '@utils/is-defined';
 import type { ContactDto } from '@modules/resend/sync/types/contact.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
-import { findOrCreatePerson } from '@modules/resend/shared/utils/find-or-create-person';
+import { findOrCreatePeopleByEmail } from '@modules/resend/shared/utils/find-or-create-people-by-email';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
-import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import { toIsoString } from '@modules/resend/shared/utils/to-iso-string';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 import { withSyncCursor } from '@modules/resend/sync/cursor/utils/with-sync-cursor';
+
+type RawContact = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  unsubscribed: boolean;
+  created_at: string;
+};
+
+const toContactDto = (contact: RawContact, syncedAt: string): ContactDto => ({
+  email: toEmailsField(contact.email),
+  name: {
+    firstName: contact.first_name ?? '',
+    lastName: contact.last_name ?? '',
+  },
+  unsubscribed: contact.unsubscribed,
+  createdAt: toIsoString(contact.created_at),
+  lastSyncedFromResend: syncedAt,
+});
 
 export const syncContacts = async (
   resend: Resend,
   client: CoreApiClient,
   syncedAt: string,
 ): Promise<SyncStepResult> => {
-  const existingMap = await getExistingRecordsMap(client, 'resendContacts');
-
   const aggregate: SyncResult = {
     fetched: 0,
     created: 0,
@@ -32,63 +49,65 @@ export const syncContacts = async (
     await forEachPage(
       (paginationParameters) => resend.contacts.list(paginationParameters),
       async (pageContacts) => {
-        const mapData = (
-          contact: (typeof pageContacts)[number],
-        ): ContactDto => ({
-          email: toEmailsField(contact.email),
-          name: {
-            firstName: contact.first_name ?? '',
-            lastName: contact.last_name ?? '',
-          },
-          unsubscribed: contact.unsubscribed,
-          createdAt: toIsoString(contact.created_at),
-          lastSyncedFromResend: syncedAt,
-        });
-
-        const pageResult = await upsertRecords({
+        const pageOutcome = await upsertRecords({
           items: pageContacts,
           getId: (contact) => contact.id,
-          mapCreateData: (_detail, item) => mapData(item),
-          mapUpdateData: (_detail, item) => mapData(item),
-          existingMap,
+          mapCreateData: (_detail, item) => toContactDto(item, syncedAt),
+          mapUpdateData: (_detail, item) => toContactDto(item, syncedAt),
           client,
           objectNameSingular: 'resendContact',
+          objectNamePlural: 'resendContacts',
         });
 
-        aggregate.fetched += pageResult.fetched;
-        aggregate.created += pageResult.created;
-        aggregate.updated += pageResult.updated;
-        aggregate.errors.push(...pageResult.errors);
+        aggregate.fetched += pageOutcome.result.fetched;
+        aggregate.created += pageOutcome.result.created;
+        aggregate.updated += pageOutcome.result.updated;
+        aggregate.errors.push(...pageOutcome.result.errors);
+
+        let personLinkOk = true;
+
+        const personIdByEmail = await findOrCreatePeopleByEmail(
+          client,
+          pageContacts.map((contact) => ({
+            email: contact.email,
+            name: {
+              firstName: contact.first_name ?? '',
+              lastName: contact.last_name ?? '',
+            },
+          })),
+        );
 
         for (const contact of pageContacts) {
-          const twentyId = existingMap.get(contact.id);
+          const twentyId = pageOutcome.twentyIdByResendId.get(contact.id);
 
           if (!isDefined(twentyId)) {
             continue;
           }
 
-          try {
-            const personId = await findOrCreatePerson(client, contact.email, {
-              firstName: contact.first_name ?? '',
-              lastName: contact.last_name ?? '',
-            });
+          const personId = personIdByEmail.get(
+            contact.email.trim().toLowerCase(),
+          );
 
-            if (isDefined(personId)) {
-              await client.mutation({
-                updateResendContact: {
-                  __args: { id: twentyId, data: { personId } },
-                  id: true,
-                },
-              });
-            }
+          if (!isDefined(personId)) continue;
+
+          try {
+            await client.mutation({
+              updateResendContact: {
+                __args: { id: twentyId, data: { personId } },
+                id: true,
+              },
+            });
           } catch (error) {
             const message = getErrorMessage(error);
 
             aggregate.errors.push(
               `resendContact ${contact.id} person link: ${message}`,
             );
+            personLinkOk = false;
           }
         }
+
+        return { ok: pageOutcome.ok && personLinkOk };
       },
       'contacts',
       { startCursor: resumeCursor, onCursorAdvance },

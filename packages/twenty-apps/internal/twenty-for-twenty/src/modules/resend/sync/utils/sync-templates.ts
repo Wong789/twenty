@@ -7,7 +7,6 @@ import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateTemplateDto } from '@modules/resend/sync/types/update-template.dto';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
-import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
   toIsoString,
@@ -20,8 +19,6 @@ export const syncTemplates = async (
   resend: Resend,
   client: CoreApiClient,
 ): Promise<SyncStepResult> => {
-  const existingMap = await getExistingRecordsMap(client, 'resendTemplates');
-
   const aggregate: SyncResult = {
     fetched: 0,
     created: 0,
@@ -33,7 +30,7 @@ export const syncTemplates = async (
     await forEachPage(
       (paginationParameters) => resend.templates.list(paginationParameters),
       async (pageTemplates) => {
-        const pageResult = await upsertRecords({
+        const pageOutcome = await upsertRecords({
           items: pageTemplates,
           getId: (template) => template.id,
           fetchDetail: async (id) => {
@@ -72,15 +69,17 @@ export const syncTemplates = async (
             resendUpdatedAt: toIsoString(template.updated_at),
             publishedAt: toIsoStringOrNull(template.published_at),
           }),
-          existingMap,
           client,
           objectNameSingular: 'resendTemplate',
+          objectNamePlural: 'resendTemplates',
         });
 
-        aggregate.fetched += pageResult.fetched;
-        aggregate.created += pageResult.created;
-        aggregate.updated += pageResult.updated;
-        aggregate.errors.push(...pageResult.errors);
+        aggregate.fetched += pageOutcome.result.fetched;
+        aggregate.created += pageOutcome.result.created;
+        aggregate.updated += pageOutcome.result.updated;
+        aggregate.errors.push(...pageOutcome.result.errors);
+
+        return { ok: pageOutcome.ok };
       },
       'templates',
       { startCursor: resumeCursor, onCursorAdvance },

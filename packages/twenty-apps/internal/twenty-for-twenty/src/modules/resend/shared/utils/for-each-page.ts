@@ -1,18 +1,31 @@
 import { isDefined } from '@utils/is-defined';
 
-import type { ResendListFunction } from '@modules/resend/shared/utils/fetch-all-paginated';
+import { RESEND_PAGE_SIZE } from '@modules/resend/constants/sync-config';
 import { withRateLimitRetry } from '@modules/resend/shared/utils/with-rate-limit-retry';
 
-const PAGE_SIZE = 100;
+export type ResendListFunction<T> = (paginationParameters: {
+  limit: number;
+  after?: string;
+}) => Promise<{
+  data: { data: T[]; has_more: boolean } | null;
+  error: unknown;
+}>;
 
 export type ForEachPageOptions = {
   startCursor?: string;
   onCursorAdvance?: (cursor: string) => Promise<void>;
 };
 
+export type OnPageResult = { ok: boolean; stop?: boolean };
+
+export type OnPageHandler<T> = (
+  items: T[],
+  pageNumber: number,
+) => Promise<OnPageResult | void>;
+
 export const forEachPage = async <T extends { id: string }>(
   listFunction: ResendListFunction<T>,
-  onPage: (items: T[], pageNumber: number) => Promise<void>,
+  onPage: OnPageHandler<T>,
   label = 'items',
   options?: ForEachPageOptions,
 ): Promise<void> => {
@@ -22,8 +35,8 @@ export const forEachPage = async <T extends { id: string }>(
 
   while (true) {
     const paginationParameters = {
-      limit: PAGE_SIZE,
-      ...(isDefined(cursor) && { after: cursor }),
+      limit: RESEND_PAGE_SIZE,
+      ...(isDefined(cursor) && cursor.length > 0 && { after: cursor }),
     };
     const response = await withRateLimitRetry(() =>
       listFunction(paginationParameters),
@@ -46,13 +59,23 @@ export const forEachPage = async <T extends { id: string }>(
       `[resend] fetched ${label} page ${pageNumber} (size=${page.data.length}, total=${totalFetched}, has_more=${page.has_more})`,
     );
 
-    await onPage(page.data, pageNumber);
+    const handlerResult = await onPage(page.data, pageNumber);
+    const pageOk = handlerResult?.ok ?? true;
+    const shouldStop = handlerResult?.stop === true;
+
+    if (!pageOk) {
+      throw new Error(
+        `Resend ${label} page ${pageNumber} reported per-item failures; aborting at cursor=${cursor ?? 'start'}`,
+      );
+    }
 
     const nextCursor = page.data[page.data.length - 1].id;
 
     if (isDefined(options?.onCursorAdvance)) {
       await options.onCursorAdvance(nextCursor);
     }
+
+    if (shouldStop) break;
 
     if (!page.has_more) break;
 

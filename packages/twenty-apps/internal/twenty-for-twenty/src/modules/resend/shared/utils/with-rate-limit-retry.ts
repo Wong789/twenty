@@ -1,3 +1,9 @@
+import {
+  RATE_LIMIT_BASE_DELAY_MS,
+  RATE_LIMIT_MAX_RETRIES,
+  RATE_LIMIT_MIN_INTERVAL_MS,
+} from '@modules/resend/constants/sync-config';
+
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -17,31 +23,31 @@ const isRateLimitError = (error: unknown): boolean => {
   );
 };
 
-const MAX_RETRIES = 5;
-const BASE_DELAY_MS = 1000;
-const MIN_INTERVAL_MS = 220;
-
 let lastCallTimestamp = 0;
 
 export const withRateLimitRetry = async <T>(
   fn: () => Promise<T>,
 ): Promise<T> => {
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt <= RATE_LIMIT_MAX_RETRIES; attempt++) {
     const elapsed = Date.now() - lastCallTimestamp;
 
-    if (elapsed < MIN_INTERVAL_MS) await sleep(MIN_INTERVAL_MS - elapsed);
+    if (elapsed < RATE_LIMIT_MIN_INTERVAL_MS) {
+      await sleep(RATE_LIMIT_MIN_INTERVAL_MS - elapsed);
+    }
 
     lastCallTimestamp = Date.now();
 
     try {
       return await fn();
     } catch (error) {
-      if (!isRateLimitError(error) || attempt === MAX_RETRIES) throw error;
+      if (!isRateLimitError(error) || attempt === RATE_LIMIT_MAX_RETRIES) {
+        throw error;
+      }
 
-      const delayMs = BASE_DELAY_MS * 2 ** attempt;
+      const delayMs = RATE_LIMIT_BASE_DELAY_MS * 2 ** attempt;
 
       console.warn(
-        `[resend] Rate limited, retrying in ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRIES})`,
+        `[resend] Rate limited, retrying in ${delayMs}ms (attempt ${attempt + 1}/${RATE_LIMIT_MAX_RETRIES})`,
       );
       await sleep(delayMs);
     }

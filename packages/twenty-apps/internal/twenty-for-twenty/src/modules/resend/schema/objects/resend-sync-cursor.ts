@@ -1,6 +1,8 @@
 import {
   RESEND_SYNC_CURSOR_OBJECT_UNIVERSAL_IDENTIFIER,
   SYNC_CURSOR_CURSOR_FIELD_UNIVERSAL_IDENTIFIER,
+  SYNC_CURSOR_LAST_RUN_AT_FIELD_UNIVERSAL_IDENTIFIER,
+  SYNC_CURSOR_LAST_RUN_STATUS_FIELD_UNIVERSAL_IDENTIFIER,
   SYNC_CURSOR_STEP_FIELD_UNIVERSAL_IDENTIFIER,
 } from 'src/modules/resend/constants/universal-identifiers';
 import { defineObject, FieldType } from 'twenty-sdk/define';
@@ -24,6 +26,7 @@ export default defineObject({
       label: 'Step',
       description: 'Sync step this cursor tracks',
       icon: 'IconHash',
+      isUnique: true,
       options: [
         {
           id: 'c271f363-c680-446b-9318-06970b9af137',
@@ -70,6 +73,46 @@ export default defineObject({
       description:
         'Last successfully processed Resend ID; empty when not in progress',
       icon: 'IconArrowBigRight',
+    },
+    {
+      universalIdentifier: SYNC_CURSOR_LAST_RUN_AT_FIELD_UNIVERSAL_IDENTIFIER,
+      type: FieldType.DATE_TIME,
+      name: 'lastRunAt',
+      label: 'Last run at',
+      description: 'Timestamp of the most recent sync run for this step',
+      icon: 'IconClock',
+    },
+    {
+      universalIdentifier:
+        SYNC_CURSOR_LAST_RUN_STATUS_FIELD_UNIVERSAL_IDENTIFIER,
+      type: FieldType.SELECT,
+      name: 'lastRunStatus',
+      label: 'Last run status',
+      description: 'Outcome of the most recent sync run for this step',
+      icon: 'IconActivity',
+      options: [
+        {
+          id: 'b8e6cc9c-3b1f-4a6c-9f2c-77c5e1f0c8b1',
+          value: 'SUCCESS',
+          label: 'Success',
+          position: 0,
+          color: 'green',
+        },
+        {
+          id: '6a8d7c44-cb5b-4d4d-b6d6-6e02e1f0aa12',
+          value: 'FAILED',
+          label: 'Failed',
+          position: 1,
+          color: 'red',
+        },
+        {
+          id: 'c8d2bea1-0c5f-4b78-95cf-2f1de4d2f0a3',
+          value: 'IN_PROGRESS',
+          label: 'In progress',
+          position: 2,
+          color: 'yellow',
+        },
+      ],
     },
   ],
 });

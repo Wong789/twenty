@@ -7,7 +7,6 @@ import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateBroadcastDto } from '@modules/resend/sync/types/update-broadcast.dto';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
-import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
 import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
@@ -22,8 +21,6 @@ export const syncBroadcasts = async (
   client: CoreApiClient,
   segmentMap: SegmentIdMap,
 ): Promise<SyncStepResult> => {
-  const existingMap = await getExistingRecordsMap(client, 'resendBroadcasts');
-
   const aggregate: SyncResult = {
     fetched: 0,
     created: 0,
@@ -35,7 +32,7 @@ export const syncBroadcasts = async (
     await forEachPage(
       (paginationParameters) => resend.broadcasts.list(paginationParameters),
       async (pageBroadcasts) => {
-        const pageResult = await upsertRecords({
+        const pageOutcome = await upsertRecords({
           items: pageBroadcasts,
           getId: (broadcast) => broadcast.id,
           fetchDetail: async (id) => {
@@ -95,15 +92,18 @@ export const syncBroadcasts = async (
 
             return data;
           },
-          existingMap,
+          fetchDetailOnlyForCreate: true,
           client,
           objectNameSingular: 'resendBroadcast',
+          objectNamePlural: 'resendBroadcasts',
         });
 
-        aggregate.fetched += pageResult.fetched;
-        aggregate.created += pageResult.created;
-        aggregate.updated += pageResult.updated;
-        aggregate.errors.push(...pageResult.errors);
+        aggregate.fetched += pageOutcome.result.fetched;
+        aggregate.created += pageOutcome.result.created;
+        aggregate.updated += pageOutcome.result.updated;
+        aggregate.errors.push(...pageOutcome.result.errors);
+
+        return { ok: pageOutcome.ok };
       },
       'broadcasts',
       { startCursor: resumeCursor, onCursorAdvance },

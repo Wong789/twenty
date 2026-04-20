@@ -2,7 +2,10 @@ import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
 import { getOrCreateSyncCursor } from 'src/modules/resend/sync/cursor/utils/get-or-create-sync-cursor';
-import { setCursor } from 'src/modules/resend/sync/cursor/utils/set-cursor';
+import {
+  setCursor,
+  updateCursorRow,
+} from 'src/modules/resend/sync/cursor/utils/set-cursor';
 import type { SyncCursorStep } from 'src/modules/resend/sync/cursor/types/sync-cursor-step';
 
 export type SyncCursorContext = {
@@ -16,15 +19,35 @@ export const withSyncCursor = async <TValue>(
   runWithCursor: (context: SyncCursorContext) => Promise<TValue>,
 ): Promise<TValue> => {
   const cursorRow = await getOrCreateSyncCursor(client, step);
+  const startedAt = new Date().toISOString();
+
+  await updateCursorRow(client, cursorRow.id, {
+    lastRunAt: startedAt,
+    lastRunStatus: 'IN_PROGRESS',
+  });
 
   const context: SyncCursorContext = {
-    resumeCursor: isDefined(cursorRow.cursor) ? cursorRow.cursor : undefined,
+    resumeCursor:
+      isDefined(cursorRow.cursor) && cursorRow.cursor.length > 0
+        ? cursorRow.cursor
+        : undefined,
     onCursorAdvance: (cursor) => setCursor(client, cursorRow.id, cursor),
   };
 
-  const value = await runWithCursor(context);
+  try {
+    const value = await runWithCursor(context);
 
-  await setCursor(client, cursorRow.id, null);
+    await updateCursorRow(client, cursorRow.id, {
+      cursor: null,
+      lastRunStatus: 'SUCCESS',
+    });
 
-  return value;
+    return value;
+  } catch (runError) {
+    await updateCursorRow(client, cursorRow.id, {
+      lastRunStatus: 'FAILED',
+    });
+
+    throw runError;
+  }
 };

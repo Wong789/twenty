@@ -4,6 +4,7 @@ import { defineLogicFunction } from 'twenty-sdk/define';
 import { SYNC_RESEND_DATA_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
 import { getResendClient } from '@modules/resend/shared/utils/get-resend-client';
 import type { StepOutcome } from '@modules/resend/sync/types/step-outcome';
+import { getExistingRecordsMap } from '@modules/resend/sync/utils/get-existing-records-map';
 import { logStepOutcome } from '@modules/resend/sync/utils/log-step-outcome';
 import { orchestrateSyncResend } from '@modules/resend/sync/utils/orchestrate-sync-resend';
 import { reportAndThrowIfErrors } from '@modules/resend/sync/utils/report-and-throw-if-errors';
@@ -12,6 +13,7 @@ import { syncBroadcasts } from '@modules/resend/sync/utils/sync-broadcasts';
 import { syncContacts } from '@modules/resend/sync/utils/sync-contacts';
 import { syncEmails } from '@modules/resend/sync/utils/sync-emails';
 import { syncSegments } from '@modules/resend/sync/utils/sync-segments';
+import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
 import { syncTemplates } from '@modules/resend/sync/utils/sync-templates';
 
 const SYNC_STEPS = [
@@ -64,11 +66,10 @@ const runSingleStep = async (
         ),
       ];
     case 'BROADCASTS': {
-      const segmentMap = await syncSegments(
-        resendClient,
+      const segmentMap: SegmentIdMap = await getExistingRecordsMap(
         coreApiClient,
-        syncedAt,
-      ).then(({ value }) => value);
+        'resendSegments',
+      );
 
       return [
         await runSyncStep('BROADCASTS', () =>
@@ -94,7 +95,72 @@ const runAllSteps = async (): Promise<ReadonlyArray<StepOutcome<unknown>>> => {
   });
 };
 
-const handler = async (payload?: SyncResendDataPayload): Promise<void> => {
+type SyncSummaryStep = {
+  name: string;
+  status: 'ok' | 'failed' | 'skipped';
+  fetched: number;
+  created: number;
+  updated: number;
+  errorCount: number;
+  durationMs: number;
+};
+
+type SyncResendDataSummary = {
+  totalDurationMs: number;
+  steps: SyncSummaryStep[];
+};
+
+const summariseOutcomes = (
+  outcomes: ReadonlyArray<StepOutcome<unknown>>,
+): SyncResendDataSummary => {
+  let totalDurationMs = 0;
+
+  const steps: SyncSummaryStep[] = outcomes.map((outcome) => {
+    if (outcome.status === 'ok') {
+      totalDurationMs += outcome.durationMs;
+
+      return {
+        name: outcome.name,
+        status: 'ok',
+        fetched: outcome.result.fetched,
+        created: outcome.result.created,
+        updated: outcome.result.updated,
+        errorCount: outcome.result.errors.length,
+        durationMs: outcome.durationMs,
+      };
+    }
+
+    if (outcome.status === 'failed') {
+      totalDurationMs += outcome.durationMs;
+
+      return {
+        name: outcome.name,
+        status: 'failed',
+        fetched: 0,
+        created: 0,
+        updated: 0,
+        errorCount: 1,
+        durationMs: outcome.durationMs,
+      };
+    }
+
+    return {
+      name: outcome.name,
+      status: 'skipped',
+      fetched: 0,
+      created: 0,
+      updated: 0,
+      errorCount: 0,
+      durationMs: 0,
+    };
+  });
+
+  return { totalDurationMs, steps };
+};
+
+const handler = async (
+  payload?: SyncResendDataPayload,
+): Promise<SyncResendDataSummary> => {
   const step = payload?.step ?? 'ALL';
 
   const outcomes =
@@ -107,6 +173,8 @@ const handler = async (payload?: SyncResendDataPayload): Promise<void> => {
   }
 
   reportAndThrowIfErrors(outcomes);
+
+  return summariseOutcomes(outcomes);
 };
 
 export default defineLogicFunction({

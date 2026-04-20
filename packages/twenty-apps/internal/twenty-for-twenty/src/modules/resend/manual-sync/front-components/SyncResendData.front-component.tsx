@@ -1,23 +1,64 @@
+import { isDefined } from '@utils/is-defined';
 import { MetadataApiClient } from 'twenty-client-sdk/metadata';
 import { defineFrontComponent } from 'twenty-sdk/define';
-import { Command, enqueueSnackbar, updateProgress } from 'twenty-sdk/front-component';
-import { isDefined } from '@utils/is-defined';
+import {
+  Command,
+  enqueueSnackbar,
+  updateProgress,
+} from 'twenty-sdk/front-component';
 
+import { SYNC_LOOKUP_PROGRESS } from '@modules/resend/constants/sync-config';
 import {
   SYNC_RESEND_DATA_COMMAND_UNIVERSAL_IDENTIFIER,
   SYNC_RESEND_DATA_FRONT_COMPONENT_UNIVERSAL_IDENTIFIER,
   SYNC_RESEND_DATA_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
 } from '@modules/resend/constants/universal-identifiers';
 
-const SYNC_STEPS = [
-  'SEGMENTS',
-  'TEMPLATES',
-  'CONTACTS',
-  'EMAILS',
-  'BROADCASTS',
-] as const;
+type SyncSummaryStep = {
+  name: string;
+  status: 'ok' | 'failed' | 'skipped';
+  fetched: number;
+  created: number;
+  updated: number;
+  errorCount: number;
+  durationMs: number;
+};
 
-const LOOKUP_PROGRESS = 0.1;
+type SyncSummary = {
+  totalDurationMs: number;
+  steps: SyncSummaryStep[];
+};
+
+const formatStepCounts = (step: SyncSummaryStep): string => {
+  const verbs: string[] = [];
+
+  if (step.created > 0) verbs.push(`${step.created} created`);
+  if (step.updated > 0) verbs.push(`${step.updated} updated`);
+
+  const counts =
+    verbs.length > 0 ? verbs.join(', ') : `${step.fetched} fetched`;
+
+  return `${step.name.toLowerCase()}: ${counts}`;
+};
+
+const formatSummary = (summary: SyncSummary): string => {
+  const seconds = (summary.totalDurationMs / 1000).toFixed(1);
+  const stepLines = summary.steps
+    .filter((step) => step.status === 'ok')
+    .map(formatStepCounts);
+
+  if (stepLines.length === 0) {
+    return `Resend sync completed in ${seconds}s`;
+  }
+
+  return `Resend sync completed in ${seconds}s — ${stepLines.join('; ')}`;
+};
+
+const isSyncSummary = (value: unknown): value is SyncSummary =>
+  typeof value === 'object' &&
+  value !== null &&
+  Array.isArray((value as SyncSummary).steps) &&
+  typeof (value as SyncSummary).totalDurationMs === 'number';
 
 const execute = async () => {
   await updateProgress(0.05);
@@ -41,50 +82,39 @@ const execute = async () => {
     throw new Error('Sync logic function not found');
   }
 
-  await updateProgress(LOOKUP_PROGRESS);
+  await updateProgress(SYNC_LOOKUP_PROGRESS);
 
-  for (let stepIndex = 0; stepIndex < SYNC_STEPS.length; stepIndex++) {
-    const step = SYNC_STEPS[stepIndex];
-
-    const { executeOneLogicFunction } = await metadataClient.mutation({
-      executeOneLogicFunction: {
-        __args: {
-          input: {
-            id: syncFunction.id,
-            payload: { step } as Record<string, unknown>,
-          },
+  const { executeOneLogicFunction } = await metadataClient.mutation({
+    executeOneLogicFunction: {
+      __args: {
+        input: {
+          id: syncFunction.id,
+          payload: { step: 'ALL' } as Record<string, unknown>,
         },
-        status: true,
-        error: true,
       },
-    });
+      status: true,
+      error: true,
+      data: true,
+    },
+  });
 
-    if (executeOneLogicFunction.status !== 'SUCCESS') {
-      const rawMessage =
-        typeof executeOneLogicFunction.error?.errorMessage === 'string'
-          ? executeOneLogicFunction.error.errorMessage
-          : `Sync logic function execution failed for step "${step}"`;
+  if (executeOneLogicFunction.status !== 'SUCCESS') {
+    const rawMessage =
+      typeof executeOneLogicFunction.error?.errorMessage === 'string'
+        ? executeOneLogicFunction.error.errorMessage
+        : 'Sync logic function execution failed';
 
-      const isRateLimit =
-        rawMessage.toLowerCase().includes('rate_limit') ||
-        rawMessage.toLowerCase().includes('rate limit');
-
-      throw new Error(
-        isRateLimit
-          ? `Sync failed at step "${step}": Resend API rate limit exceeded. Please try again later.`
-          : `Sync failed at step "${step}": ${rawMessage}`,
-      );
-    }
-
-    const progress =
-      LOOKUP_PROGRESS +
-      ((stepIndex + 1) / SYNC_STEPS.length) * (1 - LOOKUP_PROGRESS);
-
-    await updateProgress(progress);
+    throw new Error(`Resend sync failed:\n${rawMessage}`);
   }
 
+  await updateProgress(1);
+
+  const summaryMessage = isSyncSummary(executeOneLogicFunction.data)
+    ? formatSummary(executeOneLogicFunction.data)
+    : 'Resend data sync completed';
+
   await enqueueSnackbar({
-    message: 'Resend data sync completed',
+    message: summaryMessage,
     variant: 'success',
   });
 };
