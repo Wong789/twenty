@@ -19,6 +19,8 @@ import {
   type AgentResponseSchema,
   type ModelConfiguration,
 } from 'twenty-shared/ai';
+import { AUTO_SELECT_SMART_MODEL_ID } from 'twenty-shared/constants';
+import { isAutoSelectModelId } from 'twenty-shared/utils';
 import { useDebouncedCallback } from 'use-debounce';
 import {
   UpdateOneAgentDocument,
@@ -114,10 +116,19 @@ export const WorkflowAiAgentPromptTab = ({
   }
 
   const agent = workflowAiAgentActionAgent;
+  const defaultPinnedOption = pinnedOption
+    ? {
+        ...pinnedOption,
+        value: null,
+      }
+    : undefined;
+  const selectedModelId = isAutoSelectModelId(agent.modelId)
+    ? null
+    : agent.modelId;
 
-  const handleModelChange = async (modelId: string) => {
+  const handleModelChange = async (modelId: string | null) => {
     await updateAgentField({
-      modelId,
+      modelId: modelId ?? AUTO_SELECT_SMART_MODEL_ID,
     });
   };
 
@@ -136,12 +147,12 @@ export const WorkflowAiAgentPromptTab = ({
 
   return (
     <>
-      <Select
+      <Select<string | null>
         label={t`Model`}
         dropdownId="select-agent-model"
         options={aiModelOptions}
-        pinnedOption={pinnedOption}
-        value={agent.modelId}
+        pinnedOption={defaultPinnedOption}
+        value={selectedModelId}
         onChange={handleModelChange}
         showContextualTextInControl={false}
         disabled={readonly}
