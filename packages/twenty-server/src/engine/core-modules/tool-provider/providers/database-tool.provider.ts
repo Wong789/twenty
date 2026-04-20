@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { STANDARD_OBJECTS } from 'twenty-shared/metadata';
 import {
   type ObjectsPermissions,
   type ObjectsPermissionsByRoleId,
@@ -8,8 +9,8 @@ import { camelToSnakeCase, isDefined } from 'twenty-shared/utils';
 import { z } from 'zod';
 
 import { type GenerateDescriptorOptions } from 'src/engine/core-modules/tool-provider/interfaces/generate-descriptor-options.type';
-import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
+import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 
 import { getFlatFieldsFromFlatObjectMetadata } from 'src/engine/api/graphql/workspace-schema-builder/utils/get-flat-fields-for-flat-object-metadata.util';
 import { generateCreateManyRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-create-many-record-input-schema.util';
@@ -23,13 +24,17 @@ import {
   generateGroupByToolInputSchema,
   hasGroupByToolInputSchema,
 } from 'src/engine/core-modules/record-crud/zod-schemas/group-by-tool.zod-schema';
-import { ToolCategory } from 'twenty-shared/ai';
 import { type ToolDescriptor } from 'src/engine/core-modules/tool-provider/types/tool-descriptor.type';
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
+import { sanitizeToolSchemaForXaiWorkflow } from 'src/engine/core-modules/tool-provider/utils/sanitize-tool-schema-for-xai-workflow.util';
 import { isWorkflowRelatedObject } from 'src/engine/metadata-modules/ai/ai-agent/utils/is-workflow-related-object.util';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { computePermissionIntersection } from 'src/engine/twenty-orm/utils/compute-permission-intersection.util';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
+import { ToolCategory } from 'twenty-shared/ai';
+
+const WORKSPACE_MEMBER_OBJECT_UNIVERSAL_IDENTIFIER =
+  STANDARD_OBJECTS.workspaceMember.universalIdentifier;
 
 @Injectable()
 export class DatabaseToolProvider implements ToolProvider {
@@ -73,6 +78,11 @@ export class DatabaseToolProvider implements ToolProvider {
         },
       );
 
+    const isWorkflowAgentExecution =
+      context.executionScope === 'workflow_agent';
+    const shouldSanitizeSchemasForXaiWorkflow =
+      isWorkflowAgentExecution && context.agent?.modelId.startsWith('xai/');
+
     const allFlatObjects = Object.values(
       flatObjectMetadataMaps.byUniversalIdentifier,
     )
@@ -81,6 +91,15 @@ export class DatabaseToolProvider implements ToolProvider {
 
     for (const flatObject of allFlatObjects) {
       if (isWorkflowRelatedObject(flatObject)) {
+        continue;
+      }
+
+      if (
+        isWorkflowAgentExecution &&
+        (flatObject.isSystem ||
+          flatObject.universalIdentifier ===
+            WORKSPACE_MEMBER_OBJECT_UNIVERSAL_IDENTIFIER)
+      ) {
         continue;
       }
 
@@ -103,14 +122,18 @@ export class DatabaseToolProvider implements ToolProvider {
       const snakeSingular = camelToSnakeCase(objectMetadata.nameSingular);
 
       if (permission.canReadObjectRecords) {
+        const findToolInputSchema = z.toJSONSchema(
+          generateFindToolInputSchema(objectMetadata, restrictedFields),
+        );
+
         descriptors.push({
           name: `find_${snakePlural}`,
           description: `Search for ${objectMetadata.labelPlural} records using flexible filtering criteria. Supports exact matches, pattern matching, ranges, and null checks. Use limit/offset for pagination and orderBy for sorting. To find by ID, use filter: { id: { eq: "record-id" } }. Returns an array of matching records with their full data.`,
           category: ToolCategory.DATABASE_CRUD,
           ...(includeSchemas && {
-            inputSchema: z.toJSONSchema(
-              generateFindToolInputSchema(objectMetadata, restrictedFields),
-            ),
+            inputSchema: shouldSanitizeSchemasForXaiWorkflow
+              ? this.sanitizeSchemaForXaiWorkflow(findToolInputSchema)
+              : findToolInputSchema,
           }),
           executionRef: {
             kind: 'database_crud',
@@ -147,13 +170,20 @@ export class DatabaseToolProvider implements ToolProvider {
           hasGroupByToolInputSchema(objectMetadata, restrictedFields);
 
         if (hasGroupBySchema) {
+          const groupByToolInputSchema =
+            includeSchemas && groupBySchema
+              ? z.toJSONSchema(groupBySchema)
+              : null;
+
           descriptors.push({
             name: `group_by_${snakePlural}`,
             description: `Group ${objectMetadata.labelPlural} records by one or two fields and compute an aggregate (COUNT, SUM, AVG, MIN, MAX, etc.). Use for questions like "how many deals per stage?" or "total revenue by company". Returns groups with dimension values and aggregate results, ordered by the aggregate value.`,
             category: ToolCategory.DATABASE_CRUD,
             ...(includeSchemas &&
-              groupBySchema && {
-                inputSchema: z.toJSONSchema(groupBySchema),
+              groupByToolInputSchema && {
+                inputSchema: shouldSanitizeSchemasForXaiWorkflow
+                  ? this.sanitizeSchemaForXaiWorkflow(groupByToolInputSchema)
+                  : groupByToolInputSchema,
               }),
             executionRef: {
               kind: 'database_crud',
@@ -228,17 +258,18 @@ export class DatabaseToolProvider implements ToolProvider {
           operation: 'update',
         });
 
+        const updateManyInputSchema = z.toJSONSchema(
+          generateUpdateManyRecordInputSchema(objectMetadata, restrictedFields),
+        );
+
         descriptors.push({
           name: `update_many_${snakePlural}`,
           description: `Update multiple ${objectMetadata.labelPlural} records matching a filter in a single operation. All matching records will receive the same field values. WARNING: Use specific filters to avoid unintended mass updates. Always verify the filter scope with a find query first. Returns the updated records.`,
           category: ToolCategory.DATABASE_CRUD,
           ...(includeSchemas && {
-            inputSchema: z.toJSONSchema(
-              generateUpdateManyRecordInputSchema(
-                objectMetadata,
-                restrictedFields,
-              ),
-            ),
+            inputSchema: shouldSanitizeSchemasForXaiWorkflow
+              ? this.sanitizeSchemaForXaiWorkflow(updateManyInputSchema)
+              : updateManyInputSchema,
           }),
           executionRef: {
             kind: 'database_crud',
@@ -272,6 +303,18 @@ export class DatabaseToolProvider implements ToolProvider {
     }
 
     return descriptors;
+  }
+
+  private sanitizeSchemaForXaiWorkflow(schema: object): object {
+    // xAI function tools use JSON Schema parameters:
+    // https://docs.x.ai/developers/tools/function-calling#parameter-schema
+    // xAI also documents a restricted schema subset for structured outputs:
+    // https://docs.x.ai/developers/model-capabilities/text/structured-outputs#supported-schemas
+    // The docs do not explicitly mention $defs or recursive refs for tools,
+    // but xAI rejects our recursive DB filter schema at runtime with:
+    // "unresolvable $ref '#/$defs/__schema0'".
+    // For workflow agents we strip logical filter recursion
+    return sanitizeToolSchemaForXaiWorkflow(schema);
   }
 
   private getObjectPermissions(
