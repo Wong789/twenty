@@ -1,4 +1,3 @@
-import { type AiSdkPackage } from 'twenty-shared/ai';
 import { type ActorMetadata } from 'twenty-shared/types';
 
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
@@ -16,7 +15,6 @@ export type ToolProviderContext = {
   userId?: string;
   userWorkspaceId?: string;
   agent?: ToolProviderAgent | null;
-  modelSdkPackage?: AiSdkPackage;
   onCodeExecutionUpdate?: CodeExecutionStreamEmitter;
 };
 

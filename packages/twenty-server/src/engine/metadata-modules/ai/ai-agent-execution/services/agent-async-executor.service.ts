@@ -27,10 +27,7 @@ import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
-import {
-  AiModelRegistryService,
-  RegisteredAiModel,
-} from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
+import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import {
   AiException,
   AiExceptionCode,
@@ -84,36 +81,6 @@ export class AgentAsyncExecutorService {
     return [];
   }
 
-  private describeRolePermissionConfig(
-    rolePermissionConfig?: RolePermissionConfig,
-  ): string {
-    if (!rolePermissionConfig) {
-      return 'none';
-    }
-
-    if ('shouldBypassPermissionChecks' in rolePermissionConfig) {
-      return 'bypass';
-    }
-
-    if ('intersectionOf' in rolePermissionConfig) {
-      return `intersectionOf=[${rolePermissionConfig.intersectionOf.join(', ')}]`;
-    }
-
-    if ('unionOf' in rolePermissionConfig) {
-      return `unionOf=[${rolePermissionConfig.unionOf.join(', ')}]`;
-    }
-
-    return 'unknown';
-  }
-
-  private extractAttemptedToolNames(
-    steps: Array<{ toolCalls: Array<{ toolName: string }> }>,
-  ): string[] {
-    return steps.flatMap((step) =>
-      step.toolCalls.map((toolCall) => toolCall.toolName),
-    );
-  }
-
   private async getEffectiveRolePermissionConfig(
     agentId: string,
     workspaceId: string,
@@ -156,8 +123,7 @@ export class AgentAsyncExecutorService {
     rolePermissionConfig?: RolePermissionConfig;
     authContext?: WorkspaceAuthContext;
   }): Promise<AgentExecutionResult> {
-    let registeredModel: RegisteredAiModel | undefined;
-    let generatedToolNames: string[] = [];
+    let generatedToolCount = 0;
     let effectiveAgentPermissions: EffectiveAgentPermissions | undefined;
 
     try {
@@ -174,12 +140,11 @@ export class AgentAsyncExecutorService {
         }
       }
 
-      registeredModel =
+      const registeredModel =
         await this.aiModelRegistryService.resolveModelForAgent(agent);
 
       let tools: ToolSet = {};
       let providerOptions = {};
-      const workflowRoleIds = this.extractRoleIds(rolePermissionConfig);
 
       if (agent) {
         effectiveAgentPermissions = await this.getEffectiveRolePermissionConfig(
@@ -199,7 +164,6 @@ export class AgentAsyncExecutorService {
               authContext,
               actorContext,
               agent: toToolProviderAgent(agent),
-              modelSdkPackage: registeredModel.sdkPackage,
               userId:
                 isDefined(authContext) && isUserAuthContext(authContext)
                   ? authContext.user.id
@@ -222,18 +186,9 @@ export class AgentAsyncExecutorService {
 
         providerOptions =
           this.aiModelConfigService.getProviderOptions(registeredModel);
+        generatedToolCount = Object.keys(tools).length;
 
-        generatedToolNames = Object.keys(tools).sort();
-
-        this.logger.log(
-          `Workflow agent tool context: agentId=${agent.id} modelId=${registeredModel.modelId} workflowRoleIds=[${workflowRoleIds.join(', ')}] savedAgentRoleId=${effectiveAgentPermissions?.agentRoleId ?? 'none'} effectiveRolePermissionConfig=${this.describeRolePermissionConfig(effectiveAgentPermissions?.rolePermissionConfig)} toolCount=${generatedToolNames.length}`,
-        );
-
-        if (generatedToolNames.length > 0) {
-          this.logger.log(
-            `Workflow agent generated tools for ${agent.id}: ${generatedToolNames.join(', ')}`,
-          );
-        }
+        this.logger.log(`Generated ${generatedToolCount} tools for agent`);
       }
 
       const textResponse = await generateText({
@@ -259,14 +214,6 @@ export class AgentAsyncExecutorService {
           });
         },
       });
-
-      const attemptedToolNames = this.extractAttemptedToolNames(
-        textResponse.steps,
-      );
-
-      this.logger.log(
-        `Workflow agent model response: agentId=${agent?.id ?? 'none'} modelId=${registeredModel.modelId} finishReason=${textResponse.finishReason} stepCount=${textResponse.steps.length} attemptedToolCalls=[${attemptedToolNames.join(', ')}]`,
-      );
 
       const cacheCreationTokens = extractCacheCreationTokensFromSteps(
         textResponse.steps,
@@ -336,7 +283,7 @@ export class AgentAsyncExecutorService {
           : { message: String(error) };
 
       this.logger.error(
-        `Workflow agent execution failed: agentId=${agent?.id ?? 'none'} modelId=${registeredModel?.modelId ?? 'unknown'} savedAgentRoleId=${effectiveAgentPermissions?.agentRoleId ?? 'none'} toolCount=${generatedToolNames.length} error=${JSON.stringify(errorDetails)}`,
+        `Workflow agent execution failed: agentId=${agent?.id ?? 'none'} modelId=${agent?.modelId ?? 'unknown'} savedAgentRoleId=${effectiveAgentPermissions?.agentRoleId ?? 'none'} toolCount=${generatedToolCount} error=${JSON.stringify(errorDetails)}`,
       );
 
       throw new AiException(

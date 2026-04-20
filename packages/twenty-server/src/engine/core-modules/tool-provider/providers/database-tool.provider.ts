@@ -13,7 +13,6 @@ import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/
 import { type ToolProvider } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider.interface';
 
 import { getFlatFieldsFromFlatObjectMetadata } from 'src/engine/api/graphql/workspace-schema-builder/utils/get-flat-fields-for-flat-object-metadata.util';
-import { AI_SDK_XAI } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
 import { generateCreateManyRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-create-many-record-input-schema.util';
 import { generateCreateRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-create-record-input-schema.util';
 import { generateUpdateManyRecordInputSchema } from 'src/engine/core-modules/record-crud/utils/generate-update-many-record-input-schema.util';
@@ -27,15 +26,18 @@ import {
 } from 'src/engine/core-modules/record-crud/zod-schemas/group-by-tool.zod-schema';
 import { type ToolDescriptor } from 'src/engine/core-modules/tool-provider/types/tool-descriptor.type';
 import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
-import { sanitizeToolSchemaForXaiWorkflow } from 'src/engine/core-modules/tool-provider/utils/sanitize-tool-schema-for-xai-workflow.util';
 import { isWorkflowRelatedObject } from 'src/engine/metadata-modules/ai/ai-agent/utils/is-workflow-related-object.util';
+import { AI_SDK_XAI } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-sdk-package.const';
+import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
 import { computePermissionIntersection } from 'src/engine/twenty-orm/utils/compute-permission-intersection.util';
 import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
-import { ToolCategory } from 'twenty-shared/ai';
+import { type AiSdkPackage, ToolCategory } from 'twenty-shared/ai';
 
 const WORKSPACE_MEMBER_OBJECT_UNIVERSAL_IDENTIFIER =
   STANDARD_OBJECTS.workspaceMember.universalIdentifier;
+const SDK_PACKAGES_WITHOUT_RECURSIVE_WORKFLOW_DB_TOOL_SUPPORT: ReadonlySet<AiSdkPackage> =
+  new Set([AI_SDK_XAI]);
 
 @Injectable()
 export class DatabaseToolProvider implements ToolProvider {
@@ -44,6 +46,7 @@ export class DatabaseToolProvider implements ToolProvider {
   constructor(
     private readonly workspaceCacheService: WorkspaceCacheService,
     private readonly flatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService,
+    private readonly aiModelRegistryService: AiModelRegistryService,
   ) {}
 
   async isAvailable(_context: ToolProviderContext): Promise<boolean> {
@@ -81,8 +84,19 @@ export class DatabaseToolProvider implements ToolProvider {
 
     const isWorkflowAgentExecution =
       context.executionScope === 'workflow_agent';
-    const shouldSanitizeSchemasForXaiWorkflow =
-      isWorkflowAgentExecution && context.modelSdkPackage === AI_SDK_XAI;
+    const registeredModel =
+      isWorkflowAgentExecution && context.agent
+        ? this.aiModelRegistryService.resolveModelForAgent(context.agent)
+        : undefined;
+    // Some providers (xAI) reject our recursive filter schemas when workflow DB
+    // tools are exposed directly, so exclude only the filter-based tools
+    // in that path.
+    const shouldExcludeRecursiveFilterToolsForWorkflowModel =
+      isWorkflowAgentExecution &&
+      isDefined(registeredModel) &&
+      SDK_PACKAGES_WITHOUT_RECURSIVE_WORKFLOW_DB_TOOL_SUPPORT.has(
+        registeredModel.sdkPackage,
+      );
 
     const allFlatObjects = Object.values(
       flatObjectMetadataMaps.byUniversalIdentifier,
@@ -123,28 +137,28 @@ export class DatabaseToolProvider implements ToolProvider {
       const snakeSingular = camelToSnakeCase(objectMetadata.nameSingular);
 
       if (permission.canReadObjectRecords) {
-        const findToolInputSchema = z.toJSONSchema(
-          generateFindToolInputSchema(objectMetadata, restrictedFields),
-        );
+        if (!shouldExcludeRecursiveFilterToolsForWorkflowModel) {
+          const findToolInputSchema = z.toJSONSchema(
+            generateFindToolInputSchema(objectMetadata, restrictedFields),
+          );
 
-        descriptors.push({
-          name: `find_${snakePlural}`,
-          description: `Search for ${objectMetadata.labelPlural} records using flexible filtering criteria. Supports exact matches, pattern matching, ranges, and null checks. Use limit/offset for pagination and orderBy for sorting. To find by ID, use filter: { id: { eq: "record-id" } }. Returns an array of matching records with their full data.`,
-          category: ToolCategory.DATABASE_CRUD,
-          ...(includeSchemas && {
-            inputSchema: shouldSanitizeSchemasForXaiWorkflow
-              ? this.sanitizeSchemaForXaiWorkflow(findToolInputSchema)
-              : findToolInputSchema,
-          }),
-          executionRef: {
-            kind: 'database_crud',
-            objectNameSingular: objectMetadata.nameSingular,
+          descriptors.push({
+            name: `find_${snakePlural}`,
+            description: `Search for ${objectMetadata.labelPlural} records using flexible filtering criteria. Supports exact matches, pattern matching, ranges, and null checks. Use limit/offset for pagination and orderBy for sorting. To find by ID, use filter: { id: { eq: "record-id" } }. Returns an array of matching records with their full data.`,
+            category: ToolCategory.DATABASE_CRUD,
+            ...(includeSchemas && {
+              inputSchema: findToolInputSchema,
+            }),
+            executionRef: {
+              kind: 'database_crud',
+              objectNameSingular: objectMetadata.nameSingular,
+              operation: 'find',
+            },
+            objectName: objectMetadata.nameSingular,
+            icon: flatObject.icon ?? undefined,
             operation: 'find',
-          },
-          objectName: objectMetadata.nameSingular,
-          icon: flatObject.icon ?? undefined,
-          operation: 'find',
-        });
+          });
+        }
 
         descriptors.push({
           name: `find_one_${snakeSingular}`,
@@ -170,7 +184,10 @@ export class DatabaseToolProvider implements ToolProvider {
           groupBySchema !== null ||
           hasGroupByToolInputSchema(objectMetadata, restrictedFields);
 
-        if (hasGroupBySchema) {
+        if (
+          hasGroupBySchema &&
+          !shouldExcludeRecursiveFilterToolsForWorkflowModel
+        ) {
           const groupByToolInputSchema =
             includeSchemas && groupBySchema
               ? z.toJSONSchema(groupBySchema)
@@ -182,9 +199,7 @@ export class DatabaseToolProvider implements ToolProvider {
             category: ToolCategory.DATABASE_CRUD,
             ...(includeSchemas &&
               groupByToolInputSchema && {
-                inputSchema: shouldSanitizeSchemasForXaiWorkflow
-                  ? this.sanitizeSchemaForXaiWorkflow(groupByToolInputSchema)
-                  : groupByToolInputSchema,
+                inputSchema: groupByToolInputSchema,
               }),
             executionRef: {
               kind: 'database_crud',
@@ -263,24 +278,24 @@ export class DatabaseToolProvider implements ToolProvider {
           generateUpdateManyRecordInputSchema(objectMetadata, restrictedFields),
         );
 
-        descriptors.push({
-          name: `update_many_${snakePlural}`,
-          description: `Update multiple ${objectMetadata.labelPlural} records matching a filter in a single operation. All matching records will receive the same field values. WARNING: Use specific filters to avoid unintended mass updates. Always verify the filter scope with a find query first. Returns the updated records.`,
-          category: ToolCategory.DATABASE_CRUD,
-          ...(includeSchemas && {
-            inputSchema: shouldSanitizeSchemasForXaiWorkflow
-              ? this.sanitizeSchemaForXaiWorkflow(updateManyInputSchema)
-              : updateManyInputSchema,
-          }),
-          executionRef: {
-            kind: 'database_crud',
-            objectNameSingular: objectMetadata.nameSingular,
+        if (!shouldExcludeRecursiveFilterToolsForWorkflowModel) {
+          descriptors.push({
+            name: `update_many_${snakePlural}`,
+            description: `Update multiple ${objectMetadata.labelPlural} records matching a filter in a single operation. All matching records will receive the same field values. WARNING: Use specific filters to avoid unintended mass updates. Always verify the filter scope with a find query first. Returns the updated records.`,
+            category: ToolCategory.DATABASE_CRUD,
+            ...(includeSchemas && {
+              inputSchema: updateManyInputSchema,
+            }),
+            executionRef: {
+              kind: 'database_crud',
+              objectNameSingular: objectMetadata.nameSingular,
+              operation: 'update_many',
+            },
+            objectName: objectMetadata.nameSingular,
+            icon: flatObject.icon ?? undefined,
             operation: 'update_many',
-          },
-          objectName: objectMetadata.nameSingular,
-          icon: flatObject.icon ?? undefined,
-          operation: 'update_many',
-        });
+          });
+        }
       }
 
       if (permission.canSoftDeleteObjectRecords) {
@@ -304,18 +319,6 @@ export class DatabaseToolProvider implements ToolProvider {
     }
 
     return descriptors;
-  }
-
-  private sanitizeSchemaForXaiWorkflow(schema: object): object {
-    // xAI function tools use JSON Schema parameters:
-    // https://docs.x.ai/developers/tools/function-calling#parameter-schema
-    // xAI also documents a restricted schema subset for structured outputs:
-    // https://docs.x.ai/developers/model-capabilities/text/structured-outputs#supported-schemas
-    // The docs do not explicitly mention $defs or recursive refs for tools,
-    // but xAI rejects our recursive DB filter schema at runtime with:
-    // "unresolvable $ref '#/$defs/__schema0'".
-    // For workflow agents we strip logical filter recursion
-    return sanitizeToolSchemaForXaiWorkflow(schema);
   }
 
   private getObjectPermissions(
