@@ -291,6 +291,40 @@ describe('ClientConfigService', () => {
       expect(result.isCodeInterpreterEnabled).toBe(false);
     });
 
+    it('keeps x search available when external web search is preferred', async () => {
+      jest
+        .spyOn(aiModelRegistryService, 'getAdminFilteredModels')
+        .mockReturnValue([
+          {
+            modelId: 'xai-model',
+            sdkPackage: AI_SDK_XAI,
+            model: {} as never,
+            providerName: 'xai',
+          },
+        ]);
+
+      jest
+        .spyOn(twentyConfigService, 'get')
+        .mockImplementation((key: string) => {
+          if (key === 'WEB_SEARCH_DRIVER') return WebSearchDriverType.EXA;
+          if (key === 'WEB_SEARCH_PREFER_NATIVE') return false;
+          if (key === 'CODE_INTERPRETER_TYPE')
+            return CodeInterpreterDriverType.DISABLED;
+
+          return undefined;
+        });
+
+      const result = await service.getClientConfig();
+      const xaiModel = result.aiModels.find(
+        (model) => model.modelId === 'xai-model',
+      );
+
+      expect(xaiModel?.capabilities).toEqual({
+        webSearch: true,
+        twitterSearch: true,
+      });
+    });
+
     it('surfaces code interpreter availability at the client-config level', async () => {
       jest
         .spyOn(aiModelRegistryService, 'getAdminFilteredModels')

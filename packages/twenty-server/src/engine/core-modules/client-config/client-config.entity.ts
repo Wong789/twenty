@@ -29,8 +29,8 @@ registerEnumType(AiModelRole, {
   name: 'AiModelRole',
 });
 
-@ObjectType()
-export class AgentCapabilities {
+@ObjectType('AgentCapabilities')
+export class ClientAiModelCapabilities {
   @Field(() => Boolean)
   webSearch: boolean;
 
@@ -62,8 +62,9 @@ export class ClientAiModelConfig {
   @Field(() => Number, { nullable: true })
   outputCostPerMillionTokens?: number;
 
-  @Field(() => AgentCapabilities)
-  capabilities: AgentCapabilities;
+  @Field(() => ClientAiModelCapabilities)
+  // Model-level availability. Agent-level on/off state lives in modelConfiguration.
+  capabilities: ClientAiModelCapabilities;
 
   @Field(() => Boolean, { nullable: true })
   isDeprecated?: boolean;

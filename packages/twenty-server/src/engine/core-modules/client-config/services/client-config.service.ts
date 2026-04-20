@@ -17,7 +17,7 @@ import {
 
 import { MaintenanceModeService } from 'src/engine/core-modules/admin-panel/maintenance-mode.service';
 import {
-  type AgentCapabilities,
+  type ClientAiModelCapabilities,
   type ClientAiModelConfig,
   type ClientConfig,
 } from 'src/engine/core-modules/client-config/client-config.entity';
@@ -40,9 +40,9 @@ export class ClientConfigService {
     private maintenanceModeService: MaintenanceModeService,
   ) {}
 
-  private deriveAvailableModelCapabilities(
+  private deriveModelCapabilities(
     sdkPackage?: AiSdkPackage,
-  ): AgentCapabilities {
+  ): ClientAiModelCapabilities {
     const supportsProviderNativeWebSearch =
       sdkPackage === AI_SDK_OPENAI ||
       sdkPackage === AI_SDK_ANTHROPIC ||
@@ -104,7 +104,7 @@ export class ClientConfigService {
           sdkPackage: registeredModel.sdkPackage,
           providerName,
           providerLabel: getProviderLabel(providerName),
-          capabilities: this.deriveAvailableModelCapabilities(
+          capabilities: this.deriveModelCapabilities(
             registeredModel.sdkPackage,
           ),
           inputCostPerMillionTokens: modelConfig?.inputCostPerMillionTokens,
@@ -144,7 +144,7 @@ export class ClientConfigService {
             defaultPerformanceModel?.providerName,
           ),
           sdkPackage: defaultPerformanceModel?.sdkPackage ?? null,
-          capabilities: this.deriveAvailableModelCapabilities(
+          capabilities: this.deriveModelCapabilities(
             defaultPerformanceModel?.sdkPackage,
           ),
           inputCostPerMillionTokens:
@@ -165,7 +165,7 @@ export class ClientConfigService {
           providerName: defaultSpeedModel?.providerName,
           providerLabel: getProviderLabel(defaultSpeedModel?.providerName),
           sdkPackage: defaultSpeedModel?.sdkPackage ?? null,
-          capabilities: this.deriveAvailableModelCapabilities(
+          capabilities: this.deriveModelCapabilities(
             defaultSpeedModel?.sdkPackage,
           ),
           inputCostPerMillionTokens:

@@ -34,17 +34,17 @@ export const SettingsAgentModelCapabilities = ({
   disabled = false,
 }: SettingsAgentModelCapabilitiesProps) => {
   const aiModels = useAtomStateValue(aiModelsState);
-  const isCodeInterpreterEnabled = useAtomStateValue(
+  const isCodeInterpreterAvailable = useAtomStateValue(
     isCodeInterpreterEnabledState,
   );
 
   const selectedModel = aiModels.find((m) => m.modelId === selectedModelId);
-  const modelCapabilities = selectedModel?.capabilities;
+  const availableModelCapabilities = selectedModel?.capabilities;
 
   if (
-    !modelCapabilities?.webSearch &&
-    !modelCapabilities?.twitterSearch &&
-    !isCodeInterpreterEnabled
+    !availableModelCapabilities?.webSearch &&
+    !availableModelCapabilities?.twitterSearch &&
+    !isCodeInterpreterAvailable
   ) {
     return null;
   }
@@ -66,8 +66,8 @@ export const SettingsAgentModelCapabilities = ({
     });
   };
 
-  const capabilityItems = [
-    ...(modelCapabilities?.webSearch
+  const modelCapabilityItems = [
+    ...(availableModelCapabilities?.webSearch
       ? [
           {
             key: 'webSearch' as const,
@@ -77,7 +77,7 @@ export const SettingsAgentModelCapabilities = ({
           },
         ]
       : []),
-    ...(modelCapabilities?.twitterSearch
+    ...(availableModelCapabilities?.twitterSearch
       ? [
           {
             key: 'twitterSearch' as const,
@@ -90,19 +90,25 @@ export const SettingsAgentModelCapabilities = ({
           },
         ]
       : []),
-    ...(isCodeInterpreterEnabled
-      ? [
-          {
-            key: 'codeInterpreter' as const,
-            label: t`Code Interpreter`,
-            Icon: IconCode,
-            enabled: isAgentCapabilityEnabled(
-              modelConfiguration,
-              'codeInterpreter',
-            ),
-          },
-        ]
-      : []),
+  ];
+
+  const workspaceCapabilityItems = isCodeInterpreterAvailable
+    ? [
+        {
+          key: 'codeInterpreter' as const,
+          label: t`Code Interpreter`,
+          Icon: IconCode,
+          enabled: isAgentCapabilityEnabled(
+            modelConfiguration,
+            'codeInterpreter',
+          ),
+        },
+      ]
+    : [];
+
+  const capabilityItems = [
+    ...modelCapabilityItems,
+    ...workspaceCapabilityItems,
   ];
 
   return (

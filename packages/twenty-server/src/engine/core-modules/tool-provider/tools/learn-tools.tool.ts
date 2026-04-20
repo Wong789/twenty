@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 import { type ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
+import { type ToolContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 
 export const LEARN_TOOLS_TOOL_NAME = 'learn_tools';
 
@@ -38,7 +38,7 @@ export type LearnToolsResult = {
 
 export const createLearnToolsTool = (
   toolRegistry: ToolRegistryService,
-  context: ToolProviderContext,
+  context: ToolContext,
   excludeTools?: Set<string>,
 ) => ({
   description:

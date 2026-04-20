@@ -1,4 +1,3 @@
-import { isArray, isObject } from '@sniptt/guards';
 import { z } from 'zod';
 
 const DEFAULT_LOADING_MESSAGE_SCHEMA = z
@@ -23,16 +22,10 @@ export const wrapSchemaForExecution = <T extends z.ZodRawShape>(
 export const wrapJsonSchemaForExecution = (
   schema: Record<string, unknown>,
 ): Record<string, unknown> => {
-  const properties =
-    isObject(schema.properties) && !isArray(schema.properties)
-      ? (schema.properties as Record<string, unknown>)
-      : {};
-  const required = isArray(schema.required)
-    ? schema.required.filter((item): item is string => typeof item === 'string')
-    : [];
+  const properties = (schema.properties as Record<string, unknown>) ?? {};
+  const required = (schema.required as string[]) ?? [];
 
   return {
-    ...schema,
     type: 'object',
     properties: {
       loadingMessage: {
@@ -41,7 +34,7 @@ export const wrapJsonSchemaForExecution = (
       },
       ...properties,
     },
-    required: [...new Set(['loadingMessage', ...required])],
+    required: ['loadingMessage', ...required],
   };
 };
 

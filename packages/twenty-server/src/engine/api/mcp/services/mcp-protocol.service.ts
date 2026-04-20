@@ -15,7 +15,6 @@ import { ApiKeyRoleService } from 'src/engine/core-modules/api-key/services/api-
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
 import { buildApiKeyAuthContext } from 'src/engine/core-modules/auth/utils/build-api-key-auth-context.util';
 import { COMMON_PRELOAD_TOOLS } from 'src/engine/core-modules/tool-provider/constants/common-preload-tools.const';
-import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
   createExecuteToolTool,
@@ -108,10 +107,9 @@ export class McpProtocolService {
       userWorkspaceId?: string;
     },
   ): Promise<ToolSet> {
-    const toolContext: ToolProviderContext = {
+    const toolContext = {
       workspaceId: workspace.id,
       roleId,
-      rolePermissionConfig: { unionOf: [roleId] },
       authContext: options?.authContext,
       userId: options?.userId,
       userWorkspaceId: options?.userWorkspaceId,

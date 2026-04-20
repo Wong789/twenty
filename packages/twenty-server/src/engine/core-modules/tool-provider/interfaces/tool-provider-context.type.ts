@@ -16,3 +16,14 @@ export type ToolProviderContext = {
   agent?: ToolProviderAgent | null;
   onCodeExecutionUpdate?: CodeExecutionStreamEmitter;
 };
+
+export type ToolContext = Pick<
+  ToolProviderContext,
+  | 'workspaceId'
+  | 'roleId'
+  | 'authContext'
+  | 'actorContext'
+  | 'userId'
+  | 'userWorkspaceId'
+  | 'onCodeExecutionUpdate'
+>;

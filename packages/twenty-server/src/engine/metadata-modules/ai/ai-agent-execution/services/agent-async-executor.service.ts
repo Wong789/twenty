@@ -12,23 +12,13 @@ import { type ActorMetadata } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { type Repository } from 'typeorm';
 
-import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
-import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
 import { type ToolProviderAgent } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-agent.type';
 import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
-import { LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
+import { isUserAuthContext } from 'src/engine/core-modules/auth/guards/is-user-auth-context.guard';
+import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
+import { ToolCategory } from 'twenty-shared/ai';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
-import {
-  EXECUTE_TOOL_TOOL_NAME,
-  LEARN_TOOLS_TOOL_NAME,
-} from 'src/engine/core-modules/tool-provider/tools';
-import { type ToolIndexEntry } from 'src/engine/core-modules/tool-provider/types/tool-index-entry.type';
-import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { type AgentExecutionResult } from 'src/engine/metadata-modules/ai/ai-agent-execution/types/agent-execution-result.type';
-import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
-import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
-import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
-import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
 import { countNativeWebSearchCallsFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/count-native-web-search-calls-from-steps.util';
 import { extractCacheCreationTokensFromSteps } from 'src/engine/metadata-modules/ai/ai-billing/utils/extract-cache-creation-tokens.util';
 import { mergeLanguageModelUsage } from 'src/engine/metadata-modules/ai/ai-billing/utils/merge-language-model-usage.util';
@@ -36,17 +26,21 @@ import {
   AiException,
   AiExceptionCode,
 } from 'src/engine/metadata-modules/ai/ai.exception';
+import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
+import { WORKFLOW_SYSTEM_PROMPTS } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-system-prompts.const';
+import { type AgentEntity } from 'src/engine/metadata-modules/ai/ai-agent/entities/agent.entity';
+import { repairToolCall } from 'src/engine/metadata-modules/ai/ai-agent/utils/repair-tool-call.util';
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
+import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 import { RoleTargetEntity } from 'src/engine/metadata-modules/role-target/role-target.entity';
 import { type RolePermissionConfig } from 'src/engine/twenty-orm/types/role-permission-config';
-import { ToolCategory } from 'twenty-shared/ai';
 
-const WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES = [
-  ToolCategory.DATABASE_CRUD,
-  ToolCategory.ACTION,
-] as const;
+type EffectiveAgentPermissions = {
+  agentRoleId: string;
+  rolePermissionConfig: RolePermissionConfig;
+};
 
 const toToolProviderAgent = (agent: AgentEntity): ToolProviderAgent => ({
   modelId: agent.modelId,
@@ -63,7 +57,6 @@ export class AgentAsyncExecutorService {
   constructor(
     private readonly aiModelRegistryService: AiModelRegistryService,
     private readonly aiModelConfigService: AiModelConfigService,
-    private readonly lazyToolRuntimeService: LazyToolRuntimeService,
     private readonly toolRegistry: ToolRegistryService,
     @InjectRepository(RoleTargetEntity)
     private readonly roleTargetRepository: Repository<RoleTargetEntity>,
@@ -89,11 +82,41 @@ export class AgentAsyncExecutorService {
     return [];
   }
 
+  private describeRolePermissionConfig(
+    rolePermissionConfig?: RolePermissionConfig,
+  ): string {
+    if (!rolePermissionConfig) {
+      return 'none';
+    }
+
+    if ('shouldBypassPermissionChecks' in rolePermissionConfig) {
+      return 'bypass';
+    }
+
+    if ('intersectionOf' in rolePermissionConfig) {
+      return `intersectionOf=[${rolePermissionConfig.intersectionOf.join(', ')}]`;
+    }
+
+    if ('unionOf' in rolePermissionConfig) {
+      return `unionOf=[${rolePermissionConfig.unionOf.join(', ')}]`;
+    }
+
+    return 'unknown';
+  }
+
+  private extractAttemptedToolNames(
+    steps: Array<{ toolCalls: Array<{ toolName: string }> }>,
+  ): string[] {
+    return steps.flatMap((step) =>
+      step.toolCalls.map((toolCall) => toolCall.toolName),
+    );
+  }
+
   private async getEffectiveRolePermissionConfig(
     agentId: string,
     workspaceId: string,
     rolePermissionConfig?: RolePermissionConfig,
-  ): Promise<RolePermissionConfig | undefined> {
+  ): Promise<EffectiveAgentPermissions | undefined> {
     const roleTarget = await this.roleTargetRepository.findOne({
       where: {
         agentId,
@@ -103,60 +126,19 @@ export class AgentAsyncExecutorService {
     });
 
     const agentRoleId = roleTarget?.roleId;
-    const configRoleIds = this.extractRoleIds(rolePermissionConfig);
 
-    const allRoleIds = agentRoleId
-      ? [...new Set([...configRoleIds, agentRoleId])]
-      : configRoleIds;
-
-    if (allRoleIds.length === 0) {
+    if (!agentRoleId) {
       return undefined;
     }
 
-    return { intersectionOf: allRoleIds };
-  }
+    const workflowRoleIds = this.extractRoleIds(rolePermissionConfig);
 
-  private buildWorkflowToolCatalogPrompt({
-    toolCatalog,
-    directToolNames,
-  }: {
-    toolCatalog: ToolIndexEntry[];
-    directToolNames: string[];
-  }): string {
-    const toolsByCategory = new Map<ToolCategory, ToolIndexEntry[]>();
-
-    for (const tool of toolCatalog) {
-      const existing = toolsByCategory.get(tool.category) ?? [];
-
-      existing.push(tool);
-      toolsByCategory.set(tool.category, existing);
-    }
-
-    const directToolsSection =
-      directToolNames.length > 0
-        ? `Direct native model tools available now: ${directToolNames.map((toolName) => `\`${toolName}\``).join(', ')}.`
-        : 'No direct native model tools are available.';
-
-    const sections = [
-      `## Available Workflow Tools
-
-${directToolsSection}
-
-For database and action tools, first call \`${LEARN_TOOLS_TOOL_NAME}\` with the exact tool name to learn its schema, then call \`${EXECUTE_TOOL_TOOL_NAME}\` with matching arguments. Do not call tools that are not listed below.`,
-    ];
-
-    for (const category of WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES) {
-      const tools = toolsByCategory.get(category);
-
-      if (!tools || tools.length === 0) {
-        continue;
-      }
-
-      sections.push(`### ${category}
-${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
-    }
-
-    return sections.join('\n\n');
+    return {
+      agentRoleId,
+      rolePermissionConfig: {
+        intersectionOf: [...new Set([agentRoleId, ...workflowRoleIds])],
+      },
+    };
   }
 
   async executeAgent({
@@ -172,7 +154,9 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
     rolePermissionConfig?: RolePermissionConfig;
     authContext?: WorkspaceAuthContext;
   }): Promise<AgentExecutionResult> {
-    let lazyWorkflowToolCount = 0;
+    let registeredModel: RegisteredAiModel | undefined;
+    let generatedToolNames: string[] = [];
+    let effectiveAgentPermissions: EffectiveAgentPermissions | undefined;
 
     try {
       if (agent) {
@@ -188,72 +172,69 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
         }
       }
 
-      const registeredModel =
+      registeredModel =
         await this.aiModelRegistryService.resolveModelForAgent(agent);
 
       let tools: ToolSet = {};
       let providerOptions = {};
-      let workflowToolCatalogPrompt = '';
+      const workflowRoleIds = this.extractRoleIds(rolePermissionConfig);
 
       if (agent) {
-        const effectiveRoleConfig = await this.getEffectiveRolePermissionConfig(
+        effectiveAgentPermissions = await this.getEffectiveRolePermissionConfig(
           agent.id,
           agent.workspaceId,
           rolePermissionConfig,
         );
 
-        const roleId = this.extractRoleIds(effectiveRoleConfig)[0] ?? '';
-        const toolProviderContext: ToolProviderContext = {
-          workspaceId: agent.workspaceId,
-          roleId,
-          rolePermissionConfig: effectiveRoleConfig ?? { unionOf: [] },
-          authContext,
-          actorContext,
-          agent: toToolProviderAgent(agent),
-          userId:
-            isDefined(authContext) && isUserAuthContext(authContext)
-              ? authContext.user.id
-              : undefined,
-          userWorkspaceId:
-            isDefined(authContext) && isUserAuthContext(authContext)
-              ? authContext.userWorkspaceId
-              : undefined,
-        };
-
-        const nativeModelTools = await this.toolRegistry.getToolsByCategories(
-          toolProviderContext,
-          {
-            categories: [ToolCategory.NATIVE_MODEL],
-            wrapWithErrorContext: false,
-          },
-        );
-
-        const toolRuntime = await this.lazyToolRuntimeService.buildToolRuntime({
-          context: toolProviderContext,
-          directTools: nativeModelTools,
-          lazyToolCategories: WORKFLOW_AGENT_LAZY_TOOL_CATEGORIES,
-        });
-
-        tools = toolRuntime.runtimeTools;
-        lazyWorkflowToolCount = toolRuntime.lazyToolCatalog.length;
-        workflowToolCatalogPrompt = this.buildWorkflowToolCatalogPrompt({
-          toolCatalog: toolRuntime.lazyToolCatalog,
-          directToolNames: toolRuntime.directToolNames,
-        });
+        if (effectiveAgentPermissions) {
+          tools = await this.toolRegistry.getToolsByCategories(
+            {
+              workspaceId: agent.workspaceId,
+              roleId: effectiveAgentPermissions.agentRoleId,
+              rolePermissionConfig:
+                effectiveAgentPermissions.rolePermissionConfig,
+              authContext,
+              actorContext,
+              agent: toToolProviderAgent(agent),
+              userId:
+                isDefined(authContext) && isUserAuthContext(authContext)
+                  ? authContext.user.id
+                  : undefined,
+              userWorkspaceId:
+                isDefined(authContext) && isUserAuthContext(authContext)
+                  ? authContext.userWorkspaceId
+                  : undefined,
+            },
+            {
+              categories: [
+                ToolCategory.DATABASE_CRUD,
+                ToolCategory.ACTION,
+                ToolCategory.NATIVE_MODEL,
+              ],
+              wrapWithErrorContext: false,
+            },
+          );
+        }
 
         providerOptions = this.aiModelConfigService.getProviderOptions(
           registeredModel,
         );
+
+        generatedToolNames = Object.keys(tools).sort();
+
+        this.logger.log(
+          `Workflow agent tool context: agentId=${agent.id} modelId=${registeredModel.modelId} workflowRoleIds=[${workflowRoleIds.join(', ')}] savedAgentRoleId=${effectiveAgentPermissions?.agentRoleId ?? 'none'} effectiveRolePermissionConfig=${this.describeRolePermissionConfig(effectiveAgentPermissions?.rolePermissionConfig)} toolCount=${generatedToolNames.length}`,
+        );
+
+        if (generatedToolNames.length > 0) {
+          this.logger.log(
+            `Workflow agent generated tools for ${agent.id}: ${generatedToolNames.join(', ')}`,
+          );
+        }
       }
 
-      const runtimeToolCount = Object.keys(tools).length;
-
-      this.logger.log(
-        `Generated ${runtimeToolCount} runtime tools and ${lazyWorkflowToolCount} lazy workflow tools for agent`,
-      );
-
       const textResponse = await generateText({
-        system: `${WORKFLOW_SYSTEM_PROMPTS.BASE}\n\n${workflowToolCatalogPrompt}\n\n${agent ? agent.prompt : ''}`,
+        system: `${WORKFLOW_SYSTEM_PROMPTS.BASE}\n\n${agent ? agent.prompt : ''}`,
         tools,
         model: registeredModel.model,
         prompt: userPrompt,
@@ -275,6 +256,14 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
           });
         },
       });
+
+      const attemptedToolNames = this.extractAttemptedToolNames(
+        textResponse.steps,
+      );
+
+      this.logger.log(
+        `Workflow agent model response: agentId=${agent?.id ?? 'none'} modelId=${registeredModel.modelId} finishReason=${textResponse.finishReason} stepCount=${textResponse.steps.length} attemptedToolCalls=[${attemptedToolNames.join(', ')}]`,
+      );
 
       const cacheCreationTokens = extractCacheCreationTokensFromSteps(
         textResponse.steps,
@@ -330,6 +319,23 @@ ${tools.map((tool) => `- \`${tool.name}\``).join('\n')}`);
       if (error instanceof AiException) {
         throw error;
       }
+
+      const errorDetails =
+        typeof error === 'object' && error !== null
+          ? {
+              name: 'name' in error ? error.name : undefined,
+              message: 'message' in error ? error.message : undefined,
+              statusCode:
+                'statusCode' in error ? error.statusCode : undefined,
+              responseBody:
+                'responseBody' in error ? error.responseBody : undefined,
+              cause: 'cause' in error ? error.cause : undefined,
+            }
+          : { message: String(error) };
+
+      this.logger.error(
+        `Workflow agent execution failed: agentId=${agent?.id ?? 'none'} modelId=${registeredModel?.modelId ?? 'unknown'} savedAgentRoleId=${effectiveAgentPermissions?.agentRoleId ?? 'none'} toolCount=${generatedToolNames.length} error=${JSON.stringify(errorDetails)}`,
+      );
 
       throw new AiException(
         error instanceof Error ? error.message : 'Agent execution failed',

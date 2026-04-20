@@ -23,15 +23,16 @@ import { CodeInterpreterService } from 'src/engine/core-modules/code-interpreter
 import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
 import { ExceptionHandlerService } from 'src/engine/core-modules/exception-handler/exception-handler.service';
 import { COMMON_PRELOAD_TOOLS } from 'src/engine/core-modules/tool-provider/constants/common-preload-tools.const';
-import { type ToolProviderContext } from 'src/engine/core-modules/tool-provider/interfaces/tool-provider-context.type';
 import { wrapToolsWithOutputSerialization } from 'src/engine/core-modules/tool-provider/output-serialization/wrap-tools-with-output-serialization.util';
-import { LazyToolRuntimeService } from 'src/engine/core-modules/tool-provider/services/lazy-tool-runtime.service';
 import { ToolRegistryService } from 'src/engine/core-modules/tool-provider/services/tool-registry.service';
 import {
+  createExecuteToolTool,
+  createLearnToolsTool,
   createLoadSkillTool,
+  EXECUTE_TOOL_TOOL_NAME,
+  LEARN_TOOLS_TOOL_NAME,
   LOAD_SKILL_TOOL_NAME,
 } from 'src/engine/core-modules/tool-provider/tools';
-import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AgentActorContextService } from 'src/engine/metadata-modules/ai/ai-agent-execution/services/agent-actor-context.service';
 import { AGENT_CONFIG } from 'src/engine/metadata-modules/ai/ai-agent/constants/agent-config.const';
@@ -54,10 +55,10 @@ import {
 import { AI_TELEMETRY_CONFIG } from 'src/engine/metadata-modules/ai/ai-models/constants/ai-telemetry.const';
 import {
   AiModelRegistryService,
-  type RegisteredAiModel,
 } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
-import { SdkProviderFactoryService } from 'src/engine/metadata-modules/ai/ai-models/services/sdk-provider-factory.service';
 import { type AiModelConfig } from 'src/engine/metadata-modules/ai/ai-models/types/ai-model-config.type';
+import { AiModelConfigService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-config.service';
+import { WebSearchService } from 'src/engine/core-modules/web-search/web-search.service';
 import { SkillService } from 'src/engine/metadata-modules/skill/skill.service';
 
 export type ChatExecutionOptions = {
@@ -82,7 +83,6 @@ export class ChatExecutionService {
   private readonly logger = new Logger(ChatExecutionService.name);
 
   constructor(
-    private readonly lazyToolRuntimeService: LazyToolRuntimeService,
     private readonly toolRegistry: ToolRegistryService,
     private readonly skillService: SkillService,
     private readonly aiModelRegistryService: AiModelRegistryService,
@@ -92,7 +92,7 @@ export class ChatExecutionService {
     private readonly codeInterpreterService: CodeInterpreterService,
     private readonly systemPromptBuilder: SystemPromptBuilderService,
     private readonly exceptionHandlerService: ExceptionHandlerService,
-    private readonly sdkProviderFactory: SdkProviderFactoryService,
+    private readonly aiModelConfigService: AiModelConfigService,
     private readonly messagePruningService: MessagePruningService,
     private readonly webSearchService: WebSearchService,
   ) {}
@@ -114,12 +114,9 @@ export class ChatExecutionService {
         workspace.id,
       );
 
-    // Regular AI chat is not executing a saved agent, so agent-specific
-    // capability toggles should only apply in AgentAsyncExecutorService.
-    const toolProviderContext: ToolProviderContext = {
+    const toolContext = {
       workspaceId: workspace.id,
       roleId,
-      rolePermissionConfig: { unionOf: [roleId] },
       actorContext,
       userId,
       userWorkspaceId,
@@ -130,16 +127,31 @@ export class ChatExecutionService {
       ? this.buildContextFromBrowsingContext(workspace, browsingContext)
       : undefined;
 
-    const useNativeSearch = this.webSearchService.shouldUseNativeSearch();
+    const toolCatalog = await this.toolRegistry.buildToolIndex(
+      workspace.id,
+      roleId,
+      { userId, userWorkspaceId },
+    );
+
+    const skillCatalog = await this.skillService.findAllFlatSkills(
+      workspace.id,
+    );
 
     this.logger.log(
-      `Web search strategy: ${useNativeSearch ? 'native (provider SDK)' : 'external (EXA)'}`,
+      `Built tool catalog with ${toolCatalog.length} tools, ${skillCatalog.length} skills available`,
     );
+
+    const useNativeSearch = this.webSearchService.shouldUseNativeSearch();
 
     const toolNamesToPreload = [
       ...COMMON_PRELOAD_TOOLS,
       ...(useNativeSearch ? [] : ['web_search']),
     ];
+
+    const preloadedTools = await this.toolRegistry.getToolsByName(
+      toolNamesToPreload,
+      toolContext,
+    );
 
     const resolvedModelId = modelId ?? workspace.smartModel;
 
@@ -157,38 +169,36 @@ export class ChatExecutionService {
       registeredModel.modelId,
     );
 
-    const { tools: nativeSearchTools } = useNativeSearch
-      ? this.getNativeWebSearchTools(registeredModel)
-      : { tools: {} };
+    const { tools: nativeSearchTools, callableToolNames: searchToolNames } =
+      this.aiModelConfigService.getChatNativeSearchTools(registeredModel, {
+        useProviderNativeWebSearch: useNativeSearch,
+      });
 
-    const preloadedTools = await this.toolRegistry.getToolsByName(
-      toolNamesToPreload,
-      toolProviderContext,
-    );
+    // Direct tools: native provider tools + preloaded tools.
+    // These are callable directly AND as fallback through execute_tool.
+    const directTools: ToolSet = {
+      ...wrapToolsWithOutputSerialization(preloadedTools),
+      ...nativeSearchTools,
+    };
 
-    const toolRuntime = await this.lazyToolRuntimeService.buildToolRuntime({
-      context: toolProviderContext,
-      directTools: {
-        ...wrapToolsWithOutputSerialization(preloadedTools),
-        ...nativeSearchTools,
-      },
-    });
-
-    const toolCatalog = toolRuntime.toolCatalog;
-    const skillCatalog = await this.skillService.findAllFlatSkills(
-      workspace.id,
-    );
-
-    this.logger.log(
-      `Built tool catalog with ${toolCatalog.length} tools, ${skillCatalog.length} skills available`,
-    );
-
-    const preloadedToolNames = toolRuntime.directToolNames;
+    const preloadedToolNames = [
+      ...Object.keys(preloadedTools),
+      ...searchToolNames,
+    ];
 
     // ToolSet is constant for the entire conversation — no mutation.
     // learn_tools returns schemas as text; execute_tool dispatches to cached tools.
     const activeTools: ToolSet = {
-      ...toolRuntime.runtimeTools,
+      ...directTools,
+      [LEARN_TOOLS_TOOL_NAME]: createLearnToolsTool(
+        this.toolRegistry,
+        toolContext,
+      ),
+      [EXECUTE_TOOL_TOOL_NAME]: createExecuteToolTool(
+        this.toolRegistry,
+        toolContext,
+        directTools,
+      ),
       [LOAD_SKILL_TOOL_NAME]: createLoadSkillTool(
         (skillNames) =>
           this.skillService.findFlatSkillsByNames(skillNames, workspace.id),
@@ -442,48 +452,6 @@ export class ChatExecutionService {
     context += `\nUse get_view_query_parameters tool with this viewId to get the exact filter/sort parameters for querying records.`;
 
     return context;
-  }
-
-  private getNativeWebSearchTools(model: RegisteredAiModel): {
-    tools: ToolSet;
-  } {
-    const empty = { tools: {} };
-    const providerName = model.providerName;
-
-    if (!providerName) {
-      return empty;
-    }
-
-    switch (model.sdkPackage) {
-      case AI_SDK_ANTHROPIC: {
-        const provider =
-          this.sdkProviderFactory.getRawAnthropicProvider(providerName);
-
-        if (!provider) {
-          return empty;
-        }
-
-        return {
-          tools: { web_search: provider.tools.webSearch_20250305() },
-        };
-      }
-      case AI_SDK_BEDROCK:
-        return empty;
-      case AI_SDK_OPENAI: {
-        const provider =
-          this.sdkProviderFactory.getRawOpenAIProvider(providerName);
-
-        if (!provider) {
-          return empty;
-        }
-
-        return {
-          tools: { web_search: provider.tools.webSearch() },
-        };
-      }
-      default:
-        return empty;
-    }
   }
 
   private async storeExtractedFiles(

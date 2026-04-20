@@ -1,3 +1,4 @@
-import { type ModelConfiguration } from './model-configuration.type';
-
-export type AgentCapability = keyof ModelConfiguration;
+export type AgentCapability =
+  | 'webSearch'
+  | 'twitterSearch'
+  | 'codeInterpreter';
