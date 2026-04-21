@@ -11,12 +11,14 @@ import {
 } from 'twenty-sdk/ui';
 
 import { extractConnection } from '@modules/resend/shared/utils/typed-client';
+import { RESEND_SYNC_CURSOR_STEPS } from '@modules/resend/sync/cursor/constants/resend-sync-cursor-steps';
+import type { SyncCursorStep } from '@modules/resend/sync/cursor/types/sync-cursor-step';
 
 type CursorRowStatus = 'SUCCESS' | 'FAILED' | 'IN_PROGRESS';
 
 type CursorRow = {
   id: string;
-  step: string;
+  step: SyncCursorStep;
   cursor: string | null;
   lastRunAt: string | null;
   lastRunStatus: CursorRowStatus | null;
@@ -56,7 +58,7 @@ const formatTimestamp = (value: string | null): string => {
   return parsed.toLocaleString();
 };
 
-const formatStepLabel = (step: string): string =>
+const formatStepLabel = (step: SyncCursorStep): string =>
   step
     .toLowerCase()
     .split('_')
@@ -202,53 +204,50 @@ export const ResendSyncStatus = () => {
     );
   }
 
-  const sortedRows = [...state.rows].sort((a, b) =>
-    a.step.localeCompare(b.step),
-  );
+  const rowByStep = new Map<SyncCursorStep, CursorRow>();
+
+  for (const row of state.rows) {
+    rowByStep.set(row.step, row);
+  }
 
   return (
     <div style={styles.container}>
-      {sortedRows.length === 0 ? (
-        <Callout
-          variant="neutral"
-          title="No sync runs yet"
-          description="Trigger a sync from the command menu to populate this dashboard."
-        />
-      ) : (
-        sortedRows.map((row) => {
-          const runStatus = row.lastRunStatus;
-          const statusColor: StatusThemeColor = isDefined(runStatus)
-            ? STATUS_COLOR_BY_RUN_STATUS[runStatus]
-            : 'gray';
-          const statusLabel = isDefined(runStatus)
-            ? STATUS_LABEL_BY_RUN_STATUS[runStatus]
-            : 'Never run';
+      {RESEND_SYNC_CURSOR_STEPS.map((step) => {
+        const row = rowByStep.get(step);
+        const runStatus = row?.lastRunStatus ?? null;
+        const cursor = row?.cursor ?? null;
+        const lastRunAt = row?.lastRunAt ?? null;
+        const statusColor: StatusThemeColor = isDefined(runStatus)
+          ? STATUS_COLOR_BY_RUN_STATUS[runStatus]
+          : 'gray';
+        const statusLabel = isDefined(runStatus)
+          ? STATUS_LABEL_BY_RUN_STATUS[runStatus]
+          : 'Not synced';
 
-          return (
-            <div key={row.id} style={styles.card}>
-              <div style={styles.cardHeader}>
-                <div style={styles.h2TitleNoMargin}>
-                  <H2Title title={formatStepLabel(row.step)} />
-                </div>
-                <Status
-                  color={statusColor}
-                  text={statusLabel}
-                  isLoaderVisible={runStatus === 'IN_PROGRESS'}
-                />
+        return (
+          <div key={step} style={styles.card}>
+            <div style={styles.cardHeader}>
+              <div style={styles.h2TitleNoMargin}>
+                <H2Title title={formatStepLabel(step)} />
               </div>
-              <div style={styles.cardLine}>
-                Last run: {formatTimestamp(row.lastRunAt)}
-              </div>
-              {isDefined(row.cursor) && row.cursor !== '' && (
-                <div style={styles.cardLine}>
-                  Resume cursor:{' '}
-                  <code style={styles.cursorCode}>{row.cursor}</code>
-                </div>
-              )}
+              <Status
+                color={statusColor}
+                text={statusLabel}
+                isLoaderVisible={runStatus === 'IN_PROGRESS'}
+              />
             </div>
-          );
-        })
-      )}
+            <div style={styles.cardLine}>
+              Last run: {formatTimestamp(lastRunAt)}
+            </div>
+            {isDefined(cursor) && cursor !== '' && (
+              <div style={styles.cardLine}>
+                Resume cursor:{' '}
+                <code style={styles.cursorCode}>{cursor}</code>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

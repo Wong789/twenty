@@ -2,16 +2,8 @@ import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
 import { extractConnection } from '@modules/resend/shared/utils/typed-client';
+import { RESEND_SYNC_CURSOR_STEPS } from '@modules/resend/sync/cursor/constants/resend-sync-cursor-steps';
 import type { SyncCursorStep } from '@modules/resend/sync/cursor/types/sync-cursor-step';
-
-const REQUIRED_STEPS: ReadonlyArray<SyncCursorStep> = [
-  'TOPICS',
-  'SEGMENTS',
-  'TEMPLATES',
-  'CONTACTS',
-  'EMAILS',
-  'BROADCASTS',
-];
 
 type SyncCursorNode = {
   step: SyncCursorStep;
@@ -25,7 +17,7 @@ export const areAllSyncCursorsEmpty = async (
   const queryResult = await client.query({
     resendSyncCursors: {
       __args: {
-        first: REQUIRED_STEPS.length + 5,
+        first: RESEND_SYNC_CURSOR_STEPS.length + 5,
       },
       edges: {
         node: {
@@ -50,7 +42,7 @@ export const areAllSyncCursorsEmpty = async (
     }
   }
 
-  return REQUIRED_STEPS.every((step) => {
+  return RESEND_SYNC_CURSOR_STEPS.every((step) => {
     const row = rowByStep.get(step);
 
     if (!isDefined(row)) return false;
