@@ -515,11 +515,6 @@ msgstr "1. Välj ett objekt"
 msgid "1. Type"
 msgstr "1. Typ"
 
-#. js-lingui-id: 7IIx+y
-#: src/pages/onboarding/internal/ChooseYourPlanContent.tsx
-msgid "10,000 workflow node executions"
-msgstr "10 000 utföranden av arbetsflödesnoder"
-
 #. js-lingui-id: rU05hS
 #: src/modules/settings/experience/components/DateTimeSettingsTimeFormatSelect.tsx
 msgid "12h"
@@ -575,6 +570,11 @@ msgstr "Tvåfaktorsmetod har tagits bort framgångsrikt."
 #: src/modules/settings/two-factor-authentication/components/DeleteTwoFactorAuthenticationMethod.tsx
 msgid "2FA Method Reset"
 msgstr "Återställning av tvåfaktorsmetod"
+
+#. js-lingui-id: 2Lvxm0
+#: src/pages/onboarding/internal/ChooseYourPlanContent.tsx
+msgid "50,000 workflow node executions"
+msgstr ""
 
 #. js-lingui-id: 4lbHin
 #: src/modules/logic-functions/components/LogicFunctionExecutionResult.tsx
@@ -2745,7 +2745,6 @@ msgstr "caldav.example.com"
 #. js-lingui-id: AjVXBS
 #: src/modules/views/view-picker/constants/ViewPickerTypeSelectOptions.ts
 #: src/modules/settings/accounts/components/SettingsAccountsSettingsSection.tsx
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownLayoutContent.tsx
 msgid "Calendar"
 msgstr "Kalender"
@@ -4212,6 +4211,7 @@ msgstr "Nuvarande arbetsytemedlem inte hittad."
 #: src/pages/settings/ai/components/SettingsToolsTable.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelObjectPicker.tsx
 #: src/modules/settings/data-model/fields/forms/date/utils/getDisplayFormatLabel.ts
+#: src/modules/applications/hooks/useApplicationChipData.ts
 msgid "Custom"
 msgstr "Anpassad"
 
@@ -5582,7 +5582,6 @@ msgstr "E-postdomäner"
 #: src/pages/settings/accounts/SettingsAccountsEmails.tsx
 #: src/modules/settings/hooks/useSettingsNavigationItems.tsx
 #: src/modules/settings/accounts/components/SettingsAccountsSettingsSection.tsx
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
 msgid "Emails"
 msgstr "E-postmeddelanden"
 
@@ -6904,11 +6903,6 @@ msgstr ""
 msgid "File upload failed"
 msgstr "Filuppladdningen misslyckades"
 
-#. js-lingui-id: sER+bs
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
-msgid "Files"
-msgstr "Filer"
-
 #. js-lingui-id: o7J4JM
 #: src/modules/workflow/workflow-steps/workflow-actions/find-records-action/components/WorkflowEditActionFindRecords.tsx
 #: src/modules/views/components/ViewBarFilterDropdownFieldSelectMenu.tsx
@@ -7027,7 +7021,6 @@ msgstr "Åtgärda betalningsproblemet för att dina Enterprise-funktioner ska fo
 #. js-lingui-id: ylQd2j
 #: src/modules/workflow/workflow-steps/workflow-actions/utils/getActionHeaderTypeOrThrow.ts
 #: src/modules/side-panel/pages/workflow/action/components/SidePanelWorkflowSelectAction.tsx
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
 msgid "Flow"
 msgstr "Flöde"
 
@@ -7472,7 +7465,6 @@ msgid "Hide label"
 msgstr ""
 
 #. js-lingui-id: i0qMbr
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
 #: src/modules/navigation/components/MainNavigationDrawerTabsRow.tsx
 msgid "Home"
 msgstr "Hem"
@@ -10380,16 +10372,6 @@ msgstr "Inte delad av {notSharedByFullName}"
 #: src/modules/settings/accounts/components/SettingsAccountsConnectedAccountsRowRightContainer.tsx
 msgid "Not synced"
 msgstr "Inte synkroniserad"
-
-#. js-lingui-id: KiJn9B
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
-msgid "Note"
-msgstr "Anteckning"
-
-#. js-lingui-id: 1DBGsz
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
-msgid "Notes"
-msgstr "Anteckningar"
 
 #. js-lingui-id: DYCPYF
 #: src/modules/page-layout/widgets/components/StandaloneWidgetPlaceholder.tsx
@@ -13591,6 +13573,7 @@ msgstr "Stadier"
 #: src/pages/settings/ai/components/SettingsToolsTable.tsx
 #: src/pages/settings/ai/components/SettingsToolsTable.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/components/SettingsRolePermissionsObjectLevelObjectPicker.tsx
+#: src/modules/applications/hooks/useApplicationChipData.ts
 msgid "Standard"
 msgstr "Standard"
 
@@ -14044,11 +14027,6 @@ msgstr "Uppgiftstitel"
 msgid "Task Title"
 msgstr "Uppgiftstitel"
 
-#. js-lingui-id: GtycJ/
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
-msgid "Tasks"
-msgstr "Uppgifter"
-
 #. js-lingui-id: lKXcJz
 #: src/pages/settings/emailing-domains/utils/getEmailingDomainStatusText.ts
 msgid "Temporary Failure"
@@ -14346,6 +14324,11 @@ msgstr "Denna åtgärd kommer att ta bort denna mapp och alla {2} navigationsmen
 msgid "This action will delete this folder and the navigation menu item inside. Do you want to continue?"
 msgstr "Denna åtgärd kommer att ta bort denna mapp och navigationsmenyalternativet i den. Vill du fortsätta?"
 
+#. js-lingui-id: 6jJt3O
+#: src/modules/applications/hooks/useApplicationChipData.ts
+msgid "This app"
+msgstr ""
+
 #. js-lingui-id: SLIRqz
 #: src/modules/settings/admin-panel/config-variables/components/ConfigVariableHelpText.tsx
 msgid "This database value overrides environment settings. "
@@ -14535,7 +14518,6 @@ msgid "Time zone"
 msgstr "Tidszon"
 
 #. js-lingui-id: cklVjM
-#: src/modules/page-layout/constants/StandardPageLayoutTabTitleTranslations.ts
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownCalendarViewContent.tsx
 msgid "Timeline"
 msgstr "Tidslinje"

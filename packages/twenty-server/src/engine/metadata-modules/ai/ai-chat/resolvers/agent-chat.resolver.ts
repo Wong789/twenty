@@ -10,7 +10,6 @@ import {
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { PermissionFlagType } from 'twenty-shared/constants';
-import { FeatureFlagKey } from 'twenty-shared/types';
 import { isDefined } from 'twenty-shared/utils';
 import { Repository } from 'typeorm';
 import GraphQLJSON from 'graphql-type-json';
@@ -29,10 +28,6 @@ import { toDisplayCredits } from 'src/engine/core-modules/usage/utils/to-display
 import { type WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 import { AuthUserWorkspaceId } from 'src/engine/decorators/auth/auth-user-workspace-id.decorator';
 import { AuthWorkspace } from 'src/engine/decorators/auth/auth-workspace.decorator';
-import {
-  FeatureFlagGuard,
-  RequireFeatureFlag,
-} from 'src/engine/guards/feature-flag.guard';
 import { SettingsPermissionGuard } from 'src/engine/guards/settings-permission.guard';
 import { WorkspaceAuthGuard } from 'src/engine/guards/workspace-auth.guard';
 import {
@@ -54,11 +49,7 @@ import { getCancelChannel } from 'src/engine/metadata-modules/ai/ai-chat/utils/g
 import { SystemPromptBuilderService } from 'src/engine/metadata-modules/ai/ai-chat/services/system-prompt-builder.service';
 import { AiModelRegistryService } from 'src/engine/metadata-modules/ai/ai-models/services/ai-model-registry.service';
 
-@UseGuards(
-  WorkspaceAuthGuard,
-  FeatureFlagGuard,
-  SettingsPermissionGuard(PermissionFlagType.AI),
-)
+@UseGuards(WorkspaceAuthGuard, SettingsPermissionGuard(PermissionFlagType.AI))
 @UseInterceptors(AiGraphqlApiExceptionInterceptor)
 @MetadataResolver(() => AgentChatThreadDTO)
 export class AgentChatResolver {
@@ -76,7 +67,6 @@ export class AgentChatResolver {
   ) {}
 
   @Query(() => AgentChatThreadDTO)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async chatThread(
     @Args('id', { type: () => UUIDScalarType }) id: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
@@ -85,7 +75,6 @@ export class AgentChatResolver {
   }
 
   @Query(() => [AgentMessageDTO])
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async chatMessages(
     @Args('threadId', { type: () => UUIDScalarType }) threadId: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
@@ -97,7 +86,6 @@ export class AgentChatResolver {
   }
 
   @Query(() => ChatStreamCatchupChunksDTO)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async chatStreamCatchupChunks(
     @Args('threadId', { type: () => UUIDScalarType }) threadId: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
@@ -108,7 +96,6 @@ export class AgentChatResolver {
   }
 
   @Mutation(() => AgentChatThreadDTO)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async createChatThread(
     @AuthUserWorkspaceId() userWorkspaceId: string,
     @AuthWorkspace() workspace: WorkspaceEntity,
@@ -120,7 +107,6 @@ export class AgentChatResolver {
   }
 
   @Mutation(() => SendChatMessageResultDTO)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async sendChatMessage(
     @Args('threadId', { type: () => UUIDScalarType }) threadId: string,
     @Args('text') text: string,
@@ -210,7 +196,6 @@ export class AgentChatResolver {
   }
 
   @Mutation(() => Boolean)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async stopAgentChatStream(
     @Args('threadId', { type: () => UUIDScalarType }) threadId: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
@@ -236,7 +221,6 @@ export class AgentChatResolver {
   }
 
   @Mutation(() => Boolean)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async deleteQueuedChatMessage(
     @Args('messageId', { type: () => UUIDScalarType }) messageId: string,
     @AuthUserWorkspaceId() userWorkspaceId: string,
@@ -276,7 +260,6 @@ export class AgentChatResolver {
   }
 
   @Query(() => AiSystemPromptPreviewDTO)
-  @RequireFeatureFlag(FeatureFlagKey.IS_AI_ENABLED)
   async getAiSystemPromptPreview(
     @AuthWorkspace() workspace: WorkspaceEntity,
     @AuthUserWorkspaceId() userWorkspaceId: string,

@@ -1,381 +1,90 @@
 ---
 title: دليل الترقية
+icon: arrow-up-right-dots
 ---
 
 ## إرشادات عامة
 
-**تأكد دائماً من عمل نسخة احتياطية لقاعدة بياناتك قبل بدء عملية الترقية** عن طريق تشغيل `docker exec -it {db_container_name_or_id} pg_dumpall -U {postgres_user} > databases_backup.sql`.
-
-لاستعادة النسخة الاحتياطية، قم بتشغيل `cat databases_backup.sql | docker exec -i {db_container_name_or_id} psql -U {postgres_user}`.
-
-إذا كنت تستخدم Docker Compose، اتبع الخطوات التالية:
-
-1. في الطرفية، على الجهاز الذي يعمل فيه Twenty، قم بإيقاف Twenty: `docker compose down`
-
-2. قم بترقية الإصدار عن طريق تغيير قيمة `TAG` في ملف .env بجانب docker-compose. ( نوصي باستخدام إصدار `major.minor` مثل `v0.53` )
-
-3. قم بإعادة تشغيل Twenty باستخدام `docker compose up -d`
-
-إذا كنت ترغب في ترقية مثيلك بزيادة بعض الإصدارات، مثل الانتقال من v0.33.0 إلى v0.35.0، يجب أن تقوم بترقية مثيلك بشكل تسلسلي، في هذا المثال من v0.33.0 إلى v0.34.0، ثم من v0.34.0 إلى v0.35.0.
-
-**تأكد من أن لديك نسخة احتياطية غير تالفة بعد كل إصدار تمت ترقيته.**
-
-## خطوات الترقية الخاصة بالإصدار
-
-## v1.0
-
-مرحباً Twenty v1.0! 🎉
-
-## v0.60
-
-### تحسين الأداء
-
-تم تحسين جميع التفاعلات مع واجهة برمجة التطبيقات للبيانات الوصفية للحصول على أداء أفضل، خاصة فيما يتعلق بمعالجة بيانات الكائن وإنشاء المساحات.
-
-أعدنا تصميم استراتيجيتنا للتخزين المؤقت لإعطاء الأولوية للوصول عبر التخزين المؤقت على استعلامات قاعدة البيانات قدر الإمكان، مما أدى إلى تحسين كبير في أداء عمليات واجهة برمجة التطبيقات للبيانات الوصفية.
-
-إذا واجهت أي مشاكل في وقت التشغيل بعد الترقية، قد تحتاج إلى مسح التخزين المؤقت لضمان تزامنه مع أحدث التغييرات. قم بتشغيل هذا الأمر في حاوية خادم twenty الخاص بك:
+**Always back up your database before starting the upgrade process** by running:
 
 ```bash
-yarn command:prod cache:flush
+docker exec -it {db_container_name_or_id} pg_dumpall -U {postgres_user} > databases_backup.sql
 ```
 
-### v0.55
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.55
-
-لم تعد بحاجة إلى تشغيل أي أمر، الصورة الجديدة ستعتني بتشغيل جميع الترحيلات المطلوبة تلقائيًا.
-
-### خطأ: `User does not have permission`
-
-إذا واجهت أخطاء في الأذونات في معظم الطلبات بعد الترقية، فقد تحتاج إلى مسح التخزين المؤقت لإعادة حساب أحدث الأذونات.
-
-في حاوية خادم `twenty` الخاص بك، قم بتشغيل:
+To restore from backup:
 
 ```bash
-yarn command:prod cache:flush
+cat databases_backup.sql | docker exec -i {db_container_name_or_id} psql -U {postgres_user}
 ```
 
-هذه المشكلة خاصة بهذا الإصدار من Twenty ولا يجب أن تكون ضرورية في الترقيات المستقبلية.
+If you use Docker Compose, follow these steps:
 
-### v0.54
+1. Stop Twenty: `docker compose down`
+2. Change the `TAG` value in the `.env` file next to your `docker-compose.yml`
+3. Start Twenty: `docker compose up -d`
 
-منذ الإصدار `0.53`، لا حاجة لأي إجراءات يدوية.
+The server runs all required upgrade migrations automatically on startup. No manual command is needed.
 
-#### إيقاف تشغيل مخطط البيانات الوصفية
+## Cross-version upgrades (v1.22+)
 
-قمنا بدمج مخطط `metadata` مع مخطط `core` لتبسيط استرجاع البيانات من `TypeORM`.
-قمنا بدمج خطوة تنفيذ الأمر `migrate` مع الأمر `upgrade`. لا ننصح بتشغيل `migrate` يدويًا داخل أي من حاويات الخادم/العمل الخاصة بك.
+Starting from **v1.22**, Twenty supports cross-version upgrades. You can jump directly from any supported version to the latest release without stepping through each intermediate version.
 
-### منذ v0.53
+For example, upgrading from v1.22 straight to v2.0 is fully supported.
 
-بدءًا من الإصدار `0.53`، تتم الترقية بشكل برمجي داخل `DockerFile`، مما يعني أنه من الآن فصاعدًا، لن تحتاج إلى تشغيل أي أوامر يدويًا بعد الآن.
+## Checking upgrade status
 
-تأكد من متابعة الترقية الخاصة بك تسلسليًا، دون تخطي أي إصدار رئيسي (على سبيل المثال `0.43.3` إلى `0.44.0` مسموح، ولكن `0.43.1` إلى `0.45.0` غير مسموح)، قد يؤدي بخلاف ذلك إلى عدم تزامن إصدار مساحة العمل مما قد يؤدي إلى خطأ في وقت التشغيل وفقدان الوظائف.
+The `upgrade:status` command lets you inspect the current state of your instance and workspace migrations. It is useful for debugging upgrade issues or when filing a support request.
 
-للتحقق مما إذا كانت مساحة العمل قد تمت ترقيتها بشكل صحيح ، يمكنك مراجعة نسختها في قاعدة البيانات في جدول `core.workspace`.
+Run it from the server container:
 
-يجب أن تكون دائمًا في نطاق إصدار `major.minor` لحساب Twenty الحالي الخاص بك ، ويمكنك مشاهدة نسخة حسابك في لوحة المدير (في `/settings/admin-panel`، يمكن الوصول إليها إذا كانت خاصية `canAccessFullAdminPanel` الخاصة بالمستخدم مصفوفة إلى true في قاعدة البيانات) أو عن طريق تشغيل `echo $APP_VERSION` في حاوية `twenty-server` الخاصة بك.
-
-لإصلاح إصدار مساحة العمل غير المتزامن ، سيتعين عليك الترقية من الإصدار المعني لـ Twenty باتباع دليل الترقية الخاص ذو الصلة تسلسليًا وهكذا حتى يصل إلى الإصدار المطلوب.
-
-#### إزالة `auditLog`
-
-لقد قمنا بإزالة كائن المعيار auditLog، مما يعني أن حجم النسخة الاحتياطية الخاصة بك قد يقل بشكل كبير بعد هذه الترقية.
-
-### من v0.51 إلى v0.52
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.52
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade
+```bash
+docker exec -it {server_container_name_or_id} yarn command:prod upgrade:status
 ```
 
-#### لدي مساحة عمل محظورة في الإصدار بين `0.52.0` و`0.52.6`
+مثال على المخرجات:
 
-لسوء الحظ، تم إزالة `0.52.0` و`0.52.6` بالكامل من dockerHub.
-سيتعين عليك تحديث نسخة مساحة العمل يدويًا إلى `0.51.0` في قاعدة البيانات والترقية باستخدام إصدار twenty عند `0.52.11` باتباع دليل الترقية الخاص به أعلاه.
+```sh
+APP_VERSION: v1.23.0
 
-### من v0.50 إلى v0.51
+Instance
+    Inferred version: 1.23.0
+    Latest command:   1.23.0_DropWorkspaceVersionColumnFastInstanceCommand_1785000000000
+    Status:           Up to date
+    Executed by:      v1.23.0
+    At:               2026-04-16T11:43:58.823Z
 
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.51
+Workspace
+  Apple (20202020-1c25-4d02-bf25-6aeccf7ea419)
+      Inferred version: 1.23.0
+      Latest command:   1.23.0_UpdateGlobalObjectContextCommandMenuItemsCommand_1780000005000
+      Status:           Up to date
+      Executed by:      v1.23.0
+      At:               2026-04-16T11:44:09.361Z
 
-```
-yarn database:migrate:prod
-yarn command:prod upgrade
-```
-
-### من v0.44.0 إلى v0.50.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.50.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade
-```
-
-#### تغيير ملف docker-compose.yml
-
-يتضمن هذا الإصدار تغييرًا في `docker-compose.yml` لمنح خدمة `worker` إمكانية الوصول إلى وحدة التخزين `server-local-data`.
-يرجى تحديث `docker-compose.yml` المحلي الخاص بك بـ [docker-compose.yml v0.50.0](https://github.com/twentyhq/twenty/blob/v0.50.0/packages/twenty-docker/docker-compose.yml)
-
-### من v0.43.0 إلى v0.44.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.44.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade
+Summary
+    Instance: Up to date
+    Workspaces: 1 up to date, 0 behind, 0 failed (1 total)
 ```
 
-### من v0.42.0 إلى v0.43.0
+### خيارات
 
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.43.0
+| Flag                      | الوصف                                                            |
+| ------------------------- | ---------------------------------------------------------------- |
+| `-w, --workspace-id <id>` | Filter to a specific workspace. Can be passed multiple times.    |
+| `-f, --failed-only`       | Hide up-to-date workspaces, only show behind and failed entries. |
 
-```
-yarn database:migrate:prod
-yarn command:prod upgrade
-```
+## استكشاف الأخطاء وإصلاحها
 
-في هذا الإصدار، قمنا أيضًا بالتحول إلى صورة postgres:16 في docker-compose.yml.
+If the upgrade fails on some workspaces, the server will not advance past the failing step. Restarting the server (`docker compose up -d`) will retry the upgrade from where it left off.
 
-#### (الخيار 1) ترحيل قاعدة البيانات
+To quickly identify problems, run:
 
-احتفاظ بصورة postgres-spilo الحالية مقبول، ولكن سيتعين عليك تجميد الإصدار في docker-compose.yml ليكون 0.43.0.
-
-#### (الخيار 2) ترحيل قاعدة البيانات
-
-إذا كنت تريد ترحيل قاعدة بياناتك إلى الصورة الجديدة postgres:16، يرجى اتباع هذه الخطوات:
-
-1. نسخ قاعدة البيانات الخاصة بك من حاوية postgres-spilo القديمة
-
-```
-docker exec -it twenty-db-1 sh
-pg_dump -U {YOUR_POSTGRES_USER} -d {YOUR_POSTGRES_DB} > databases_backup.sql
-exit
-docker cp twenty-db-1:/home/postgres/databases_backup.sql .
+```bash
+docker exec -it {server_container_name_or_id} yarn command:prod upgrade:status --failed-only
 ```
 
-تأكد من أن ملف النسخ الاحتياطي ليس فارغًا.
+This shows only workspaces that are behind or have failed, along with the error message for each failure.
 
-2. قم بترقية docker-compose.yml الخاص بك لاستخدام صورة postgres:16 كما هو في الملف [docker-compose.yml](https://raw.githubusercontent.com/twentyhq/twenty/main/packages/twenty-docker/docker-compose.yml).
+## Before v1.22
 
-3. استعادة قاعدة البيانات إلى الحاوية الجديدة postgres:16
-
-```
-docker cp databases_backup.sql twenty-db-1:/databases_backup.sql
-docker exec -it twenty-db-1 sh
-psql -U {YOUR_POSTGRES_USER} -d {YOUR_POSTGRES_DB} -f databases_backup.sql
-exit
-```
-
-### من v0.41.0 إلى v0.42.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.42.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.42
-```
-
-**متغيرات البيئة**
-
-* تمت الإزالة: `FRONT_PORT`, `FRONT_PROTOCOL`, `FRONT_DOMAIN`, `PORT`
-* تمت الإضافة: `FRONTEND_URL`, `NODE_PORT`, `MAX_NUMBER_OF_WORKSPACES_DELETED_PER_EXECUTION`, `MESSAGING_PROVIDER_MICROSOFT_ENABLED`, `CALENDAR_PROVIDER_MICROSOFT_ENABLED`, `IS_MICROSOFT_SYNC_ENABLED`
-
-### من v0.40.0 إلى v0.41.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.41.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.41
-```
-
-**متغيرات البيئة**
-
-* تمت الإزالة: `AUTH_MICROSOFT_TENANT_ID`
-
-### من v0.35.0 إلى v0.40.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.40.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.40
-```
-
-**متغيرات البيئة**
-
-* تمت الإضافة: `IS_EMAIL_VERIFICATION_REQUIRED`, `EMAIL_VERIFICATION_TOKEN_EXPIRES_IN`, `WORKFLOW_EXEC_THROTTLE_LIMIT`, `WORKFLOW_EXEC_THROTTLE_TTL`
-
-### من v0.34.0 إلى v0.35.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.35.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.35
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.35` يتولى ترقية البيانات إلى جميع المساحات.
-
-**متغيرات البيئة**
-
-* قمنا باستبدال `ENABLE_DB_MIGRATIONS` بـ `DISABLE_DB_MIGRATIONS` (القيمة الافتراضية الآن `false`, على الأرجح لن تحتاج إلى تعيين أي شيء)
-
-### من v0.33.0 إلى v0.34.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.34.0
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.34
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.34` يتولى ترقية البيانات إلى جميع المساحات.
-
-**متغيرات البيئة**
-
-* تمت الإزالة: `FRONT_BASE_URL`
-* تمت الإضافة: `FRONT_DOMAIN`, `FRONT_PROTOCOL`, `FRONT_PORT`
-
-لقد قمنا بتحديث الطريقة التي نتعامل بها مع عنوان URL الخاص بالواجهة الأمامية.
-يمكنك الآن تعيين عنوان URL الخاص بالواجهة الأمامية باستخدام متغيرات `FRONT_DOMAIN`, `FRONT_PROTOCOL` و`FRONT_PORT`.
-إذا لم يتم تعيين FRONT_DOMAIN، فسوف يتراجع عنوان URL للواجهة الأمامية إلى `SERVER_URL`.
-
-### من v0.32.0 إلى v0.33.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.33.0
-
-```
-yarn command:prod cache:flush
-yarn database:migrate:prod
-yarn command:prod upgrade-0.33
-```
-
-أمر `yarn command:prod cache:flush` سيقوم بمسح ذاكرة تخزين Redis المؤقتة.
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.33` يتولى ترقية البيانات إلى جميع المساحات.
-
-بدءًا من هذا الإصدار، أصبحت صورة twenty-postgres للقاعدة غير نشطة وتم استخدام twenty-postgres-spilo بدلاً منها.
-إذا كنت ترغب في الاستمرار باستخدام صورة twenty-postgres، فما عليك سوى استبدال `twentycrm/twenty-postgres:${TAG}` بـ `twentycrm/twenty-postgres` في docker-compose.yml.
-
-### من v0.31.0 إلى v0.32.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.32.0
-
-**ترقية المخطط والبيانات**
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.32
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.32` يتولى ترقية البيانات إلى جميع المساحات.
-
-**متغيرات البيئة**
-
-لقد قمنا بتحديث الطريقة التي نتعامل بها مع اتصال Redis.
-
-* تمت الإزالة: `REDIS_HOST`, `REDIS_PORT`, `REDIS_USERNAME`, `REDIS_PASSWORD`
-* تمت الإضافة: `REDIS_URL`
-
-قم بتحديث ملفك `.env` لاستخدام المتغير الجديد `REDIS_URL` بدلاً من معلمات اتصال Redis الفردية.
-
-قمنا أيضًا بتبسيط الطريقة التي نتعامل بها مع رموز JWT.
-
-* تمت الإزالة: `ACCESS_TOKEN_SECRET`, `LOGIN_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `FILE_TOKEN_SECRET`
-* تمت الإضافة: `APP_SECRET`
-
-قم بتحديث ملفك `.env` لاستخدام المتغير الجديد `APP_SECRET` بدلاً من الأسرار الفردية للرموز (يمكنك استخدام نفس السر كما كان من قبل أو توليد سلسلة عشوائية جديدة)
-
-**الحساب المتصل**
-
-إذا كنت تستخدم حسابًا متصلًا لمزامنة رسائل بريدك الإلكتروني في جوجل والتقويمات، فستحتاج إلى تفعيل [People API](https://developers.google.com/people) في وحدة تحكم مشرف جوجل لديك.
-
-### من v0.30.0 إلى v0.31.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.31.0
-
-**ترقية المخطط والبيانات**:
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.31
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.31` يتولى ترقية البيانات إلى جميع المساحات.
-
-### من v0.24.0 إلى v0.30.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.30.0
-
-**تغيير كبير**:
-لتحسين الأداء، يتطلب Twenty الآن تكوين Redis للتخزين المؤقت. قمنا بتحديث [docker-compose.yml](https://raw.githubusercontent.com/twentyhq/twenty/main/packages/twenty-docker/docker-compose.yml) لتعكس ذلك.
-تأكد من تحديث إعدادات التكوين الخاصة بك وتحديث المتغيرات البيئية الخاصة بك وفقًا لذلك:
-
-```
-REDIS_HOST={your-redis-host}
-REDIS_PORT={your-redis-port}
-CACHE_STORAGE_TYPE=redis
-```
-
-**ترقية المخطط والبيانات**:
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.30
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.30` يتولى ترقية البيانات إلى جميع المساحات.
-
-### من v0.23.0 إلى v0.24.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.24.0
-
-قم بتشغيل الأوامر التالية:
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.24
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على هيكل قاعدة البيانات (مخططات core وmetadata)
-أمر `yarn command:prod upgrade-0.24` يتولى ترقية البيانات إلى جميع المساحات.
-
-### من v0.22.0 إلى v0.23.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.23.0
-
-قم بتشغيل الأوامر التالية:
-
-```
-yarn database:migrate:prod
-yarn command:prod upgrade-0.23
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على قاعدة البيانات.
-أمر `yarn command:prod upgrade-0.23` يتولى ترقية البيانات، بما في ذلك نقل الأنشطة إلى المهام/الملاحظات.
-
-### من v0.21.0 إلى v0.22.0
-
-قم بترقية مثيل Twenty الخاص بك لاستخدام صورة v0.22.0
-
-قم بتشغيل الأوامر التالية:
-
-```
-yarn database:migrate:prod
-yarn command:prod workspace:sync-metadata -f
-yarn command:prod upgrade-0.22
-```
-
-أمر `yarn database:migrate:prod` سيقوم بتطبيق الترقيات على قاعدة البيانات.
-الأمر `yarn command:prod workspace:sync-metadata -f` سيزامن تعريف الكائنات القياسية مع جداول البيانات الوصفية ويطبق الترقيات المطلوبة على مساحات العمل الموجودة.
-الأمر `yarn command:prod upgrade-0.22` سيقوم بتطبيق تحويلات بيانات محددة للتكيف مع الخيارات الافتراضية الجديدة لتوثيق الطلبات في الكائنات.
+If your instance is older than v1.22, you must upgrade incrementally through each major tagged version (v1.6 to v1.7, then v1.7 to v1.8, and so on) until you reach v1.22. From there, you can jump directly to the latest version.
