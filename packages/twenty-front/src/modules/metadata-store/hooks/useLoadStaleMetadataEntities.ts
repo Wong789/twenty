@@ -62,10 +62,15 @@ export const useLoadStaleMetadataEntities = () => {
         return;
       }
 
-      const fetchPromises: Promise<void>[] = [];
+      // Critical entities are needed to render the current page (objects, views, page layouts).
+      // Deferred entities are supplementary and can load after the page is interactive.
+      // Splitting into two tiers reduces HTTP/2 connection contention during cold loads,
+      // preventing the metadata burst from starving concurrent GraphQL data queries.
+      const criticalFetchPromises: Promise<void>[] = [];
+      const deferredFetchPromises: Promise<void>[] = [];
 
       if (hasOverlap(staleEntityKeys, OBJECTS_GROUP_KEYS)) {
-        fetchPromises.push(
+        criticalFetchPromises.push(
           client
             .query<ObjectMetadataItemsQuery>({
               query: FIND_MANY_OBJECT_METADATA_ITEMS,
@@ -83,7 +88,7 @@ export const useLoadStaleMetadataEntities = () => {
       }
 
       if (hasOverlap(staleEntityKeys, VIEWS_GROUP_KEYS)) {
-        fetchPromises.push(
+        criticalFetchPromises.push(
           Promise.all([
             client.query({
               query: FindAllViewsDocument,
@@ -135,7 +140,7 @@ export const useLoadStaleMetadataEntities = () => {
       }
 
       if (hasOverlap(staleEntityKeys, PAGE_LAYOUTS_GROUP_KEYS)) {
-        fetchPromises.push(
+        criticalFetchPromises.push(
           client
             .query({
               query: FindAllRecordPageLayoutsDocument,
@@ -163,7 +168,7 @@ export const useLoadStaleMetadataEntities = () => {
       }
 
       if (staleEntityKeys.includes('logicFunctions')) {
-        fetchPromises.push(
+        deferredFetchPromises.push(
           client
             .query({
               query: FindManyLogicFunctionsDocument,
@@ -183,7 +188,7 @@ export const useLoadStaleMetadataEntities = () => {
       }
 
       if (staleEntityKeys.includes('navigationMenuItems')) {
-        fetchPromises.push(
+        deferredFetchPromises.push(
           client
             .query({
               query: FindManyNavigationMenuItemsDocument,
@@ -203,7 +208,7 @@ export const useLoadStaleMetadataEntities = () => {
       }
 
       if (staleEntityKeys.includes('commandMenuItems')) {
-        fetchPromises.push(
+        deferredFetchPromises.push(
           client
             .query({
               query: FindManyCommandMenuItemsDocument,
@@ -220,7 +225,7 @@ export const useLoadStaleMetadataEntities = () => {
       }
 
       if (staleEntityKeys.includes('frontComponents')) {
-        fetchPromises.push(
+        deferredFetchPromises.push(
           client
             .query({
               query: FindManyFrontComponentsDocument,
@@ -236,8 +241,15 @@ export const useLoadStaleMetadataEntities = () => {
         );
       }
 
-      await Promise.all(fetchPromises);
+      // Load critical entities first so the page can render,
+      // then load deferred entities without competing for bandwidth.
+      await Promise.all(criticalFetchPromises);
       applyChanges();
+
+      if (deferredFetchPromises.length > 0) {
+        await Promise.all(deferredFetchPromises);
+        applyChanges();
+      }
     },
     [client, replaceDraft, applyChanges],
   );
