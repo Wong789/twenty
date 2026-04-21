@@ -26,11 +26,17 @@ export const withSyncCursor = async <TValue>(
     lastRunStatus: 'IN_PROGRESS',
   });
 
+  const hasResumeCursor =
+    isDefined(cursorRow.cursor) && cursorRow.cursor.length > 0;
+
+  if (hasResumeCursor) {
+    console.log(
+      `[sync] resuming step ${step} from cursor ${cursorRow.cursor}`,
+    );
+  }
+
   const context: SyncCursorContext = {
-    resumeCursor:
-      isDefined(cursorRow.cursor) && cursorRow.cursor.length > 0
-        ? cursorRow.cursor
-        : undefined,
+    resumeCursor: hasResumeCursor ? cursorRow.cursor ?? undefined : undefined,
     onCursorAdvance: (cursor) => setCursor(client, cursorRow.id, cursor),
   };
 

@@ -5,8 +5,11 @@ export type UpdateBroadcastDto = {
   scheduledAt: string | null;
   sentAt: string | null;
   segmentId?: string | null;
+  topicId?: string | null;
   subject?: string;
   fromAddress?: EmailsField;
   replyTo?: EmailsField;
   previewText?: string;
+  htmlBody?: string;
+  textBody?: string;
 };

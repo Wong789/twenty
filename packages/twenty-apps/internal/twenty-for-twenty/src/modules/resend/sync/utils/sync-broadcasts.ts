@@ -16,6 +16,7 @@ import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateBroadcastDto } from '@modules/resend/sync/types/update-broadcast.dto';
 import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
+import type { TopicIdMap } from '@modules/resend/sync/utils/sync-topics';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 
 type BroadcastDetail = Awaited<
@@ -57,6 +58,7 @@ export const syncBroadcasts = async (
   resend: Resend,
   client: CoreApiClient,
   segmentMap: SegmentIdMap,
+  topicMap: TopicIdMap,
 ): Promise<SyncStepResult> => {
   const aggregate: SyncResult = {
     fetched: 0,
@@ -105,6 +107,16 @@ export const syncBroadcasts = async (
                 data.fromAddress = toEmailsField(detail.from);
                 data.replyTo = toEmailsField(detail.reply_to);
                 data.previewText = detail.preview_text ?? '';
+                data.htmlBody = detail.html ?? '';
+                data.textBody = detail.text ?? '';
+
+                if (isDefined(detail.topic_id)) {
+                  const topicId = topicMap.get(detail.topic_id);
+
+                  if (isDefined(topicId)) {
+                    data.topicId = topicId;
+                  }
+                }
               }
 
               return data;
@@ -137,6 +149,22 @@ export const syncBroadcasts = async (
                 data.fromAddress = toEmailsField(detail.from);
                 data.replyTo = toEmailsField(detail.reply_to);
                 data.previewText = detail.preview_text ?? '';
+                data.htmlBody = detail.html ?? '';
+                data.textBody = detail.text ?? '';
+
+                if (!isDefined(detail.topic_id)) {
+                  data.topicId = null;
+                } else {
+                  const topicId = topicMap.get(detail.topic_id);
+
+                  if (isDefined(topicId)) {
+                    data.topicId = topicId;
+                  } else {
+                    console.warn(
+                      `[sync] broadcast ${broadcast.id}: topic ${detail.topic_id} not found in lookup map; leaving topicId untouched`,
+                    );
+                  }
+                }
               }
 
               return data;

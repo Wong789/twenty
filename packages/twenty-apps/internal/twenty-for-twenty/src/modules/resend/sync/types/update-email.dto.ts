@@ -11,4 +11,5 @@ export type UpdateEmailDto = {
   lastEvent?: LastEvent;
   scheduledAt: string | null;
   lastSyncedFromResend: string;
+  personId?: string;
 };

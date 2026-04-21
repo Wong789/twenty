@@ -24,7 +24,8 @@ const findExistingCursor = async (
     resendSyncCursors: {
       __args: {
         filter: {
-          step: { eq: step },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          step: { eq: step as any },
         },
         first: 1,
       },
@@ -71,7 +72,8 @@ export const getOrCreateSyncCursor = async (
       createResendSyncCursor: {
         __args: {
           data: {
-            step,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            step: step as any,
           },
         },
         id: true,

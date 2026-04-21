@@ -4,7 +4,6 @@ import { CoreApiClient } from 'twenty-client-sdk/core';
 
 import { findPeopleByEmail } from '@modules/resend/shared/utils/find-people-by-email';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
-import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
 import { mapLastEvent } from '@modules/resend/shared/utils/map-last-event';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
@@ -49,56 +48,6 @@ export const syncEmails = async (
       await forEachPage(
         (paginationParameters) => resend.emails.list(paginationParameters),
         async (pageEmails) => {
-          const pageOutcome = await upsertRecords({
-            items: pageEmails,
-            getId: (email) => email.id,
-            mapCreateData: (_detail, email): CreateEmailDto => {
-              const mappedLastEvent = mapLastEvent(email.last_event);
-
-              return {
-                subject: email.subject,
-                fromAddress: toEmailsField(email.from),
-                toAddresses: toEmailsField(email.to),
-                ccAddresses: toEmailsField(email.cc),
-                bccAddresses: toEmailsField(email.bcc),
-                replyToAddresses: toEmailsField(email.reply_to),
-                ...(isDefined(mappedLastEvent) && {
-                  lastEvent: mappedLastEvent,
-                }),
-                createdAt: toIsoString(email.created_at),
-                scheduledAt: toIsoStringOrNull(email.scheduled_at),
-                lastSyncedFromResend: syncedAt,
-              };
-            },
-            mapUpdateData: (_detail, email): UpdateEmailDto => {
-              const mappedLastEvent = mapLastEvent(email.last_event);
-
-              return {
-                subject: email.subject,
-                fromAddress: toEmailsField(email.from),
-                toAddresses: toEmailsField(email.to),
-                ccAddresses: toEmailsField(email.cc),
-                bccAddresses: toEmailsField(email.bcc),
-                replyToAddresses: toEmailsField(email.reply_to),
-                ...(isDefined(mappedLastEvent) && {
-                  lastEvent: mappedLastEvent,
-                }),
-                scheduledAt: toIsoStringOrNull(email.scheduled_at),
-                lastSyncedFromResend: syncedAt,
-              };
-            },
-            client,
-            objectNameSingular: 'resendEmail',
-            objectNamePlural: 'resendEmails',
-          });
-
-          aggregate.fetched += pageOutcome.result.fetched;
-          aggregate.created += pageOutcome.result.created;
-          aggregate.updated += pageOutcome.result.updated;
-          aggregate.errors.push(...pageOutcome.result.errors);
-
-          let personLinkOk = true;
-
           const primaryToByEmail = new Map<string, string>();
 
           for (const email of pageEmails) {
@@ -114,43 +63,65 @@ export const syncEmails = async (
             Array.from(primaryToByEmail.values()),
           );
 
-          for (const email of pageEmails) {
-            const twentyId = pageOutcome.twentyIdByResendId.get(email.id);
+          const resolvePersonId = (resendEmailId: string): string | undefined => {
+            const primaryTo = primaryToByEmail.get(resendEmailId);
 
-            if (!isDefined(twentyId)) {
-              continue;
-            }
+            if (!isDefined(primaryTo)) return undefined;
 
-            const primaryTo = primaryToByEmail.get(email.id);
+            return personIdByEmail.get(primaryTo.trim().toLowerCase());
+          };
 
-            if (!isDefined(primaryTo)) {
-              continue;
-            }
+          const pageOutcome = await upsertRecords({
+            items: pageEmails,
+            getId: (email) => email.id,
+            mapCreateData: (_detail, email): CreateEmailDto => {
+              const mappedLastEvent = mapLastEvent(email.last_event);
+              const personId = resolvePersonId(email.id);
 
-            const personId = personIdByEmail.get(
-              primaryTo.trim().toLowerCase(),
-            );
+              return {
+                subject: email.subject,
+                fromAddress: toEmailsField(email.from),
+                toAddresses: toEmailsField(email.to),
+                ccAddresses: toEmailsField(email.cc),
+                bccAddresses: toEmailsField(email.bcc),
+                replyToAddresses: toEmailsField(email.reply_to),
+                ...(isDefined(mappedLastEvent) && {
+                  lastEvent: mappedLastEvent,
+                }),
+                createdAt: toIsoString(email.created_at),
+                scheduledAt: toIsoStringOrNull(email.scheduled_at),
+                lastSyncedFromResend: syncedAt,
+                ...(isDefined(personId) && { personId }),
+              };
+            },
+            mapUpdateData: (_detail, email): UpdateEmailDto => {
+              const mappedLastEvent = mapLastEvent(email.last_event);
+              const personId = resolvePersonId(email.id);
 
-            if (!isDefined(personId)) {
-              continue;
-            }
+              return {
+                subject: email.subject,
+                fromAddress: toEmailsField(email.from),
+                toAddresses: toEmailsField(email.to),
+                ccAddresses: toEmailsField(email.cc),
+                bccAddresses: toEmailsField(email.bcc),
+                replyToAddresses: toEmailsField(email.reply_to),
+                ...(isDefined(mappedLastEvent) && {
+                  lastEvent: mappedLastEvent,
+                }),
+                scheduledAt: toIsoStringOrNull(email.scheduled_at),
+                lastSyncedFromResend: syncedAt,
+                ...(isDefined(personId) && { personId }),
+              };
+            },
+            client,
+            objectNameSingular: 'resendEmail',
+            objectNamePlural: 'resendEmails',
+          });
 
-            try {
-              await client.mutation({
-                updateResendEmail: {
-                  __args: { id: twentyId, data: { personId } },
-                  id: true,
-                },
-              });
-            } catch (error) {
-              const message = getErrorMessage(error);
-
-              aggregate.errors.push(
-                `resendEmail ${email.id} person link: ${message}`,
-              );
-              personLinkOk = false;
-            }
-          }
+          aggregate.fetched += pageOutcome.result.fetched;
+          aggregate.created += pageOutcome.result.created;
+          aggregate.updated += pageOutcome.result.updated;
+          aggregate.errors.push(...pageOutcome.result.errors);
 
           const reachedCutoff =
             isDefined(cutoffTimestampMs) &&
@@ -160,7 +131,7 @@ export const syncEmails = async (
             );
 
           return {
-            ok: pageOutcome.ok && personLinkOk,
+            ok: pageOutcome.ok,
             stop: reachedCutoff,
           };
         },

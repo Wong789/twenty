@@ -5,6 +5,7 @@ import { extractConnection } from '@modules/resend/shared/utils/typed-client';
 import type { SyncCursorStep } from '@modules/resend/sync/cursor/types/sync-cursor-step';
 
 const REQUIRED_STEPS: ReadonlyArray<SyncCursorStep> = [
+  'TOPICS',
   'SEGMENTS',
   'TEMPLATES',
   'CONTACTS',
@@ -55,8 +56,8 @@ export const areAllSyncCursorsEmpty = async (
     if (!isDefined(row)) return false;
 
     const cursorCleared = !isDefined(row.cursor) || row.cursor.length === 0;
-    const succeeded = row.lastRunStatus === 'SUCCESS';
+    const notFailed = row.lastRunStatus !== 'FAILED';
 
-    return cursorCleared && succeeded;
+    return cursorCleared && notFailed;
   });
 };

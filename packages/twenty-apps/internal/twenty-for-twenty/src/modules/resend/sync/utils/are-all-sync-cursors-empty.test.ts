@@ -20,6 +20,7 @@ const makeClient = (nodes: CursorNode[]) =>
   }) as unknown as CoreApiClient;
 
 const allSuccessfulRows: CursorNode[] = [
+  { step: 'TOPICS', cursor: null, lastRunStatus: 'SUCCESS' },
   { step: 'SEGMENTS', cursor: null, lastRunStatus: 'SUCCESS' },
   { step: 'TEMPLATES', cursor: null, lastRunStatus: 'SUCCESS' },
   { step: 'CONTACTS', cursor: null, lastRunStatus: 'SUCCESS' },
@@ -32,6 +33,26 @@ describe('areAllSyncCursorsEmpty', () => {
     const client = makeClient(allSuccessfulRows);
 
     await expect(areAllSyncCursorsEmpty(client)).resolves.toBe(true);
+  });
+
+  it('returns true when a step is IN_PROGRESS but cursor is cleared', async () => {
+    const client = makeClient(
+      allSuccessfulRows.map((row) =>
+        row.step === 'EMAILS'
+          ? { ...row, lastRunStatus: 'IN_PROGRESS' }
+          : row,
+      ),
+    );
+
+    await expect(areAllSyncCursorsEmpty(client)).resolves.toBe(true);
+  });
+
+  it('returns false when the TOPICS row is missing entirely', async () => {
+    const client = makeClient(
+      allSuccessfulRows.filter((row) => row.step !== 'TOPICS'),
+    );
+
+    await expect(areAllSyncCursorsEmpty(client)).resolves.toBe(false);
   });
 
   it('returns false when a step is missing a cursor row', async () => {

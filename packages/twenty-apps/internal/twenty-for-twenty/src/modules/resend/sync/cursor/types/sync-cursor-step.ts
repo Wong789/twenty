@@ -3,7 +3,8 @@ export type SyncCursorStep =
   | 'TEMPLATES'
   | 'CONTACTS'
   | 'EMAILS'
-  | 'BROADCASTS';
+  | 'BROADCASTS'
+  | 'TOPICS';
 
 export type SyncCursorRow = {
   id: string;

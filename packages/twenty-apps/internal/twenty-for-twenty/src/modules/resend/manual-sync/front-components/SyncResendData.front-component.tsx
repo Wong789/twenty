@@ -11,13 +11,16 @@ import {
 import { APPLICATION_UNIVERSAL_IDENTIFIER } from '@constants/universal-identifiers';
 import { INITIAL_SYNC_MODE_ENV_VAR_NAME } from '@modules/resend/constants/sync-config';
 import {
-  RESEND_INITIAL_LIST_SYNC_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+  RESEND_SYNC_BROADCASTS_AND_DEPENDENCIES_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+  RESEND_SYNC_CONTACTS_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+  RESEND_SYNC_EMAILS_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+  RESEND_SYNC_TEMPLATES_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
   SYNC_RESEND_DATA_COMMAND_UNIVERSAL_IDENTIFIER,
   SYNC_RESEND_DATA_FRONT_COMPONENT_UNIVERSAL_IDENTIFIER,
 } from '@modules/resend/constants/universal-identifiers';
 import { extractConnection } from '@modules/resend/shared/utils/typed-client';
 
-type InitialListSyncSummaryStep = {
+type SyncSummaryStep = {
   name: string;
   status: 'ok' | 'failed' | 'skipped';
   fetched: number;
@@ -27,16 +30,42 @@ type InitialListSyncSummaryStep = {
   durationMs: number;
 };
 
-type InitialListSyncSummary = {
-  skipped: boolean;
-  initialSyncCompleted: boolean;
+type SyncFunctionSummary = {
   totalDurationMs: number;
-  steps: InitialListSyncSummaryStep[];
+  steps: SyncSummaryStep[];
 };
 
 type CursorRowId = { id: string };
 
-const formatStepCounts = (step: InitialListSyncSummaryStep): string => {
+type LogicFunctionDescriptor = {
+  universalIdentifier: string;
+  label: string;
+};
+
+const SYNC_FUNCTION_DESCRIPTORS: ReadonlyArray<LogicFunctionDescriptor> = [
+  {
+    universalIdentifier:
+      RESEND_SYNC_BROADCASTS_AND_DEPENDENCIES_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+    label: 'topics + segments + broadcasts',
+  },
+  {
+    universalIdentifier:
+      RESEND_SYNC_TEMPLATES_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+    label: 'templates',
+  },
+  {
+    universalIdentifier:
+      RESEND_SYNC_CONTACTS_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+    label: 'contacts',
+  },
+  {
+    universalIdentifier:
+      RESEND_SYNC_EMAILS_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
+    label: 'emails',
+  },
+];
+
+const formatStepCounts = (step: SyncSummaryStep): string => {
   const verbs: string[] = [];
 
   if (step.created > 0) verbs.push(`${step.created} created`);
@@ -48,15 +77,20 @@ const formatStepCounts = (step: InitialListSyncSummaryStep): string => {
   return `${step.name.toLowerCase()}: ${counts}`;
 };
 
-const formatSummary = (summary: InitialListSyncSummary): string => {
-  const seconds = (summary.totalDurationMs / 1000).toFixed(1);
-  const stepLines = summary.steps
+const formatAggregatedSummary = (
+  summaries: ReadonlyArray<SyncFunctionSummary>,
+): string => {
+  const allSteps = summaries.flatMap((summary) => summary.steps);
+  const totalDurationMs = summaries.reduce(
+    (acc, summary) => acc + summary.totalDurationMs,
+    0,
+  );
+  const seconds = (totalDurationMs / 1000).toFixed(1);
+  const stepLines = allSteps
     .filter((step) => step.status === 'ok')
     .map(formatStepCounts);
 
-  const prefix = summary.initialSyncCompleted
-    ? `Initial sync completed in ${seconds}s`
-    : `Initial list pass ran in ${seconds}s (still in initial sync mode)`;
+  const prefix = `Initial sync triggered (${seconds}s)`;
 
   if (stepLines.length === 0) {
     return prefix;
@@ -65,13 +99,13 @@ const formatSummary = (summary: InitialListSyncSummary): string => {
   return `${prefix} — ${stepLines.join('; ')}`;
 };
 
-const isInitialListSyncSummary = (
+const isSyncFunctionSummary = (
   value: unknown,
-): value is InitialListSyncSummary =>
+): value is SyncFunctionSummary =>
   typeof value === 'object' &&
   value !== null &&
-  Array.isArray((value as InitialListSyncSummary).steps) &&
-  typeof (value as InitialListSyncSummary).totalDurationMs === 'number';
+  Array.isArray((value as SyncFunctionSummary).steps) &&
+  typeof (value as SyncFunctionSummary).totalDurationMs === 'number';
 
 const resolveApplicationId = async (
   metadataClient: MetadataApiClient,
@@ -142,6 +176,41 @@ const resetSyncCursors = async (client: CoreApiClient): Promise<void> => {
   }
 };
 
+const executeSyncFunction = async (
+  metadataClient: MetadataApiClient,
+  logicFunctionId: string,
+  label: string,
+): Promise<SyncFunctionSummary> => {
+  const { executeOneLogicFunction } = await metadataClient.mutation({
+    executeOneLogicFunction: {
+      __args: {
+        input: {
+          id: logicFunctionId,
+          payload: {} as Record<string, unknown>,
+        },
+      },
+      status: true,
+      error: true,
+      data: true,
+    },
+  });
+
+  if (executeOneLogicFunction.status !== 'SUCCESS') {
+    const rawMessage =
+      typeof executeOneLogicFunction.error?.errorMessage === 'string'
+        ? executeOneLogicFunction.error.errorMessage
+        : `${label} sync execution failed`;
+
+    throw new Error(`Resend ${label} sync failed:\n${rawMessage}`);
+  }
+
+  if (isSyncFunctionSummary(executeOneLogicFunction.data)) {
+    return executeOneLogicFunction.data;
+  }
+
+  return { totalDurationMs: 0, steps: [] };
+};
+
 const execute = async () => {
   await updateProgress(0.05);
 
@@ -167,49 +236,44 @@ const execute = async () => {
     },
   });
 
-  const syncFunction = findManyLogicFunctions.find(
-    (logicFunction) =>
-      logicFunction.universalIdentifier ===
-      RESEND_INITIAL_LIST_SYNC_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
-  );
+  const idByUniversalIdentifier = new Map<string, string>();
 
-  if (!isDefined(syncFunction)) {
-    throw new Error('Resend initial list sync logic function not found');
+  for (const logicFunction of findManyLogicFunctions) {
+    if (
+      typeof logicFunction.universalIdentifier === 'string' &&
+      typeof logicFunction.id === 'string'
+    ) {
+      idByUniversalIdentifier.set(
+        logicFunction.universalIdentifier,
+        logicFunction.id,
+      );
+    }
   }
+
+  const resolvedFunctions = SYNC_FUNCTION_DESCRIPTORS.map((descriptor) => {
+    const id = idByUniversalIdentifier.get(descriptor.universalIdentifier);
+
+    if (!isDefined(id)) {
+      throw new Error(
+        `Resend sync logic function ${descriptor.label} not found`,
+      );
+    }
+
+    return { id, label: descriptor.label };
+  });
 
   await updateProgress(0.45);
 
-  const { executeOneLogicFunction } = await metadataClient.mutation({
-    executeOneLogicFunction: {
-      __args: {
-        input: {
-          id: syncFunction.id,
-          payload: {} as Record<string, unknown>,
-        },
-      },
-      status: true,
-      error: true,
-      data: true,
-    },
-  });
-
-  if (executeOneLogicFunction.status !== 'SUCCESS') {
-    const rawMessage =
-      typeof executeOneLogicFunction.error?.errorMessage === 'string'
-        ? executeOneLogicFunction.error.errorMessage
-        : 'Initial list sync execution failed';
-
-    throw new Error(`Resend initial sync failed:\n${rawMessage}`);
-  }
+  const summaries = await Promise.all(
+    resolvedFunctions.map(({ id, label }) =>
+      executeSyncFunction(metadataClient, id, label),
+    ),
+  );
 
   await updateProgress(1);
 
-  const summaryMessage = isInitialListSyncSummary(executeOneLogicFunction.data)
-    ? formatSummary(executeOneLogicFunction.data)
-    : 'Resend initial sync triggered';
-
   await enqueueSnackbar({
-    message: summaryMessage,
+    message: formatAggregatedSummary(summaries),
     variant: 'success',
   });
 };
@@ -220,7 +284,7 @@ export default defineFrontComponent({
   universalIdentifier: SYNC_RESEND_DATA_FRONT_COMPONENT_UNIVERSAL_IDENTIFIER,
   name: 'Sync Resend Data',
   description:
-    'Enters initial sync mode, resets sync cursors, and triggers the first list-only pass',
+    'Enters initial sync mode, resets sync cursors, and triggers all per-entity sync functions in parallel.',
   isHeadless: true,
   component: SyncResendData,
   command: {

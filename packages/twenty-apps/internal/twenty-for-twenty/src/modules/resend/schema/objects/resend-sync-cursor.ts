@@ -63,6 +63,13 @@ export default defineObject({
           position: 4,
           color: 'orange',
         },
+        {
+          id: 'abec7a2d-20c5-4304-9356-7cf05db67a71',
+          value: 'TOPICS',
+          label: 'Topics',
+          position: 5,
+          color: 'pink',
+        },
       ],
     },
     {

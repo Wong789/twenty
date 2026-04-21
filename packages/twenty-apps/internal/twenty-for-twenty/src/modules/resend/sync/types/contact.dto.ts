@@ -6,4 +6,5 @@ export type ContactDto = {
   unsubscribed: boolean;
   createdAt: string;
   lastSyncedFromResend: string;
+  personId?: string;
 };
