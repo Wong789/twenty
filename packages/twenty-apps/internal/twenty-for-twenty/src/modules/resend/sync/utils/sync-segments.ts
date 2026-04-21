@@ -44,7 +44,7 @@ export const syncSegments = async (
   const segmentIdMap: SegmentIdMap = new Map();
 
   await withSyncCursor(client, 'SEGMENTS', async ({ resumeCursor, onCursorAdvance }) => {
-    await forEachPage(
+    const { completed } = await forEachPage(
       (paginationParameters) => resend.segments.list(paginationParameters),
       async (pageSegments) => {
         const pageOutcome = await upsertRecords({
@@ -77,6 +77,8 @@ export const syncSegments = async (
         }),
       },
     );
+
+    return { value: undefined, completed };
   });
 
   return { result: aggregate, value: segmentIdMap };

@@ -76,7 +76,7 @@ export const syncBroadcasts = async (
     client,
     'BROADCASTS',
     async ({ resumeCursor, onCursorAdvance }) => {
-      await forEachPage(
+      const { completed } = await forEachPage(
         (paginationParameters) => resend.broadcasts.list(paginationParameters),
         async (pageBroadcasts) => {
           const detailByResendId = await fetchBroadcastDetailsForPage(
@@ -195,6 +195,8 @@ export const syncBroadcasts = async (
           }),
         },
       );
+
+      return { value: undefined, completed };
     },
   );
 

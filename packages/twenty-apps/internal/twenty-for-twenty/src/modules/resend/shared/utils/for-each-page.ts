@@ -28,12 +28,16 @@ export type OnPageHandler<T> = (
   pageNumber: number,
 ) => Promise<OnPageResult | void>;
 
+export type ForEachPageResult = {
+  completed: boolean;
+};
+
 export const forEachPage = async <T extends { id: string }>(
   listFunction: ResendListFunction<T>,
   onPage: OnPageHandler<T>,
   label = 'items',
   options?: ForEachPageOptions,
-): Promise<void> => {
+): Promise<ForEachPageResult> => {
   let cursor: string | undefined = options?.startCursor;
   let pageNumber = 0;
   let totalFetched = 0;
@@ -55,7 +59,9 @@ export const forEachPage = async <T extends { id: string }>(
 
     const page = response.data;
 
-    if (!isDefined(page) || page.data.length === 0) break;
+    if (!isDefined(page) || page.data.length === 0) {
+      return { completed: true };
+    }
 
     pageNumber++;
     totalFetched += page.data.length;
@@ -86,9 +92,13 @@ export const forEachPage = async <T extends { id: string }>(
       await options.onCursorAdvance(nextCursor);
     }
 
-    if (shouldStop) break;
+    if (shouldStop) {
+      return { completed: true };
+    }
 
-    if (!page.has_more) break;
+    if (!page.has_more) {
+      return { completed: true };
+    }
 
     if (nextCursor === cursor) {
       throw new Error(`Resend list[${label}] cursor stuck at ${nextCursor}`);
@@ -101,7 +111,8 @@ export const forEachPage = async <T extends { id: string }>(
       console.log(
         `[resend] reached deadline for ${label} after page ${pageNumber}; stopping early (cursor will resume next tick)`,
       );
-      break;
+
+      return { completed: false };
     }
 
     cursor = nextCursor;

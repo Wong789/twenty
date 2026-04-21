@@ -13,10 +13,17 @@ export type SyncCursorContext = {
   onCursorAdvance: (cursor: string) => Promise<void>;
 };
 
+export type SyncCursorRunResult<TValue> = {
+  value: TValue;
+  completed: boolean;
+};
+
 export const withSyncCursor = async <TValue>(
   client: CoreApiClient,
   step: SyncCursorStep,
-  runWithCursor: (context: SyncCursorContext) => Promise<TValue>,
+  runWithCursor: (
+    context: SyncCursorContext,
+  ) => Promise<SyncCursorRunResult<TValue>>,
 ): Promise<TValue> => {
   const cursorRow = await getOrCreateSyncCursor(client, step);
   const startedAt = new Date().toISOString();
@@ -41,12 +48,18 @@ export const withSyncCursor = async <TValue>(
   };
 
   try {
-    const value = await runWithCursor(context);
+    const { value, completed } = await runWithCursor(context);
 
-    await updateCursorRow(client, cursorRow.id, {
-      cursor: null,
-      lastRunStatus: 'SUCCESS',
-    });
+    if (completed) {
+      await updateCursorRow(client, cursorRow.id, {
+        cursor: null,
+        lastRunStatus: 'SUCCESS',
+      });
+    } else {
+      await updateCursorRow(client, cursorRow.id, {
+        lastRunStatus: 'IN_PROGRESS',
+      });
+    }
 
     return value;
   } catch (runError) {

@@ -61,7 +61,7 @@ export const syncTopics = async (
     const topics = (response.data?.data ?? []) as RawTopic[];
 
     if (topics.length === 0) {
-      return;
+      return { value: undefined, completed: true };
     }
 
     console.log(`[resend] fetched topics page 1 (size=${topics.length})`);
@@ -95,6 +95,8 @@ export const syncTopics = async (
         `Resend topics page reported per-item failures; aborting.${detail}`,
       );
     }
+
+    return { value: undefined, completed: true };
   });
 
   return { result: aggregate, value: topicIdMap };

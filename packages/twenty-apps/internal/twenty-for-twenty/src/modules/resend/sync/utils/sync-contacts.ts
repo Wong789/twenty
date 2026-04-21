@@ -55,7 +55,7 @@ export const syncContacts = async (
   };
 
   await withSyncCursor(client, 'CONTACTS', async ({ resumeCursor, onCursorAdvance }) => {
-    await forEachPage(
+    const { completed } = await forEachPage(
       (paginationParameters) => resend.contacts.list(paginationParameters),
       async (pageContacts) => {
         const personIdByEmail = await findPeopleByEmail(
@@ -94,6 +94,8 @@ export const syncContacts = async (
         }),
       },
     );
+
+    return { value: undefined, completed };
   });
 
   return { result: aggregate, value: undefined };

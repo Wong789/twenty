@@ -72,7 +72,7 @@ export const syncTemplates = async (
     client,
     'TEMPLATES',
     async ({ resumeCursor, onCursorAdvance }) => {
-      await forEachPage(
+      const { completed } = await forEachPage(
         (paginationParameters) => resend.templates.list(paginationParameters),
         async (pageTemplates) => {
           const detailByResendId = await fetchTemplateDetailsForPage(
@@ -142,6 +142,8 @@ export const syncTemplates = async (
           }),
         },
       );
+
+      return { value: undefined, completed };
     },
   );
 

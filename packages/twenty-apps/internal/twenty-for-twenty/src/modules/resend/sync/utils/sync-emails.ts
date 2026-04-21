@@ -46,7 +46,7 @@ export const syncEmails = async (
     client,
     'EMAILS',
     async ({ resumeCursor, onCursorAdvance }) => {
-      await forEachPage(
+      const { completed } = await forEachPage(
         (paginationParameters) => resend.emails.list(paginationParameters),
         async (pageEmails) => {
           const primaryToByEmail = new Map<string, string>();
@@ -146,6 +146,8 @@ export const syncEmails = async (
           }),
         },
       );
+
+      return { value: undefined, completed: resumable ? completed : true };
     },
   );
 
