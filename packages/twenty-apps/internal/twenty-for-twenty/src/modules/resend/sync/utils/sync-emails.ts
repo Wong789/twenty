@@ -3,6 +3,7 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 
 import { findPeopleByEmail } from '@modules/resend/shared/utils/find-people-by-email';
+import { findResendContactsByEmail } from '@modules/resend/shared/utils/find-resend-contacts-by-email';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { mapLastEvent } from '@modules/resend/shared/utils/map-last-event';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
@@ -15,6 +16,7 @@ import type { CreateEmailDto } from '@modules/resend/sync/types/create-email.dto
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateEmailDto } from '@modules/resend/sync/types/update-email.dto';
+import { backfillResendContactPersonId } from '@modules/resend/sync/utils/backfill-resend-contact-person-id';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 
 export type SyncEmailsOptions = {
@@ -59,10 +61,12 @@ export const syncEmails = async (
             }
           }
 
-          const personIdByEmail = await findPeopleByEmail(
-            client,
-            Array.from(primaryToByEmail.values()),
-          );
+          const primaryEmails = Array.from(primaryToByEmail.values());
+
+          const [personIdByEmail, contactByEmail] = await Promise.all([
+            findPeopleByEmail(client, primaryEmails),
+            findResendContactsByEmail(client, primaryEmails),
+          ]);
 
           const resolvePersonId = (resendEmailId: string): string | undefined => {
             const primaryTo = primaryToByEmail.get(resendEmailId);
@@ -72,12 +76,23 @@ export const syncEmails = async (
             return personIdByEmail.get(primaryTo.trim().toLowerCase());
           };
 
+          const resolveContactId = (
+            resendEmailId: string,
+          ): string | undefined => {
+            const primaryTo = primaryToByEmail.get(resendEmailId);
+
+            if (!isDefined(primaryTo)) return undefined;
+
+            return contactByEmail.get(primaryTo.trim().toLowerCase())?.id;
+          };
+
           const pageOutcome = await upsertRecords({
             items: pageEmails,
             getId: (email) => email.id,
             mapCreateData: (_detail, email): CreateEmailDto => {
               const mappedLastEvent = mapLastEvent(email.last_event);
               const personId = resolvePersonId(email.id);
+              const contactId = resolveContactId(email.id);
 
               return {
                 subject: email.subject,
@@ -93,11 +108,13 @@ export const syncEmails = async (
                 scheduledAt: toIsoStringOrNull(email.scheduled_at),
                 lastSyncedFromResend: syncedAt,
                 ...(isDefined(personId) && { personId }),
+                ...(isDefined(contactId) && { contactId }),
               };
             },
             mapUpdateData: (_detail, email): UpdateEmailDto => {
               const mappedLastEvent = mapLastEvent(email.last_event);
               const personId = resolvePersonId(email.id);
+              const contactId = resolveContactId(email.id);
 
               return {
                 subject: email.subject,
@@ -112,6 +129,7 @@ export const syncEmails = async (
                 scheduledAt: toIsoStringOrNull(email.scheduled_at),
                 lastSyncedFromResend: syncedAt,
                 ...(isDefined(personId) && { personId }),
+                ...(isDefined(contactId) && { contactId }),
               };
             },
             client,
@@ -123,6 +141,25 @@ export const syncEmails = async (
           aggregate.created += pageOutcome.result.created;
           aggregate.updated += pageOutcome.result.updated;
           aggregate.errors.push(...pageOutcome.result.errors);
+
+          const personBackfillForContacts = new Map<string, string>();
+
+          for (const [normalizedEmail, contact] of contactByEmail) {
+            if (isDefined(contact.personId)) continue;
+
+            const personId = personIdByEmail.get(normalizedEmail);
+
+            if (isDefined(personId)) {
+              personBackfillForContacts.set(normalizedEmail, personId);
+            }
+          }
+
+          const contactBackfill = await backfillResendContactPersonId(
+            client,
+            personBackfillForContacts,
+          );
+
+          aggregate.errors.push(...contactBackfill.errors);
 
           const reachedCutoff =
             isDefined(cutoffTimestampMs) &&
@@ -149,6 +186,7 @@ export const syncEmails = async (
 
       return { value: undefined, completed: resumable ? completed : true };
     },
+    { preserveCursor: !resumable },
   );
 
   return { result: aggregate, value: undefined };

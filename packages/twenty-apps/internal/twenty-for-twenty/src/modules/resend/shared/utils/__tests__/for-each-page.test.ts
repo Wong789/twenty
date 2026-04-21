@@ -39,6 +39,7 @@ const createMockListFunction = (
 
 beforeEach(() => {
   vi.spyOn(console, 'log').mockImplementation(() => {});
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -138,36 +139,35 @@ describe('forEachPage', () => {
     expect(onCursorAdvance).toHaveBeenCalledWith('b');
   });
 
-  it('aborts iteration on the first page that returns ok=false and leaves the cursor at the last successful page', async () => {
+  it('continues past pages that return ok=false and advances the cursor over them', async () => {
     const { listFunction, calls } = createMockListFunction([
       page(['a', 'b'], true),
       page(['c', 'd'], true),
-      page(['e', 'f'], true),
+      page(['e', 'f'], false),
     ]);
 
     const onCursorAdvance = vi.fn(async () => {});
     const seenPages: string[][] = [];
 
-    await expect(
-      forEachPage(
-        listFunction,
-        async (items, pageNumber) => {
-          seenPages.push(items.map((item) => item.id));
+    await forEachPage(
+      listFunction,
+      async (items, pageNumber) => {
+        seenPages.push(items.map((item) => item.id));
 
-          return { ok: pageNumber !== 2 };
-        },
-        'items',
-        { onCursorAdvance },
-      ),
-    ).rejects.toThrow(/items page 2 reported per-item failures/);
+        return { ok: pageNumber !== 2, errors: ['boom'] };
+      },
+      'items',
+      { onCursorAdvance },
+    );
 
     expect(seenPages).toEqual([
       ['a', 'b'],
       ['c', 'd'],
+      ['e', 'f'],
     ]);
-    expect(calls).toHaveLength(2);
-    expect(onCursorAdvance).toHaveBeenCalledTimes(1);
-    expect(onCursorAdvance).toHaveBeenCalledWith('b');
+    expect(calls).toHaveLength(3);
+    expect(onCursorAdvance).toHaveBeenCalledTimes(3);
+    expect(onCursorAdvance).toHaveBeenLastCalledWith('f');
   });
 
   it('treats a void onPage return as ok and advances the cursor', async () => {

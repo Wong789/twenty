@@ -63,6 +63,8 @@ describe('withSyncCursor', () => {
 
     await withSyncCursor(client, 'SEGMENTS', async ({ resumeCursor }) => {
       expect(resumeCursor).toBeUndefined();
+
+      return { value: undefined, completed: true };
     });
 
     const create = mutationCalls.find((c) => 'createResendSyncCursor' in c);
@@ -88,6 +90,8 @@ describe('withSyncCursor', () => {
 
     await withSyncCursor(client, 'CONTACTS', async (ctx) => {
       seen.push({ resumeCursor: ctx.resumeCursor });
+
+      return { value: undefined, completed: true };
     });
 
     expect(seen).toEqual([{ resumeCursor: 'last-id' }]);
@@ -102,6 +106,8 @@ describe('withSyncCursor', () => {
 
     await withSyncCursor(client, 'EMAILS', async ({ onCursorAdvance }) => {
       await onCursorAdvance('item-99');
+
+      return { value: undefined, completed: false };
     });
 
     const progress = findUpdate(
@@ -110,6 +116,33 @@ describe('withSyncCursor', () => {
     );
 
     expect(progress).toBeDefined();
+  });
+
+  it('preserves the resume cursor when preserveCursor=true and run completes', async () => {
+    const { client, mutationCalls } = makeClient({
+      id: 'cursor-1',
+      step: 'EMAILS',
+      cursor: 'in-progress-id',
+    });
+
+    await withSyncCursor(
+      client,
+      'EMAILS',
+      async ({ onCursorAdvance }) => {
+        await onCursorAdvance('item-99');
+
+        return { value: undefined, completed: true };
+      },
+      { preserveCursor: true },
+    );
+
+    const cursorWriteAttempt = findUpdate(
+      mutationCalls,
+      (data) =>
+        Object.prototype.hasOwnProperty.call(data, 'cursor'),
+    );
+
+    expect(cursorWriteAttempt).toBeUndefined();
   });
 
   it('rethrows and leaves the cursor untouched when fn throws', async () => {

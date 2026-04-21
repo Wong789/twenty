@@ -1,4 +1,5 @@
 import { isDefined } from '@utils/is-defined';
+import { CoreApiClient } from 'twenty-client-sdk/core';
 import { MetadataApiClient } from 'twenty-client-sdk/metadata';
 import { defineFrontComponent } from 'twenty-sdk/define';
 import { Command, enqueueSnackbar } from 'twenty-sdk/front-component';
@@ -9,6 +10,7 @@ import {
   SYNC_RESEND_DATA_COMMAND_UNIVERSAL_IDENTIFIER,
   SYNC_RESEND_DATA_FRONT_COMPONENT_UNIVERSAL_IDENTIFIER,
 } from '@modules/resend/constants/universal-identifiers';
+import { resetAllSyncCursors } from '@modules/resend/sync/cursor/utils/reset-all-sync-cursors';
 
 const resolveApplicationId = async (
   metadataClient: MetadataApiClient,
@@ -49,13 +51,17 @@ const flipInitialSyncModeOn = async (
 
 const execute = async () => {
   const metadataClient = new MetadataApiClient();
+  const coreApiClient = new CoreApiClient();
+
+  await resetAllSyncCursors(coreApiClient);
 
   const applicationId = await resolveApplicationId(metadataClient);
 
   await flipInitialSyncModeOn(metadataClient, applicationId);
 
   await enqueueSnackbar({
-    message: 'Initial sync triggered — it will run in the background.',
+    message:
+      'Sync cursors reset and initial sync triggered — it will run in the background.',
     variant: 'success',
   });
 };
@@ -66,7 +72,7 @@ export default defineFrontComponent({
   universalIdentifier: SYNC_RESEND_DATA_FRONT_COMPONENT_UNIVERSAL_IDENTIFIER,
   name: 'Sync Resend Data',
   description:
-    'Flips the application into initial sync mode so the scheduled sync handlers pick up a full resumable sync on their next run.',
+    'Resets every Resend sync cursor and flips the application into initial sync mode so the scheduled sync handlers restart from scratch on their next run.',
   isHeadless: true,
   component: SyncResendData,
   command: {

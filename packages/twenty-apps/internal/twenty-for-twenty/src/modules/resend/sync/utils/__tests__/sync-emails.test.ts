@@ -31,13 +31,27 @@ vi.mock('@modules/resend/shared/utils/find-people-by-email', () => ({
   findPeopleByEmail: vi.fn(),
 }));
 
+vi.mock('@modules/resend/shared/utils/find-resend-contacts-by-email', () => ({
+  findResendContactsByEmail: vi.fn(),
+}));
+
+vi.mock('@modules/resend/sync/utils/backfill-resend-contact-person-id', () => ({
+  backfillResendContactPersonId: vi.fn(),
+}));
+
 import { findPeopleByEmail } from '@modules/resend/shared/utils/find-people-by-email';
+import { findResendContactsByEmail } from '@modules/resend/shared/utils/find-resend-contacts-by-email';
+import { backfillResendContactPersonId } from '@modules/resend/sync/utils/backfill-resend-contact-person-id';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 
 const mockUpsertRecords = upsertRecords as unknown as ReturnType<typeof vi.fn>;
 const mockFindPeopleByEmail = findPeopleByEmail as unknown as ReturnType<
   typeof vi.fn
 >;
+const mockFindResendContactsByEmail =
+  findResendContactsByEmail as unknown as ReturnType<typeof vi.fn>;
+const mockBackfillResendContactPersonId =
+  backfillResendContactPersonId as unknown as ReturnType<typeof vi.fn>;
 
 const SYNCED_AT = '2026-01-01T00:00:00.000Z';
 
@@ -55,6 +69,12 @@ describe('syncEmails', () => {
   beforeEach(() => {
     mockUpsertRecords.mockReset();
     mockFindPeopleByEmail.mockReset();
+    mockFindResendContactsByEmail.mockReset();
+    mockBackfillResendContactPersonId.mockReset();
+    mockBackfillResendContactPersonId.mockResolvedValue({
+      updated: 0,
+      errors: [],
+    });
   });
 
   it('looks up people once per page and inlines personId into the upsert payload', async () => {
@@ -88,6 +108,7 @@ describe('syncEmails', () => {
     mockFindPeopleByEmail.mockResolvedValue(
       new Map([['matched@example.com', 'person-1']]),
     );
+    mockFindResendContactsByEmail.mockResolvedValue(new Map());
 
     mockUpsertRecords.mockResolvedValue({
       result: { fetched: 2, created: 2, updated: 0, errors: [] },
@@ -118,5 +139,114 @@ describe('syncEmails', () => {
 
     expect(matchedDto.personId).toBe('person-1');
     expect(unmatchedDto.personId).toBeUndefined();
+  });
+
+  it('inlines contactId in the upsert payload when a resend contact matches the primary recipient', async () => {
+    const pageEmails = [
+      {
+        id: 'email-1',
+        subject: 'hello',
+        from: 'sender@example.com',
+        to: ['matched@example.com'],
+        cc: null,
+        bcc: null,
+        reply_to: null,
+        last_event: 'delivered',
+        created_at: '2026-01-01T00:00:00Z',
+        scheduled_at: null,
+      },
+    ];
+
+    mockFindPeopleByEmail.mockResolvedValue(new Map());
+    mockFindResendContactsByEmail.mockResolvedValue(
+      new Map([
+        [
+          'matched@example.com',
+          { id: 'twenty-contact-1', personId: 'person-1' },
+        ],
+      ]),
+    );
+
+    mockUpsertRecords.mockResolvedValue({
+      result: { fetched: 1, created: 1, updated: 0, errors: [] },
+      ok: true,
+      twentyIdByResendId: new Map([['email-1', 'twenty-email-1']]),
+    });
+
+    const client = {} as CoreApiClient;
+    const resend = buildResend(pageEmails);
+
+    await syncEmails(resend, client, SYNCED_AT);
+
+    const upsertCall = mockUpsertRecords.mock.calls[0][0];
+    const createDto = upsertCall.mapCreateData(undefined, pageEmails[0]);
+    const updateDto = upsertCall.mapUpdateData(undefined, pageEmails[0]);
+
+    expect(createDto.contactId).toBe('twenty-contact-1');
+    expect(updateDto.contactId).toBe('twenty-contact-1');
+  });
+
+  it('backfills personId on matched resend contacts that have a null personId', async () => {
+    const pageEmails = [
+      {
+        id: 'email-1',
+        subject: 'hello',
+        from: 'sender@example.com',
+        to: ['matched@example.com'],
+        cc: null,
+        bcc: null,
+        reply_to: null,
+        last_event: 'delivered',
+        created_at: '2026-01-01T00:00:00Z',
+        scheduled_at: null,
+      },
+      {
+        id: 'email-2',
+        subject: 'hello again',
+        from: 'sender@example.com',
+        to: ['linked@example.com'],
+        cc: null,
+        bcc: null,
+        reply_to: null,
+        last_event: 'delivered',
+        created_at: '2026-01-01T00:00:00Z',
+        scheduled_at: null,
+      },
+    ];
+
+    mockFindPeopleByEmail.mockResolvedValue(
+      new Map([
+        ['matched@example.com', 'person-matched'],
+        ['linked@example.com', 'person-linked'],
+      ]),
+    );
+    mockFindResendContactsByEmail.mockResolvedValue(
+      new Map([
+        ['matched@example.com', { id: 'contact-matched', personId: null }],
+        [
+          'linked@example.com',
+          { id: 'contact-linked', personId: 'person-linked' },
+        ],
+      ]),
+    );
+
+    mockUpsertRecords.mockResolvedValue({
+      result: { fetched: 2, created: 2, updated: 0, errors: [] },
+      ok: true,
+      twentyIdByResendId: new Map(),
+    });
+
+    const client = {} as CoreApiClient;
+    const resend = buildResend(pageEmails);
+
+    await syncEmails(resend, client, SYNCED_AT);
+
+    expect(mockBackfillResendContactPersonId).toHaveBeenCalledTimes(1);
+
+    const [, personIdByEmail] = mockBackfillResendContactPersonId.mock.calls[0];
+
+    expect(personIdByEmail).toEqual(
+      new Map([['matched@example.com', 'person-matched']]),
+    );
   });
 });

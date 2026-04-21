@@ -15,7 +15,7 @@ type ResendInitialSyncModeMonitorSummary = {
 
 export const resendInitialSyncModeMonitorHandler =
   async (): Promise<ResendInitialSyncModeMonitorSummary> => {
-    if (!isInitialSyncModeOn()) {
+    if (!(await isInitialSyncModeOn())) {
       console.log(
         '[resend-initial-sync-mode-monitor] INITIAL_SYNC_MODE is off - nothing to do',
       );

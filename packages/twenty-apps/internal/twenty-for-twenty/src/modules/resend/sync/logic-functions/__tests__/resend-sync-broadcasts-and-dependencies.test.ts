@@ -44,7 +44,7 @@ describe('resendSyncBroadcastsAndDependenciesHandler', () => {
     mockGetResendClient.mockReturnValue({});
   });
 
-  it('runs topics → segments → broadcasts and forwards both id maps', async () => {
+  it('runs topics → segments → broadcasts in sequence with deadline propagation', async () => {
     const topicMap = new Map([['topic-1', 'twenty-topic-1']]);
     const segmentMap = new Map([['segment-1', 'twenty-segment-1']]);
 
@@ -60,9 +60,8 @@ describe('resendSyncBroadcastsAndDependenciesHandler', () => {
 
     const broadcastsArgs = mockSyncBroadcasts.mock.calls[0];
 
-    expect(broadcastsArgs[2]).toBe(segmentMap);
-    expect(broadcastsArgs[3]).toBe(topicMap);
-    expect(broadcastsArgs[4]).toEqual({ deadlineAtMs: expect.any(Number) });
+    expect(broadcastsArgs).toHaveLength(3);
+    expect(broadcastsArgs[2]).toEqual({ deadlineAtMs: expect.any(Number) });
 
     const topicsArgs = mockSyncTopics.mock.calls[0];
 

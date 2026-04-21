@@ -9,6 +9,10 @@ import { findPeopleByEmail } from '@modules/resend/shared/utils/find-people-by-e
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import { toIsoString } from '@modules/resend/shared/utils/to-iso-string';
+import {
+  backfillResendEmailsFromContacts,
+  type ContactBackfillEntry,
+} from '@modules/resend/sync/utils/backfill-resend-emails-from-contacts';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 import { withSyncCursor } from '@modules/resend/sync/cursor/utils/with-sync-cursor';
 
@@ -82,6 +86,28 @@ export const syncContacts = async (
         aggregate.created += pageOutcome.result.created;
         aggregate.updated += pageOutcome.result.updated;
         aggregate.errors.push(...pageOutcome.result.errors);
+
+        const entriesByEmail = new Map<string, ContactBackfillEntry>();
+
+        for (const contact of pageContacts) {
+          const twentyContactId = pageOutcome.twentyIdByResendId.get(contact.id);
+
+          if (!isDefined(twentyContactId)) continue;
+
+          const personId = resolvePersonId(contact.email);
+
+          entriesByEmail.set(contact.email.trim().toLowerCase(), {
+            contactId: twentyContactId,
+            ...(isDefined(personId) && { personId }),
+          });
+        }
+
+        const emailBackfill = await backfillResendEmailsFromContacts(
+          client,
+          entriesByEmail,
+        );
+
+        aggregate.errors.push(...emailBackfill.errors);
 
         return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
       },

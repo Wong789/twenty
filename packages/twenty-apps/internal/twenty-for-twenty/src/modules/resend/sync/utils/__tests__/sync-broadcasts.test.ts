@@ -27,9 +27,16 @@ vi.mock('@modules/resend/shared/utils/with-rate-limit-retry', () => ({
   withRateLimitRetry: async (fn: () => Promise<unknown>) => fn(),
 }));
 
+vi.mock('@modules/resend/shared/utils/find-twenty-ids-by-resend-id', () => ({
+  findTwentyIdsByResendId: vi.fn(),
+}));
+
+import { findTwentyIdsByResendId } from '@modules/resend/shared/utils/find-twenty-ids-by-resend-id';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 
 const mockUpsertRecords = upsertRecords as unknown as ReturnType<typeof vi.fn>;
+const mockFindTwentyIdsByResendId =
+  findTwentyIdsByResendId as unknown as ReturnType<typeof vi.fn>;
 
 const buildResend = (pageBroadcasts: unknown[], detailById: Record<string, unknown>): Resend =>
   ({
@@ -48,6 +55,7 @@ const buildResend = (pageBroadcasts: unknown[], detailById: Record<string, unkno
 describe('syncBroadcasts', () => {
   beforeEach(() => {
     mockUpsertRecords.mockReset();
+    mockFindTwentyIdsByResendId.mockReset();
   });
 
   it('captures html, text, and topicId from the broadcast detail', async () => {
@@ -78,17 +86,23 @@ describe('syncBroadcasts', () => {
       twentyIdByResendId: new Map([['broadcast-1', 'twenty-broadcast-1']]),
     });
 
-    const segmentMap = new Map([['seg-1', 'twenty-seg-1']]);
-    const topicMap = new Map([['topic-1', 'twenty-topic-1']]);
+    mockFindTwentyIdsByResendId.mockImplementation(
+      async (_client: unknown, plural: string) => {
+        if (plural === 'resendSegments') {
+          return new Map([['seg-1', 'twenty-seg-1']]);
+        }
+
+        if (plural === 'resendTopics') {
+          return new Map([['topic-1', 'twenty-topic-1']]);
+        }
+
+        return new Map();
+      },
+    );
 
     const resend = buildResend([broadcast], { 'broadcast-1': detail });
 
-    await syncBroadcasts(
-      resend,
-      {} as CoreApiClient,
-      segmentMap,
-      topicMap,
-    );
+    await syncBroadcasts(resend, {} as CoreApiClient);
 
     const upsertCall = mockUpsertRecords.mock.calls[0][0];
     const createDto = upsertCall.mapCreateData(undefined, broadcast);
@@ -139,14 +153,11 @@ describe('syncBroadcasts', () => {
       twentyIdByResendId: new Map(),
     });
 
+    mockFindTwentyIdsByResendId.mockResolvedValue(new Map());
+
     const resend = buildResend([broadcast], { 'broadcast-2': detail });
 
-    await syncBroadcasts(
-      resend,
-      {} as CoreApiClient,
-      new Map(),
-      new Map(),
-    );
+    await syncBroadcasts(resend, {} as CoreApiClient);
 
     const upsertCall = mockUpsertRecords.mock.calls[0][0];
     const updateDto = upsertCall.mapUpdateData(undefined, broadcast);

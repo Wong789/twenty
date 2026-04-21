@@ -16,7 +16,7 @@ vi.mock('twenty-client-sdk/metadata', () => ({
 
 vi.mock('@modules/resend/sync/utils/set-initial-sync-mode', () => ({
   setInitialSyncMode: (...args: unknown[]) => mockSetInitialSyncMode(...args),
-  isInitialSyncModeOn: () => process.env.INITIAL_SYNC_MODE === 'true',
+  isInitialSyncModeOn: async () => process.env.INITIAL_SYNC_MODE === 'true',
 }));
 
 vi.mock('@modules/resend/sync/utils/are-all-sync-cursors-empty', () => ({

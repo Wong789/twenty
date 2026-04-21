@@ -47,8 +47,9 @@ export const forEachPage = async <T extends { id: string }>(
       limit: RESEND_PAGE_SIZE,
       ...(isDefined(cursor) && cursor.length > 0 && { after: cursor }),
     };
-    const response = await withRateLimitRetry(() =>
-      listFunction(paginationParameters),
+    const response = await withRateLimitRetry(
+      () => listFunction(paginationParameters),
+      { channel: label },
     );
 
     if (isDefined(response.error)) {
@@ -81,8 +82,8 @@ export const forEachPage = async <T extends { id: string }>(
           ? ` failures: ${perItemErrors.join(' | ')}`
           : '';
 
-      throw new Error(
-        `Resend ${label} page ${pageNumber} reported per-item failures; aborting at cursor=${cursor ?? 'start'}.${detail}`,
+      console.warn(
+        `[resend] ${label} page ${pageNumber} had per-item failures at cursor=${cursor ?? 'start'}; advancing past the page.${detail}`,
       );
     }
 

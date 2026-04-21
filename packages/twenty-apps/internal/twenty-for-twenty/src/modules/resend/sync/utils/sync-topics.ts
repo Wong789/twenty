@@ -50,7 +50,9 @@ export const syncTopics = async (
   const topicIdMap: TopicIdMap = new Map();
 
   await withSyncCursor(client, 'TOPICS', async () => {
-    const response = await withRateLimitRetry(() => resend.topics.list());
+    const response = await withRateLimitRetry(() => resend.topics.list(), {
+      channel: 'topics',
+    });
 
     if (isDefined(response.error)) {
       throw new Error(

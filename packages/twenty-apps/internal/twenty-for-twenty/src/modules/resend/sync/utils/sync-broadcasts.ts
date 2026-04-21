@@ -2,6 +2,7 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
+import { findTwentyIdsByResendId } from '@modules/resend/shared/utils/find-twenty-ids-by-resend-id';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
@@ -15,8 +16,6 @@ import type { CreateBroadcastDto } from '@modules/resend/sync/types/create-broad
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
 import type { UpdateBroadcastDto } from '@modules/resend/sync/types/update-broadcast.dto';
-import type { SegmentIdMap } from '@modules/resend/sync/utils/sync-segments';
-import type { TopicIdMap } from '@modules/resend/sync/utils/sync-topics';
 import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 
 type BroadcastDetail = Awaited<
@@ -32,8 +31,9 @@ const fetchBroadcastDetailsForPage = async (
 
   for (const broadcast of pageBroadcasts) {
     try {
-      const { data: detail, error } = await withRateLimitRetry(() =>
-        resend.broadcasts.get(broadcast.id),
+      const { data: detail, error } = await withRateLimitRetry(
+        () => resend.broadcasts.get(broadcast.id),
+        { channel: 'broadcasts-detail' },
       );
 
       if (isDefined(error) || !isDefined(detail)) {
@@ -61,8 +61,6 @@ export type SyncBroadcastsOptions = {
 export const syncBroadcasts = async (
   resend: Resend,
   client: CoreApiClient,
-  segmentMap: SegmentIdMap,
-  topicMap: TopicIdMap,
   options?: SyncBroadcastsOptions,
 ): Promise<SyncStepResult> => {
   const aggregate: SyncResult = {
@@ -84,6 +82,37 @@ export const syncBroadcasts = async (
             pageBroadcasts,
             aggregate.errors,
           );
+
+          const segmentResendIds = pageBroadcasts
+            .map((broadcast) => broadcast.segment_id)
+            .filter(
+              (segmentId): segmentId is string =>
+                typeof segmentId === 'string' && segmentId.length > 0,
+            );
+
+          const topicResendIds = Array.from(detailByResendId.values())
+            .map((detail) => detail.topic_id)
+            .filter(
+              (topicId): topicId is string =>
+                typeof topicId === 'string' && topicId.length > 0,
+            );
+
+          const [segmentMap, topicMap] = await Promise.all([
+            segmentResendIds.length > 0
+              ? findTwentyIdsByResendId(
+                  client,
+                  'resendSegments',
+                  segmentResendIds,
+                )
+              : Promise.resolve(new Map<string, string>()),
+            topicResendIds.length > 0
+              ? findTwentyIdsByResendId(
+                  client,
+                  'resendTopics',
+                  topicResendIds,
+                )
+              : Promise.resolve(new Map<string, string>()),
+          ]);
 
           const pageOutcome = await upsertRecords({
             items: pageBroadcasts,

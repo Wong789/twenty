@@ -18,15 +18,21 @@ export type SyncCursorRunResult<TValue> = {
   completed: boolean;
 };
 
+export type WithSyncCursorOptions = {
+  preserveCursor?: boolean;
+};
+
 export const withSyncCursor = async <TValue>(
   client: CoreApiClient,
   step: SyncCursorStep,
   runWithCursor: (
     context: SyncCursorContext,
   ) => Promise<SyncCursorRunResult<TValue>>,
+  options?: WithSyncCursorOptions,
 ): Promise<TValue> => {
   const cursorRow = await getOrCreateSyncCursor(client, step);
   const startedAt = new Date().toISOString();
+  const preserveCursor = options?.preserveCursor === true;
 
   await updateCursorRow(client, cursorRow.id, {
     lastRunAt: startedAt,
@@ -44,7 +50,9 @@ export const withSyncCursor = async <TValue>(
 
   const context: SyncCursorContext = {
     resumeCursor: hasResumeCursor ? cursorRow.cursor ?? undefined : undefined,
-    onCursorAdvance: (cursor) => setCursor(client, cursorRow.id, cursor),
+    onCursorAdvance: preserveCursor
+      ? async () => undefined
+      : (cursor) => setCursor(client, cursorRow.id, cursor),
   };
 
   try {
@@ -52,7 +60,7 @@ export const withSyncCursor = async <TValue>(
 
     if (completed) {
       await updateCursorRow(client, cursorRow.id, {
-        cursor: null,
+        ...(preserveCursor ? {} : { cursor: null }),
         lastRunStatus: 'SUCCESS',
       });
     } else {

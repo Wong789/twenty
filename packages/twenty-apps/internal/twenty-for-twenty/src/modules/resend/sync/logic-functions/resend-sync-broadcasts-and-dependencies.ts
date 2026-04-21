@@ -49,13 +49,7 @@ export const resendSyncBroadcastsAndDependenciesHandler =
     const broadcasts =
       topics.status === 'ok' && segments.status === 'ok'
         ? await runSyncStep('BROADCASTS', () =>
-            syncBroadcasts(
-              resendClient,
-              coreApiClient,
-              segments.value,
-              topics.value,
-              { deadlineAtMs },
-            ),
+            syncBroadcasts(resendClient, coreApiClient, { deadlineAtMs }),
           )
         : skipDueToFailedDependencies('BROADCASTS', { topics, segments });
 

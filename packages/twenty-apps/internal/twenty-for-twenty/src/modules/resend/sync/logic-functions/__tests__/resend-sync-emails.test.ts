@@ -15,7 +15,7 @@ vi.mock('@modules/resend/shared/utils/get-resend-client', () => ({
 }));
 
 vi.mock('@modules/resend/sync/utils/set-initial-sync-mode', () => ({
-  isInitialSyncModeOn: () => process.env.INITIAL_SYNC_MODE === 'true',
+  isInitialSyncModeOn: async () => process.env.INITIAL_SYNC_MODE === 'true',
   setInitialSyncMode: vi.fn(),
 }));
 

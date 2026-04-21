@@ -29,7 +29,7 @@ export const resendSyncEmailsHandler =
     const coreApiClient = new CoreApiClient();
     const syncedAt = new Date().toISOString();
 
-    const initialMode = isInitialSyncModeOn();
+    const initialMode = await isInitialSyncModeOn();
 
     const deadlineAtMs =
       Date.now() +

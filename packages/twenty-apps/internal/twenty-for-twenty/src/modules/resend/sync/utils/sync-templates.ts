@@ -30,8 +30,9 @@ const fetchTemplateDetailsForPage = async (
 
   for (const template of pageTemplates) {
     try {
-      const { data: detail, error } = await withRateLimitRetry(() =>
-        resend.templates.get(template.id),
+      const { data: detail, error } = await withRateLimitRetry(
+        () => resend.templates.get(template.id),
+        { channel: 'templates-detail' },
       );
 
       if (isDefined(error) || !isDefined(detail)) {

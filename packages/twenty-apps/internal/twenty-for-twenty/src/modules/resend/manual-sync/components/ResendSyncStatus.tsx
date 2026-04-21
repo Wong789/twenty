@@ -112,6 +112,13 @@ const getStyles = (): Record<string, React.CSSProperties> => ({
     display: 'flex',
     marginBottom: `calc(-1 * ${themeCssVariables.spacing[4]})`,
   },
+  cardLine: {
+    fontSize: themeCssVariables.font.size.sm,
+    color: themeCssVariables.font.color.secondary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: themeCssVariables.spacing[1],
+  },
 });
 
 export const ResendSyncStatus = () => {
@@ -241,8 +248,7 @@ export const ResendSyncStatus = () => {
             </div>
             {isDefined(cursor) && cursor !== '' && (
               <div style={styles.cardLine}>
-                Resume cursor:{' '}
-                <code style={styles.cursorCode}>{cursor}</code>
+                Resume cursor: <code style={styles.cursorCode}>{cursor}</code>
               </div>
             )}
           </div>
