@@ -14,6 +14,7 @@ export type ResendListFunction<T> = (paginationParameters: {
 export type ForEachPageOptions = {
   startCursor?: string;
   onCursorAdvance?: (cursor: string) => Promise<void>;
+  deadlineAtMs?: number;
 };
 
 export type OnPageResult = {
@@ -91,6 +92,16 @@ export const forEachPage = async <T extends { id: string }>(
 
     if (nextCursor === cursor) {
       throw new Error(`Resend list[${label}] cursor stuck at ${nextCursor}`);
+    }
+
+    if (
+      isDefined(options?.deadlineAtMs) &&
+      Date.now() >= options.deadlineAtMs
+    ) {
+      console.log(
+        `[resend] reached deadline for ${label} after page ${pageNumber}; stopping early (cursor will resume next tick)`,
+      );
+      break;
     }
 
     cursor = nextCursor;

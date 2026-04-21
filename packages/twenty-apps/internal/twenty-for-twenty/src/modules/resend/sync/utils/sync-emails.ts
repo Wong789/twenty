@@ -20,6 +20,7 @@ import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
 export type SyncEmailsOptions = {
   stopBeforeCreatedAtMs?: number;
   resumable?: boolean;
+  deadlineAtMs?: number;
 };
 
 export const syncEmails = async (
@@ -140,6 +141,9 @@ export const syncEmails = async (
         {
           startCursor: resumable ? resumeCursor : undefined,
           ...(resumable && { onCursorAdvance }),
+          ...(isDefined(options?.deadlineAtMs) && {
+            deadlineAtMs: options.deadlineAtMs,
+          }),
         },
       );
     },

@@ -37,10 +37,15 @@ const toContactDto = (
   ...(isDefined(personId) && { personId }),
 });
 
+export type SyncContactsOptions = {
+  deadlineAtMs?: number;
+};
+
 export const syncContacts = async (
   resend: Resend,
   client: CoreApiClient,
   syncedAt: string,
+  options?: SyncContactsOptions,
 ): Promise<SyncStepResult> => {
   const aggregate: SyncResult = {
     fetched: 0,
@@ -81,7 +86,13 @@ export const syncContacts = async (
         return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
       },
       'contacts',
-      { startCursor: resumeCursor, onCursorAdvance },
+      {
+        startCursor: resumeCursor,
+        onCursorAdvance,
+        ...(isDefined(options?.deadlineAtMs) && {
+          deadlineAtMs: options.deadlineAtMs,
+        }),
+      },
     );
   });
 

@@ -52,9 +52,14 @@ const fetchTemplateDetailsForPage = async (
   return detailByResendId;
 };
 
+export type SyncTemplatesOptions = {
+  deadlineAtMs?: number;
+};
+
 export const syncTemplates = async (
   resend: Resend,
   client: CoreApiClient,
+  options?: SyncTemplatesOptions,
 ): Promise<SyncStepResult> => {
   const aggregate: SyncResult = {
     fetched: 0,
@@ -129,7 +134,13 @@ export const syncTemplates = async (
           return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
         },
         'templates',
-        { startCursor: resumeCursor, onCursorAdvance },
+        {
+          startCursor: resumeCursor,
+          onCursorAdvance,
+          ...(isDefined(options?.deadlineAtMs) && {
+            deadlineAtMs: options.deadlineAtMs,
+          }),
+        },
       );
     },
   );

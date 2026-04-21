@@ -43,7 +43,7 @@ describe('resendSyncEmailsHandler', () => {
     }
   });
 
-  it('runs a full resumable sync in initial mode', async () => {
+  it('runs a full resumable sync in initial mode and forwards a deadline', async () => {
     process.env.INITIAL_SYNC_MODE = 'true';
 
     await resendSyncEmailsHandler();
@@ -51,11 +51,12 @@ describe('resendSyncEmailsHandler', () => {
     expect(mockSyncEmails).toHaveBeenCalledTimes(1);
     const args = mockSyncEmails.mock.calls[0];
 
-    // resend, client, syncedAt — no options
-    expect(args).toHaveLength(3);
+    expect(args).toHaveLength(4);
+    expect(args[3]).toEqual({ deadlineAtMs: expect.any(Number) });
+    expect(args[3].deadlineAtMs).toBeGreaterThan(Date.now());
   });
 
-  it('runs a 7-day non-resumable sync in intermediate mode', async () => {
+  it('runs a 7-day non-resumable sync in intermediate mode and forwards a deadline', async () => {
     process.env.INITIAL_SYNC_MODE = 'false';
 
     await resendSyncEmailsHandler();
@@ -66,6 +67,8 @@ describe('resendSyncEmailsHandler', () => {
     expect(args[3]).toEqual({
       stopBeforeCreatedAtMs: INTERMEDIATE_SYNC_EMAILS_MAX_AGE_MS,
       resumable: false,
+      deadlineAtMs: expect.any(Number),
     });
+    expect(args[3].deadlineAtMs).toBeGreaterThan(Date.now());
   });
 });

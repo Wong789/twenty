@@ -23,7 +23,7 @@ describe('resendSyncContactsHandler', () => {
     (CoreApiClient as unknown as ReturnType<typeof vi.fn>).mockReset();
   });
 
-  it('invokes syncContacts and reports an ok CONTACTS step', async () => {
+  it('invokes syncContacts with a deadline and reports an ok CONTACTS step', async () => {
     mockSyncContacts.mockResolvedValue({
       result: { fetched: 1, created: 1, updated: 0, errors: [] },
       value: undefined,
@@ -32,6 +32,10 @@ describe('resendSyncContactsHandler', () => {
     const summary = await resendSyncContactsHandler();
 
     expect(mockSyncContacts).toHaveBeenCalledTimes(1);
+    const args = mockSyncContacts.mock.calls[0];
+
+    expect(args[3]).toEqual({ deadlineAtMs: expect.any(Number) });
+    expect(args[3].deadlineAtMs).toBeGreaterThan(Date.now());
     expect(summary.steps).toEqual([
       expect.objectContaining({ name: 'CONTACTS', status: 'ok', created: 1 }),
     ]);

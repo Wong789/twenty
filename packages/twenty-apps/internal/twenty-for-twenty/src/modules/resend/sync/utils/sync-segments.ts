@@ -1,5 +1,6 @@
 import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
+import { isDefined } from '@utils/is-defined';
 
 import type { SegmentDto } from '@modules/resend/sync/types/segment.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
@@ -23,10 +24,15 @@ const toSegmentDto = (segment: RawSegment, syncedAt: string): SegmentDto => ({
   lastSyncedFromResend: syncedAt,
 });
 
+export type SyncSegmentsOptions = {
+  deadlineAtMs?: number;
+};
+
 export const syncSegments = async (
   resend: Resend,
   client: CoreApiClient,
   syncedAt: string,
+  options?: SyncSegmentsOptions,
 ): Promise<SyncStepResult<SegmentIdMap>> => {
   const aggregate: SyncResult = {
     fetched: 0,
@@ -63,7 +69,13 @@ export const syncSegments = async (
         return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
       },
       'segments',
-      { startCursor: resumeCursor, onCursorAdvance },
+      {
+        startCursor: resumeCursor,
+        onCursorAdvance,
+        ...(isDefined(options?.deadlineAtMs) && {
+          deadlineAtMs: options.deadlineAtMs,
+        }),
+      },
     );
   });
 

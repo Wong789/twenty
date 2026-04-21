@@ -1,6 +1,11 @@
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { defineLogicFunction } from 'twenty-sdk/define';
 
+import {
+  RESEND_SYNC_CRON_PATTERNS,
+  RESEND_SYNC_SLOT_DEADLINE_SLACK_MS,
+  RESEND_SYNC_SLOT_TIMEOUT_SECONDS,
+} from '@modules/resend/constants/sync-config';
 import { RESEND_SYNC_BROADCASTS_AND_DEPENDENCIES_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER } from '@modules/resend/constants/universal-identifiers';
 import { getResendClient } from '@modules/resend/shared/utils/get-resend-client';
 import type { StepOutcome } from '@modules/resend/sync/types/step-outcome';
@@ -28,12 +33,17 @@ export const resendSyncBroadcastsAndDependenciesHandler =
     const coreApiClient = new CoreApiClient();
     const syncedAt = new Date().toISOString();
 
+    const deadlineAtMs =
+      Date.now() +
+      RESEND_SYNC_SLOT_TIMEOUT_SECONDS.BROADCASTS * 1_000 -
+      RESEND_SYNC_SLOT_DEADLINE_SLACK_MS;
+
     const topics = await runSyncStep('TOPICS', () =>
-      syncTopics(resendClient, coreApiClient, syncedAt),
+      syncTopics(resendClient, coreApiClient, syncedAt, { deadlineAtMs }),
     );
 
     const segments = await runSyncStep('SEGMENTS', () =>
-      syncSegments(resendClient, coreApiClient, syncedAt),
+      syncSegments(resendClient, coreApiClient, syncedAt, { deadlineAtMs }),
     );
 
     const broadcasts =
@@ -44,6 +54,7 @@ export const resendSyncBroadcastsAndDependenciesHandler =
               coreApiClient,
               segments.value,
               topics.value,
+              { deadlineAtMs },
             ),
           )
         : skipDueToFailedDependencies('BROADCASTS', { topics, segments });
@@ -69,9 +80,9 @@ export default defineLogicFunction({
   name: 'resend-sync-broadcasts-and-dependencies',
   description:
     'Syncs Resend topics, segments, and broadcasts in sequence. Broadcasts depend on the in-memory topic and segment id maps produced by the first two steps. Each step has its own cursor and resumes from the last advance on the next tick if the function timeouts mid-pagination.',
-  timeoutSeconds: 300,
+  timeoutSeconds: RESEND_SYNC_SLOT_TIMEOUT_SECONDS.BROADCASTS,
   handler: resendSyncBroadcastsAndDependenciesHandler,
   cronTriggerSettings: {
-    pattern: '*/5 * * * *',
+    pattern: RESEND_SYNC_CRON_PATTERNS.BROADCASTS,
   },
 });

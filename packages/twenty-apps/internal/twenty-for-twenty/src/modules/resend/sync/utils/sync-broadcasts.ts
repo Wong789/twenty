@@ -54,11 +54,16 @@ const fetchBroadcastDetailsForPage = async (
   return detailByResendId;
 };
 
+export type SyncBroadcastsOptions = {
+  deadlineAtMs?: number;
+};
+
 export const syncBroadcasts = async (
   resend: Resend,
   client: CoreApiClient,
   segmentMap: SegmentIdMap,
   topicMap: TopicIdMap,
+  options?: SyncBroadcastsOptions,
 ): Promise<SyncStepResult> => {
   const aggregate: SyncResult = {
     fetched: 0,
@@ -182,7 +187,13 @@ export const syncBroadcasts = async (
           return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
         },
         'broadcasts',
-        { startCursor: resumeCursor, onCursorAdvance },
+        {
+          startCursor: resumeCursor,
+          onCursorAdvance,
+          ...(isDefined(options?.deadlineAtMs) && {
+            deadlineAtMs: options.deadlineAtMs,
+          }),
+        },
       );
     },
   );

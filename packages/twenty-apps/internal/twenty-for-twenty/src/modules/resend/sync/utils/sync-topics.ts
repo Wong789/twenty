@@ -30,10 +30,15 @@ const toTopicDto = (topic: RawTopic, syncedAt: string): TopicDto => ({
   lastSyncedFromResend: syncedAt,
 });
 
+export type SyncTopicsOptions = {
+  deadlineAtMs?: number;
+};
+
 export const syncTopics = async (
   resend: Resend,
   client: CoreApiClient,
   syncedAt: string,
+  _options?: SyncTopicsOptions,
 ): Promise<SyncStepResult<TopicIdMap>> => {
   const aggregate: SyncResult = {
     fetched: 0,

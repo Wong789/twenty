@@ -62,6 +62,15 @@ describe('resendSyncBroadcastsAndDependenciesHandler', () => {
 
     expect(broadcastsArgs[2]).toBe(segmentMap);
     expect(broadcastsArgs[3]).toBe(topicMap);
+    expect(broadcastsArgs[4]).toEqual({ deadlineAtMs: expect.any(Number) });
+
+    const topicsArgs = mockSyncTopics.mock.calls[0];
+
+    expect(topicsArgs[3]).toEqual({ deadlineAtMs: expect.any(Number) });
+
+    const segmentsArgs = mockSyncSegments.mock.calls[0];
+
+    expect(segmentsArgs[3]).toEqual({ deadlineAtMs: expect.any(Number) });
 
     expect(summary.steps.map((s) => s.name)).toEqual([
       'TOPICS',
