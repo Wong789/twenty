@@ -49,38 +49,4 @@ describe('CoreApiClient', () => {
     }
   });
 
-  it('should support CRUD on resendDetailToFetch objects', async () => {
-    const client = new CoreApiClient();
-    const createMutationName: string = 'createResendDetailToFetch';
-    const destroyMutationName: string = 'destroyResendDetailToFetch';
-
-    const createResult = (await client.mutation({
-      [createMutationName]: {
-        __args: {
-          data: {
-            entityType: 'BROADCAST',
-            resendId: 'test_integration_broadcast_1',
-            twentyRecordId: 'test-twenty-id-1',
-            status: 'PENDING',
-            retryCount: 0,
-            queuedAt: new Date().toISOString(),
-          },
-        },
-        id: true,
-      },
-    })) as unknown as Record<string, { id: string } | undefined>;
-
-    const created = createResult[createMutationName];
-
-    expect(created?.id).toBeDefined();
-
-    if (created !== undefined) {
-      await client.mutation({
-        [destroyMutationName]: {
-          __args: { id: created.id },
-          id: true,
-        },
-      });
-    }
-  });
 });

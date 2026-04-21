@@ -2,7 +2,7 @@ import { isDefined } from '@utils/is-defined';
 import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 
-import { findOrCreatePeopleByEmail } from '@modules/resend/shared/utils/find-or-create-people-by-email';
+import { findPeopleByEmail } from '@modules/resend/shared/utils/find-people-by-email';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
 import { mapLastEvent } from '@modules/resend/shared/utils/map-last-event';
@@ -109,11 +109,9 @@ export const syncEmails = async (
             }
           }
 
-          const personIdByEmail = await findOrCreatePeopleByEmail(
+          const personIdByEmail = await findPeopleByEmail(
             client,
-            Array.from(primaryToByEmail.values()).map((primaryTo) => ({
-              email: primaryTo,
-            })),
+            Array.from(primaryToByEmail.values()),
           );
 
           for (const email of pageEmails) {

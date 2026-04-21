@@ -5,7 +5,7 @@ import { isDefined } from '@utils/is-defined';
 import type { ContactDto } from '@modules/resend/sync/types/contact.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
-import { findOrCreatePeopleByEmail } from '@modules/resend/shared/utils/find-or-create-people-by-email';
+import { findPeopleByEmail } from '@modules/resend/shared/utils/find-people-by-email';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
 import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
 import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
@@ -66,15 +66,9 @@ export const syncContacts = async (
 
         let personLinkOk = true;
 
-        const personIdByEmail = await findOrCreatePeopleByEmail(
+        const personIdByEmail = await findPeopleByEmail(
           client,
-          pageContacts.map((contact) => ({
-            email: contact.email,
-            name: {
-              firstName: contact.first_name ?? '',
-              lastName: contact.last_name ?? '',
-            },
-          })),
+          pageContacts.map((contact) => contact.email),
         );
 
         for (const contact of pageContacts) {

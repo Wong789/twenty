@@ -154,7 +154,7 @@ export default defineLogicFunction({
     RESEND_INITIAL_LIST_SYNC_LOGIC_FUNCTION_UNIVERSAL_IDENTIFIER,
   name: 'resend-initial-list-sync',
   description:
-    'Runs the list-only initial Resend sync while INITIAL_SYNC_MODE is on. Queues email/broadcast/template details for the resend-fetch-details cron.',
+    'Runs the initial Resend sync while INITIAL_SYNC_MODE is on. Fetches list pages and inlines broadcast/template details into each upsert.',
   timeoutSeconds: 300,
   handler: resendInitialListSyncHandler,
   cronTriggerSettings: {

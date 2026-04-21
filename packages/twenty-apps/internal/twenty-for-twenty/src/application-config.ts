@@ -31,7 +31,7 @@ export default defineApplication({
     INITIAL_SYNC_MODE: {
       universalIdentifier: INITIAL_SYNC_MODE_APP_VARIABLE_UNIVERSAL_IDENTIFIER,
       description:
-        "When 'true', the list-only initial-sync cron runs and the detail-fetch cron is paused. Flipped to 'false' once every list has completed.",
+        "When 'true', the initial-sync cron runs and the intermediate-sync cron is paused. Flipped to 'false' once every list has completed.",
       isSecret: false,
       value: 'false',
     },

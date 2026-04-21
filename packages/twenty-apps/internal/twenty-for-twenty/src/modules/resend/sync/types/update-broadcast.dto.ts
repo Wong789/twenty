@@ -1,6 +1,12 @@
+import type { EmailsField } from '@modules/resend/shared/types/emails-field';
+
 export type UpdateBroadcastDto = {
   status: string;
   scheduledAt: string | null;
   sentAt: string | null;
   segmentId?: string | null;
+  subject?: string;
+  fromAddress?: EmailsField;
+  replyTo?: EmailsField;
+  previewText?: string;
 };

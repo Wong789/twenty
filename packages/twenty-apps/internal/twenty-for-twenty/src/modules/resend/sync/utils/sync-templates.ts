@@ -2,19 +2,55 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
-import type { EnqueueDetailFetchInput } from '@modules/resend/details/utils/enqueue-detail-fetch';
-import { enqueueDetailFetches } from '@modules/resend/details/utils/enqueue-detail-fetches';
-import type { CreateTemplateDto } from '@modules/resend/sync/types/create-template.dto';
-import type { SyncResult } from '@modules/resend/sync/types/sync-result';
-import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
-import type { UpdateTemplateDto } from '@modules/resend/sync/types/update-template.dto';
 import { forEachPage } from '@modules/resend/shared/utils/for-each-page';
+import { getErrorMessage } from '@modules/resend/shared/utils/get-error-message';
+import { toEmailsField } from '@modules/resend/shared/utils/to-emails-field';
 import {
   toIsoString,
   toIsoStringOrNull,
 } from '@modules/resend/shared/utils/to-iso-string';
-import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
+import { withRateLimitRetry } from '@modules/resend/shared/utils/with-rate-limit-retry';
 import { withSyncCursor } from '@modules/resend/sync/cursor/utils/with-sync-cursor';
+import type { CreateTemplateDto } from '@modules/resend/sync/types/create-template.dto';
+import type { SyncResult } from '@modules/resend/sync/types/sync-result';
+import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
+import type { UpdateTemplateDto } from '@modules/resend/sync/types/update-template.dto';
+import { upsertRecords } from '@modules/resend/sync/utils/upsert-records';
+
+type TemplateDetail = Awaited<
+  ReturnType<Resend['templates']['get']>
+>['data'];
+
+const fetchTemplateDetailsForPage = async (
+  resend: Resend,
+  pageTemplates: ReadonlyArray<{ id: string }>,
+  errors: string[],
+): Promise<Map<string, NonNullable<TemplateDetail>>> => {
+  const detailByResendId = new Map<string, NonNullable<TemplateDetail>>();
+
+  for (const template of pageTemplates) {
+    try {
+      const { data: detail, error } = await withRateLimitRetry(() =>
+        resend.templates.get(template.id),
+      );
+
+      if (isDefined(error) || !isDefined(detail)) {
+        errors.push(
+          `resendTemplate ${template.id} detail: ${JSON.stringify(error)}`,
+        );
+        continue;
+      }
+
+      detailByResendId.set(template.id, detail);
+    } catch (error) {
+      errors.push(
+        `resendTemplate ${template.id} detail: ${getErrorMessage(error)}`,
+      );
+    }
+  }
+
+  return detailByResendId;
+};
 
 export const syncTemplates = async (
   resend: Resend,
@@ -27,62 +63,76 @@ export const syncTemplates = async (
     errors: [],
   };
 
-  await withSyncCursor(client, 'TEMPLATES', async ({ resumeCursor, onCursorAdvance }) => {
-    await forEachPage(
-      (paginationParameters) => resend.templates.list(paginationParameters),
-      async (pageTemplates) => {
-        const pageOutcome = await upsertRecords({
-          items: pageTemplates,
-          getId: (template) => template.id,
-          mapCreateData: (_detail, template): CreateTemplateDto => ({
-            name: template.name,
-            alias: template.alias ?? '',
-            status: template.status.toUpperCase(),
-            createdAt: toIsoString(template.created_at),
-            resendUpdatedAt: toIsoString(template.updated_at),
-            publishedAt: toIsoStringOrNull(template.published_at),
-          }),
-          mapUpdateData: (_detail, template): UpdateTemplateDto => ({
-            name: template.name,
-            alias: template.alias ?? '',
-            status: template.status.toUpperCase(),
-            resendUpdatedAt: toIsoString(template.updated_at),
-            publishedAt: toIsoStringOrNull(template.published_at),
-          }),
-          client,
-          objectNameSingular: 'resendTemplate',
-          objectNamePlural: 'resendTemplates',
-        });
+  await withSyncCursor(
+    client,
+    'TEMPLATES',
+    async ({ resumeCursor, onCursorAdvance }) => {
+      await forEachPage(
+        (paginationParameters) => resend.templates.list(paginationParameters),
+        async (pageTemplates) => {
+          const detailByResendId = await fetchTemplateDetailsForPage(
+            resend,
+            pageTemplates,
+            aggregate.errors,
+          );
 
-        aggregate.fetched += pageOutcome.result.fetched;
-        aggregate.created += pageOutcome.result.created;
-        aggregate.updated += pageOutcome.result.updated;
-        aggregate.errors.push(...pageOutcome.result.errors);
+          const pageOutcome = await upsertRecords({
+            items: pageTemplates,
+            getId: (template) => template.id,
+            mapCreateData: (_detail, template): CreateTemplateDto => {
+              const detail = detailByResendId.get(template.id);
 
-        const enqueueInputs: EnqueueDetailFetchInput[] = [];
+              return {
+                name: template.name,
+                alias: template.alias ?? '',
+                status: template.status.toUpperCase(),
+                createdAt: toIsoString(template.created_at),
+                resendUpdatedAt: toIsoString(template.updated_at),
+                publishedAt: toIsoStringOrNull(template.published_at),
+                ...(isDefined(detail) && {
+                  fromAddress: toEmailsField(detail.from),
+                  subject: detail.subject ?? '',
+                  replyTo: toEmailsField(detail.reply_to),
+                  htmlBody: detail.html ?? '',
+                  textBody: detail.text ?? '',
+                }),
+              };
+            },
+            mapUpdateData: (_detail, template): UpdateTemplateDto => {
+              const detail = detailByResendId.get(template.id);
 
-        for (const template of pageTemplates) {
-          const twentyId = pageOutcome.twentyIdByResendId.get(template.id);
-
-          if (!isDefined(twentyId)) continue;
-
-          enqueueInputs.push({
-            entityType: 'TEMPLATE',
-            resendId: template.id,
-            twentyRecordId: twentyId,
+              return {
+                name: template.name,
+                alias: template.alias ?? '',
+                status: template.status.toUpperCase(),
+                resendUpdatedAt: toIsoString(template.updated_at),
+                publishedAt: toIsoStringOrNull(template.published_at),
+                ...(isDefined(detail) && {
+                  fromAddress: toEmailsField(detail.from),
+                  subject: detail.subject ?? '',
+                  replyTo: toEmailsField(detail.reply_to),
+                  htmlBody: detail.html ?? '',
+                  textBody: detail.text ?? '',
+                }),
+              };
+            },
+            client,
+            objectNameSingular: 'resendTemplate',
+            objectNamePlural: 'resendTemplates',
           });
-        }
 
-        const enqueueOutcome = await enqueueDetailFetches(client, enqueueInputs);
+          aggregate.fetched += pageOutcome.result.fetched;
+          aggregate.created += pageOutcome.result.created;
+          aggregate.updated += pageOutcome.result.updated;
+          aggregate.errors.push(...pageOutcome.result.errors);
 
-        aggregate.errors.push(...enqueueOutcome.errors);
-
-        return { ok: pageOutcome.ok && enqueueOutcome.errors.length === 0 };
-      },
-      'templates',
-      { startCursor: resumeCursor, onCursorAdvance },
-    );
-  });
+          return { ok: pageOutcome.ok };
+        },
+        'templates',
+        { startCursor: resumeCursor, onCursorAdvance },
+      );
+    },
+  );
 
   return { result: aggregate, value: undefined };
 };

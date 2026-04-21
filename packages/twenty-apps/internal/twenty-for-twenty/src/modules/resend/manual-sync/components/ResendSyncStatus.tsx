@@ -6,9 +6,7 @@ import {
   H2Title,
   IconAlertCircle,
   IconRefresh,
-  Section,
   Status,
-  Tag,
   themeCssVariables,
 } from 'twenty-sdk/ui';
 
@@ -24,17 +22,8 @@ type CursorRow = {
   lastRunStatus: CursorRowStatus | null;
 };
 
-type DetailToFetchStatus = 'PENDING' | 'DONE' | 'FAILED';
-
-type DetailMetrics = {
-  pending: number;
-  done: number;
-  failed: number;
-};
-
 type FetchState = {
   rows: CursorRow[];
-  detailMetrics: DetailMetrics | null;
   loading: boolean;
   error: string | null;
 };
@@ -51,22 +40,6 @@ const STATUS_LABEL_BY_RUN_STATUS: Record<CursorRowStatus, string> = {
   SUCCESS: 'Success',
   FAILED: 'Failed',
   IN_PROGRESS: 'In progress',
-};
-
-const RESEND_DETAILS_TO_FETCH_PLURAL: string = 'resendDetailsToFetch';
-
-const fetchDetailCount = async (
-  client: CoreApiClient,
-  status: DetailToFetchStatus,
-): Promise<number> => {
-  const result = (await client.query({
-    [RESEND_DETAILS_TO_FETCH_PLURAL]: {
-      __args: { filter: { status: { eq: status } }, first: 0 },
-      totalCount: true,
-    },
-  })) as unknown as Record<string, { totalCount?: number | null } | undefined>;
-
-  return result[RESEND_DETAILS_TO_FETCH_PLURAL]?.totalCount ?? 0;
 };
 
 const formatTimestamp = (value: string | null): string => {
@@ -133,16 +106,6 @@ const getStyles = (): Record<string, React.CSSProperties> => ({
     borderRadius: themeCssVariables.border.radius.sm,
     padding: `0 ${themeCssVariables.spacing[1]}`,
   },
-  queueTagsRow: {
-    display: 'flex',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: themeCssVariables.spacing[2],
-  },
-  // H2Title hard-codes a bottom margin on its container; this wrapper negates
-  // it so the title aligns flush with sibling content inside the card header.
   h2TitleNoMargin: {
     display: 'flex',
     marginBottom: `calc(-1 * ${themeCssVariables.spacing[4]})`,
@@ -152,7 +115,6 @@ const getStyles = (): Record<string, React.CSSProperties> => ({
 export const ResendSyncStatus = () => {
   const [state, setState] = useState<FetchState>({
     rows: [],
-    detailMetrics: null,
     loading: true,
     error: null,
   });
@@ -164,25 +126,20 @@ export const ResendSyncStatus = () => {
       try {
         const client = new CoreApiClient();
 
-        const [cursorResult, pending, done, failed] = await Promise.all([
-          client.query({
-            resendSyncCursors: {
-              __args: { first: 50 },
-              edges: {
-                node: {
-                  id: true,
-                  step: true,
-                  cursor: true,
-                  lastRunAt: true,
-                  lastRunStatus: true,
-                },
+        const cursorResult = await client.query({
+          resendSyncCursors: {
+            __args: { first: 50 },
+            edges: {
+              node: {
+                id: true,
+                step: true,
+                cursor: true,
+                lastRunAt: true,
+                lastRunStatus: true,
               },
             },
-          }),
-          fetchDetailCount(client, 'PENDING'),
-          fetchDetailCount(client, 'DONE'),
-          fetchDetailCount(client, 'FAILED'),
-        ]);
+          },
+        });
 
         const connection = extractConnection<CursorRow>(
           cursorResult,
@@ -192,7 +149,6 @@ export const ResendSyncStatus = () => {
         if (!cancelled) {
           setState({
             rows: connection.edges.map((edge) => edge.node),
-            detailMetrics: { pending, done, failed },
             loading: false,
             error: null,
           });
@@ -201,7 +157,6 @@ export const ResendSyncStatus = () => {
         if (!cancelled) {
           setState({
             rows: [],
-            detailMetrics: null,
             loading: false,
             error:
               fetchError instanceof Error
@@ -253,35 +208,6 @@ export const ResendSyncStatus = () => {
 
   return (
     <div style={styles.container}>
-      {isDefined(state.detailMetrics) && (
-        <Section>
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <div style={styles.h2TitleNoMargin}>
-                <H2Title title="Detail queue" />
-              </div>
-              <div style={styles.queueTagsRow}>
-                <Tag
-                  color="orange"
-                  weight="medium"
-                  text={`Pending: ${state.detailMetrics.pending}`}
-                />
-                <Tag
-                  color="green"
-                  weight="medium"
-                  text={`Done: ${state.detailMetrics.done}`}
-                />
-                <Tag
-                  color="red"
-                  weight="medium"
-                  text={`Failed: ${state.detailMetrics.failed}`}
-                />
-              </div>
-            </div>
-          </div>
-        </Section>
-      )}
-
       {sortedRows.length === 0 ? (
         <Callout
           variant="neutral"
