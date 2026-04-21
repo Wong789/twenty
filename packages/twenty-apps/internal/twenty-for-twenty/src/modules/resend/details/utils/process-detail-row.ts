@@ -4,7 +4,6 @@ import type { CoreApiClient } from 'twenty-client-sdk/core';
 import { DETAILS_FETCH_MAX_RETRIES } from '@modules/resend/constants/sync-config';
 import type { DetailToFetchRow } from '@modules/resend/details/types/detail-to-fetch';
 import { fetchAndApplyBroadcastDetail } from '@modules/resend/details/utils/fetch-broadcast-detail';
-import { fetchAndApplyEmailDetail } from '@modules/resend/details/utils/fetch-email-detail';
 import { fetchAndApplyTemplateDetail } from '@modules/resend/details/utils/fetch-template-detail';
 import {
   markDetailRowDone,
@@ -24,13 +23,6 @@ const applyDetail = async (
   row: DetailToFetchRow,
 ): Promise<void> => {
   switch (row.entityType) {
-    case 'EMAIL':
-      return fetchAndApplyEmailDetail(
-        resend,
-        client,
-        row.resendId,
-        row.twentyRecordId,
-      );
     case 'BROADCAST':
       return fetchAndApplyBroadcastDetail(
         resend,

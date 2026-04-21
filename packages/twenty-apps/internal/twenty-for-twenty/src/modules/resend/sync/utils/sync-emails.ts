@@ -2,8 +2,6 @@ import type { Resend } from 'resend';
 import { CoreApiClient } from 'twenty-client-sdk/core';
 import { isDefined } from '@utils/is-defined';
 
-import type { EnqueueDetailFetchInput } from '@modules/resend/details/utils/enqueue-detail-fetch';
-import { enqueueDetailFetches } from '@modules/resend/details/utils/enqueue-detail-fetches';
 import type { CreateEmailDto } from '@modules/resend/sync/types/create-email.dto';
 import type { SyncResult } from '@modules/resend/sync/types/sync-result';
 import type { SyncStepResult } from '@modules/resend/sync/types/sync-step-result';
@@ -99,8 +97,6 @@ export const syncEmails = async (
           })),
         );
 
-        const enqueueInputs: EnqueueDetailFetchInput[] = [];
-
         for (const email of pageEmails) {
           const twentyId = pageOutcome.twentyIdByResendId.get(email.id);
 
@@ -110,44 +106,35 @@ export const syncEmails = async (
 
           const primaryTo = primaryToByEmail.get(email.id);
 
-          if (isDefined(primaryTo)) {
-            const personId = personIdByEmail.get(primaryTo.trim().toLowerCase());
-
-            if (isDefined(personId)) {
-              try {
-                await client.mutation({
-                  updateResendEmail: {
-                    __args: { id: twentyId, data: { personId } },
-                    id: true,
-                  },
-                });
-              } catch (error) {
-                const message = getErrorMessage(error);
-
-                aggregate.errors.push(
-                  `resendEmail ${email.id} person link: ${message}`,
-                );
-                personLinkOk = false;
-              }
-            }
+          if (!isDefined(primaryTo)) {
+            continue;
           }
 
-          enqueueInputs.push({
-            entityType: 'EMAIL',
-            resendId: email.id,
-            twentyRecordId: twentyId,
-          });
+          const personId = personIdByEmail.get(primaryTo.trim().toLowerCase());
+
+          if (!isDefined(personId)) {
+            continue;
+          }
+
+          try {
+            await client.mutation({
+              updateResendEmail: {
+                __args: { id: twentyId, data: { personId } },
+                id: true,
+              },
+            });
+          } catch (error) {
+            const message = getErrorMessage(error);
+
+            aggregate.errors.push(
+              `resendEmail ${email.id} person link: ${message}`,
+            );
+            personLinkOk = false;
+          }
         }
 
-        const enqueueOutcome = await enqueueDetailFetches(client, enqueueInputs);
-
-        aggregate.errors.push(...enqueueOutcome.errors);
-
         return {
-          ok:
-            pageOutcome.ok &&
-            personLinkOk &&
-            enqueueOutcome.errors.length === 0,
+          ok: pageOutcome.ok && personLinkOk,
         };
       },
       'emails',

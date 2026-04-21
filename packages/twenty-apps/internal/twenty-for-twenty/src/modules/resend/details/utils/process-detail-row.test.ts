@@ -11,7 +11,7 @@ const makeClient = () => {
   const mutation = vi.fn(async (m: Record<string, unknown>) => {
     mutationCalls.push(m);
 
-    return { updateResendEmail: { id: 'ok' } };
+    return { updateResendBroadcast: { id: 'ok' } };
   });
 
   const client = { mutation, query: vi.fn() } as unknown as CoreApiClient;
@@ -20,23 +20,10 @@ const makeClient = () => {
 };
 
 const makeResend = (overrides: {
-  getEmail?: ReturnType<typeof vi.fn>;
   getBroadcast?: ReturnType<typeof vi.fn>;
   getTemplate?: ReturnType<typeof vi.fn>;
 }): Resend =>
   ({
-    emails: {
-      get:
-        overrides.getEmail ??
-        vi.fn(async () => ({
-          data: {
-            html: '<p>hi</p>',
-            text: 'hi',
-            tags: [{ name: 'src', value: 'unit' }],
-          },
-          error: null,
-        })),
-    },
     broadcasts: {
       get:
         overrides.getBroadcast ??
@@ -89,8 +76,8 @@ const baseRow = (
   overrides: Partial<DetailToFetchRow> = {},
 ): DetailToFetchRow => ({
   id: 'row-id',
-  entityType: 'EMAIL',
-  resendId: 'email_abc',
+  entityType: 'BROADCAST',
+  resendId: 'bc_abc',
   twentyRecordId: 'twenty-abc',
   status: 'PENDING',
   retryCount: 0,
@@ -105,42 +92,11 @@ describe('processDetailRow', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
-  it('fetches email detail and marks the row DONE', async () => {
-    const { client, mutationCalls } = makeClient();
-    const resend = makeResend({});
-
-    const outcome = await processDetailRow(resend, client, baseRow());
-
-    expect(outcome.status).toBe('done');
-
-    const emailUpdate = findUpdateForObject(mutationCalls, 'updateResendEmail');
-
-    expect(emailUpdate).toMatchObject({
-      htmlBody: '<p>hi</p>',
-      textBody: 'hi',
-    });
-
-    const rowUpdate = findUpdateForObject(
-      mutationCalls,
-      'updateResendDetailToFetch',
-    );
-
-    expect(rowUpdate).toMatchObject({ status: 'DONE' });
-  });
-
   it('routes BROADCAST rows to the broadcast processor', async () => {
     const { client, mutationCalls } = makeClient();
     const resend = makeResend({});
 
-    const outcome = await processDetailRow(
-      resend,
-      client,
-      baseRow({
-        entityType: 'BROADCAST',
-        resendId: 'bc_1',
-        twentyRecordId: 'twenty-bc-1',
-      }),
-    );
+    const outcome = await processDetailRow(resend, client, baseRow());
 
     expect(outcome.status).toBe('done');
 
@@ -150,6 +106,13 @@ describe('processDetailRow', () => {
     );
 
     expect(broadcastUpdate).toBeDefined();
+
+    const rowUpdate = findUpdateForObject(
+      mutationCalls,
+      'updateResendDetailToFetch',
+    );
+
+    expect(rowUpdate).toMatchObject({ status: 'DONE' });
   });
 
   it('routes TEMPLATE rows to the template processor', async () => {
@@ -179,7 +142,10 @@ describe('processDetailRow', () => {
   it('marks the row as pending-retry when below the retry cap', async () => {
     const { client, mutationCalls } = makeClient();
     const resend = makeResend({
-      getEmail: vi.fn(async () => ({ data: null, error: { message: 'nope' } })),
+      getBroadcast: vi.fn(async () => ({
+        data: null,
+        error: { message: 'nope' },
+      })),
     });
 
     const outcome = await processDetailRow(
@@ -201,7 +167,10 @@ describe('processDetailRow', () => {
   it('marks the row as FAILED once the retry cap is hit', async () => {
     const { client, mutationCalls } = makeClient();
     const resend = makeResend({
-      getEmail: vi.fn(async () => ({ data: null, error: { message: 'nope' } })),
+      getBroadcast: vi.fn(async () => ({
+        data: null,
+        error: { message: 'nope' },
+      })),
     });
 
     const outcome = await processDetailRow(

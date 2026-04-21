@@ -98,13 +98,13 @@ describe('enqueueDetailFetches', () => {
 
     const result = await enqueueDetailFetches(client, [
       {
-        entityType: 'EMAIL',
-        resendId: 'email_a',
+        entityType: 'BROADCAST',
+        resendId: 'bc_a',
         twentyRecordId: 'twenty-a',
       },
       {
-        entityType: 'EMAIL',
-        resendId: 'email_b',
+        entityType: 'BROADCAST',
+        resendId: 'bc_b',
         twentyRecordId: 'twenty-b',
       },
     ]);
@@ -193,8 +193,8 @@ describe('enqueueDetailFetches', () => {
   it('updates twentyRecordId when it drifted', async () => {
     const existing: DetailToFetchRow = {
       id: 'existing-3',
-      entityType: 'EMAIL',
-      resendId: 'email_x',
+      entityType: 'BROADCAST',
+      resendId: 'bc_x',
       twentyRecordId: 'old-twenty-id',
       status: 'PENDING',
       retryCount: 0,
@@ -207,8 +207,8 @@ describe('enqueueDetailFetches', () => {
 
     const result = await enqueueDetailFetches(client, [
       {
-        entityType: 'EMAIL',
-        resendId: 'email_x',
+        entityType: 'BROADCAST',
+        resendId: 'bc_x',
         twentyRecordId: 'new-twenty-id',
       },
     ]);
@@ -227,8 +227,8 @@ describe('enqueueDetailFetches', () => {
   it('handles a mixed batch with one createMany and per-row updates', async () => {
     const upToDate: DetailToFetchRow = {
       id: 'row-up-to-date',
-      entityType: 'EMAIL',
-      resendId: 'email_uptodate',
+      entityType: 'BROADCAST',
+      resendId: 'bc_uptodate',
       twentyRecordId: 'twenty-uptodate',
       status: 'PENDING',
       retryCount: 0,
@@ -240,7 +240,7 @@ describe('enqueueDetailFetches', () => {
     const doneRow: DetailToFetchRow = {
       ...upToDate,
       id: 'row-done',
-      resendId: 'email_done',
+      resendId: 'bc_done',
       twentyRecordId: 'twenty-done',
       status: 'DONE',
       retryCount: 1,
@@ -250,7 +250,7 @@ describe('enqueueDetailFetches', () => {
     const driftRow: DetailToFetchRow = {
       ...upToDate,
       id: 'row-drift',
-      resendId: 'email_drift',
+      resendId: 'bc_drift',
       twentyRecordId: 'twenty-drift-old',
       status: 'PENDING',
     };
@@ -259,28 +259,28 @@ describe('enqueueDetailFetches', () => {
 
     const result = await enqueueDetailFetches(client, [
       {
-        entityType: 'EMAIL',
-        resendId: 'email_uptodate',
+        entityType: 'BROADCAST',
+        resendId: 'bc_uptodate',
         twentyRecordId: 'twenty-uptodate',
       },
       {
-        entityType: 'EMAIL',
-        resendId: 'email_done',
+        entityType: 'BROADCAST',
+        resendId: 'bc_done',
         twentyRecordId: 'twenty-done',
       },
       {
-        entityType: 'EMAIL',
-        resendId: 'email_drift',
+        entityType: 'BROADCAST',
+        resendId: 'bc_drift',
         twentyRecordId: 'twenty-drift-new',
       },
       {
-        entityType: 'EMAIL',
-        resendId: 'email_new1',
+        entityType: 'BROADCAST',
+        resendId: 'bc_new1',
         twentyRecordId: 'twenty-new1',
       },
       {
-        entityType: 'EMAIL',
-        resendId: 'email_new2',
+        entityType: 'BROADCAST',
+        resendId: 'bc_new2',
         twentyRecordId: 'twenty-new2',
       },
     ]);
@@ -303,13 +303,13 @@ describe('enqueueDetailFetches', () => {
 
     const result = await enqueueDetailFetches(client, [
       {
-        entityType: 'EMAIL',
-        resendId: 'email_dup',
+        entityType: 'BROADCAST',
+        resendId: 'bc_dup',
         twentyRecordId: 'twenty-dup',
       },
       {
-        entityType: 'EMAIL',
-        resendId: 'email_dup',
+        entityType: 'BROADCAST',
+        resendId: 'bc_dup',
         twentyRecordId: 'twenty-dup',
       },
     ]);

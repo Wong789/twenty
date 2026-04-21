@@ -18,7 +18,7 @@ export default defineObject({
   labelSingular: 'Resend detail to fetch',
   labelPlural: 'Resend details to fetch',
   description:
-    'Queue of Resend records (emails, broadcasts, templates) whose detail payload still needs to be fetched from the Resend API (technical object).',
+    'Queue of Resend records (broadcasts, templates) whose detail payload still needs to be fetched from the Resend API (technical object).',
   icon: 'IconDownload',
   labelIdentifierFieldMetadataUniversalIdentifier:
     DETAIL_TO_FETCH_RESEND_ID_FIELD_UNIVERSAL_IDENTIFIER,
@@ -33,24 +33,17 @@ export default defineObject({
       icon: 'IconCategory',
       options: [
         {
-          id: '8a715419-902c-462b-a4ae-b306f07991ed',
-          value: 'EMAIL',
-          label: 'Email',
-          position: 0,
-          color: 'purple',
-        },
-        {
           id: '75067d0e-735d-4506-8d4c-6cfc3b858664',
           value: 'BROADCAST',
           label: 'Broadcast',
-          position: 1,
+          position: 0,
           color: 'orange',
         },
         {
           id: '8363bb17-1ec7-4c48-affc-f284180c9c53',
           value: 'TEMPLATE',
           label: 'Template',
-          position: 2,
+          position: 1,
           color: 'blue',
         },
       ],
@@ -70,7 +63,7 @@ export default defineObject({
       name: 'twentyRecordId',
       label: 'Twenty record ID',
       description:
-        'Identifier of the matching resendEmail / resendBroadcast / resendTemplate row',
+        'Identifier of the matching resendBroadcast / resendTemplate row',
       icon: 'IconLink',
     },
     {

@@ -52,8 +52,8 @@ describe('enqueueDetailFetch', () => {
     const { client, mutationCalls } = makeClient();
 
     const row = await enqueueDetailFetch(client, {
-      entityType: 'EMAIL',
-      resendId: 'email_abc',
+      entityType: 'BROADCAST',
+      resendId: 'bc_abc',
       twentyRecordId: 'twenty-abc',
     });
 
@@ -135,8 +135,8 @@ describe('enqueueDetailFetch', () => {
   it('updates the twentyRecordId when it changed (PENDING row)', async () => {
     const existing: DetailToFetchRow = {
       id: 'existing-3',
-      entityType: 'EMAIL',
-      resendId: 'email_x',
+      entityType: 'BROADCAST',
+      resendId: 'bc_x',
       twentyRecordId: 'old-twenty-id',
       status: 'PENDING',
       retryCount: 0,
@@ -148,8 +148,8 @@ describe('enqueueDetailFetch', () => {
     const { client, mutationCalls } = makeClient(existing);
 
     const row = await enqueueDetailFetch(client, {
-      entityType: 'EMAIL',
-      resendId: 'email_x',
+      entityType: 'BROADCAST',
+      resendId: 'bc_x',
       twentyRecordId: 'new-twenty-id',
     });
 

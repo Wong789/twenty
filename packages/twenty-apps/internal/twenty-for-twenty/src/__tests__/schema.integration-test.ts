@@ -58,8 +58,8 @@ describe('CoreApiClient', () => {
       [createMutationName]: {
         __args: {
           data: {
-            entityType: 'EMAIL',
-            resendId: 'test_integration_email_1',
+            entityType: 'BROADCAST',
+            resendId: 'test_integration_broadcast_1',
             twentyRecordId: 'test-twenty-id-1',
             status: 'PENDING',
             retryCount: 0,

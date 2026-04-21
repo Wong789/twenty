@@ -1,4 +1,4 @@
-export type DetailToFetchEntityType = 'EMAIL' | 'BROADCAST' | 'TEMPLATE';
+export type DetailToFetchEntityType = 'BROADCAST' | 'TEMPLATE';
 
 export type DetailToFetchStatus = 'PENDING' | 'DONE' | 'FAILED';
 
