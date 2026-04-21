@@ -1,15 +1,27 @@
+import { isDefined } from '@utils/is-defined';
 import { useEffect, useState } from 'react';
 import { CoreApiClient } from 'twenty-client-sdk/core';
-import { isDefined } from '@utils/is-defined';
+import {
+  Callout,
+  H2Title,
+  IconAlertCircle,
+  IconRefresh,
+  Section,
+  Status,
+  Tag,
+  themeCssVariables,
+} from 'twenty-sdk/ui';
 
 import { extractConnection } from '@modules/resend/shared/utils/typed-client';
+
+type CursorRowStatus = 'SUCCESS' | 'FAILED' | 'IN_PROGRESS';
 
 type CursorRow = {
   id: string;
   step: string;
   cursor: string | null;
   lastRunAt: string | null;
-  lastRunStatus: 'SUCCESS' | 'FAILED' | 'IN_PROGRESS' | null;
+  lastRunStatus: CursorRowStatus | null;
 };
 
 type DetailToFetchStatus = 'PENDING' | 'DONE' | 'FAILED';
@@ -27,10 +39,18 @@ type FetchState = {
   error: string | null;
 };
 
-const STATUS_COLORS: Record<NonNullable<CursorRow['lastRunStatus']>, string> = {
-  SUCCESS: '#1f9d55',
-  FAILED: '#c53030',
-  IN_PROGRESS: '#b7791f',
+type StatusThemeColor = 'green' | 'red' | 'orange' | 'gray';
+
+const STATUS_COLOR_BY_RUN_STATUS: Record<CursorRowStatus, StatusThemeColor> = {
+  SUCCESS: 'green',
+  FAILED: 'red',
+  IN_PROGRESS: 'orange',
+};
+
+const STATUS_LABEL_BY_RUN_STATUS: Record<CursorRowStatus, string> = {
+  SUCCESS: 'Success',
+  FAILED: 'Failed',
+  IN_PROGRESS: 'In progress',
 };
 
 const RESEND_DETAILS_TO_FETCH_PLURAL: string = 'resendDetailsToFetch';
@@ -62,6 +82,72 @@ const formatTimestamp = (value: string | null): string => {
 
   return parsed.toLocaleString();
 };
+
+const formatStepLabel = (step: string): string =>
+  step
+    .toLowerCase()
+    .split('_')
+    .map((part) =>
+      part.length > 0 ? part[0].toUpperCase() + part.slice(1) : part,
+    )
+    .join(' ');
+
+const getStyles = (): Record<string, React.CSSProperties> => ({
+  container: {
+    fontFamily: themeCssVariables.font.family,
+    fontSize: themeCssVariables.font.size.sm,
+    color: themeCssVariables.font.color.primary,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: themeCssVariables.spacing[3],
+  },
+  card: {
+    padding: themeCssVariables.spacing[3],
+    borderRadius: themeCssVariables.border.radius.md,
+    background: themeCssVariables.background.secondary,
+    border: `1px solid ${themeCssVariables.border.color.light}`,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: themeCssVariables.spacing[2],
+    userSelect: 'text',
+    WebkitUserSelect: 'text',
+    cursor: 'text',
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: themeCssVariables.spacing[2],
+  },
+  cursorCode: {
+    display: 'inline-block',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    verticalAlign: 'bottom',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontSize: themeCssVariables.font.size.xs,
+    color: themeCssVariables.font.color.secondary,
+    background: themeCssVariables.background.transparent.light,
+    borderRadius: themeCssVariables.border.radius.sm,
+    padding: `0 ${themeCssVariables.spacing[1]}`,
+  },
+  queueTagsRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: themeCssVariables.spacing[2],
+  },
+  // H2Title hard-codes a bottom margin on its container; this wrapper negates
+  // it so the title aligns flush with sibling content inside the card header.
+  h2TitleNoMargin: {
+    display: 'flex',
+    marginBottom: `calc(-1 * ${themeCssVariables.spacing[4]})`,
+  },
+});
 
 export const ResendSyncStatus = () => {
   const [state, setState] = useState<FetchState>({
@@ -133,32 +219,30 @@ export const ResendSyncStatus = () => {
     };
   }, []);
 
+  const styles = getStyles();
+
   if (state.loading) {
     return (
-      <div
-        style={{
-          padding: '16px',
-          fontFamily: 'sans-serif',
-          fontSize: '13px',
-          color: '#666',
-        }}
-      >
-        Loading sync status…
+      <div style={styles.container}>
+        <Callout
+          variant="neutral"
+          title="Loading sync status"
+          description="Fetching cursors and queue counts…"
+          Icon={IconRefresh}
+        />
       </div>
     );
   }
 
   if (isDefined(state.error)) {
     return (
-      <div
-        style={{
-          padding: '16px',
-          fontFamily: 'sans-serif',
-          fontSize: '13px',
-          color: '#c53030',
-        }}
-      >
-        Failed to load sync status: {state.error}
+      <div style={styles.container}>
+        <Callout
+          variant="error"
+          title="Failed to load sync status"
+          description={state.error}
+          Icon={IconAlertCircle}
+        />
       </div>
     );
   }
@@ -168,97 +252,77 @@ export const ResendSyncStatus = () => {
   );
 
   return (
-    <div
-      style={{
-        padding: '16px',
-        fontFamily: 'sans-serif',
-        fontSize: '13px',
-        color: '#333',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-      }}
-    >
+    <div style={styles.container}>
       {isDefined(state.detailMetrics) && (
-        <div
-          style={{
-            padding: '12px',
-            borderRadius: '6px',
-            background: '#f7f7f7',
-            border: '1px solid #ececec',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-          }}
-        >
-          <strong>Detail queue</strong>
-          <div style={{ color: '#555' }}>
-            <span style={{ color: STATUS_COLORS.IN_PROGRESS, fontWeight: 600 }}>
-              Pending: {state.detailMetrics.pending}
-            </span>
-            {' · '}
-            <span style={{ color: STATUS_COLORS.SUCCESS, fontWeight: 600 }}>
-              Done: {state.detailMetrics.done}
-            </span>
-            {' · '}
-            <span style={{ color: STATUS_COLORS.FAILED, fontWeight: 600 }}>
-              Failed: {state.detailMetrics.failed}
-            </span>
-          </div>
-        </div>
-      )}
-      {state.rows.length === 0 && (
-        <div style={{ color: '#666' }}>No sync runs yet.</div>
-      )}
-      {sortedRows.map((row) => {
-        const statusLabel = row.lastRunStatus ?? 'NEVER';
-        const statusColor =
-          row.lastRunStatus !== null && isDefined(row.lastRunStatus)
-            ? STATUS_COLORS[row.lastRunStatus]
-            : '#888';
-
-        return (
-          <div
-            key={row.id}
-            style={{
-              padding: '12px',
-              borderRadius: '6px',
-              background: '#f7f7f7',
-              border: '1px solid #ececec',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <strong>{row.step}</strong>
-              <span
-                style={{
-                  color: statusColor,
-                  fontWeight: 600,
-                  fontSize: '12px',
-                }}
-              >
-                {statusLabel}
-              </span>
-            </div>
-            <div style={{ color: '#555' }}>
-              Last run: {formatTimestamp(row.lastRunAt)}
-            </div>
-            {isDefined(row.cursor) && row.cursor !== '' && (
-              <div style={{ color: '#555' }}>
-                Resume cursor: <code>{row.cursor}</code>
+        <Section>
+          <div style={styles.card}>
+            <div style={styles.cardHeader}>
+              <div style={styles.h2TitleNoMargin}>
+                <H2Title title="Detail queue" />
               </div>
-            )}
+              <div style={styles.queueTagsRow}>
+                <Tag
+                  color="orange"
+                  weight="medium"
+                  text={`Pending: ${state.detailMetrics.pending}`}
+                />
+                <Tag
+                  color="green"
+                  weight="medium"
+                  text={`Done: ${state.detailMetrics.done}`}
+                />
+                <Tag
+                  color="red"
+                  weight="medium"
+                  text={`Failed: ${state.detailMetrics.failed}`}
+                />
+              </div>
+            </div>
           </div>
-        );
-      })}
+        </Section>
+      )}
+
+      {sortedRows.length === 0 ? (
+        <Callout
+          variant="neutral"
+          title="No sync runs yet"
+          description="Trigger a sync from the command menu to populate this dashboard."
+        />
+      ) : (
+        sortedRows.map((row) => {
+          const runStatus = row.lastRunStatus;
+          const statusColor: StatusThemeColor = isDefined(runStatus)
+            ? STATUS_COLOR_BY_RUN_STATUS[runStatus]
+            : 'gray';
+          const statusLabel = isDefined(runStatus)
+            ? STATUS_LABEL_BY_RUN_STATUS[runStatus]
+            : 'Never run';
+
+          return (
+            <div key={row.id} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <div style={styles.h2TitleNoMargin}>
+                  <H2Title title={formatStepLabel(row.step)} />
+                </div>
+                <Status
+                  color={statusColor}
+                  text={statusLabel}
+                  isLoaderVisible={runStatus === 'IN_PROGRESS'}
+                />
+              </div>
+              <div style={styles.cardLine}>
+                Last run: {formatTimestamp(row.lastRunAt)}
+              </div>
+              {isDefined(row.cursor) && row.cursor !== '' && (
+                <div style={styles.cardLine}>
+                  Resume cursor:{' '}
+                  <code style={styles.cursorCode}>{row.cursor}</code>
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 };
