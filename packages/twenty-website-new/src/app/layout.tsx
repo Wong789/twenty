@@ -65,10 +65,46 @@ const StyledMain = styled.main`
   flex-grow: 1;
 `;
 
+const SOCIAL_PREVIEW_IMAGE_PATH = '/images/shared/companies/logos/twenty.png';
+
+function getSiteMetadataBase(): URL {
+  const websiteUrl = process.env.NEXT_PUBLIC_WEBSITE_URL?.trim();
+
+  if (websiteUrl) {
+    return new URL(websiteUrl.endsWith('/') ? websiteUrl : `${websiteUrl}/`);
+  }
+
+  if (process.env.VERCEL_URL) {
+    return new URL(`https://${process.env.VERCEL_URL}`);
+  }
+
+  return new URL('http://localhost:3000');
+}
+
 export const metadata: Metadata = {
+  metadataBase: getSiteMetadataBase(),
   title: 'Twenty | #1 open source CRM',
   description:
     'The #1 open source CRM for modern teams. Modular, scalable, and built to fit your business.',
+  openGraph: {
+    title: 'Twenty | #1 open source CRM',
+    description:
+      'The #1 open source CRM for modern teams. Modular, scalable, and built to fit your business.',
+    type: 'website',
+    images: [
+      {
+        url: SOCIAL_PREVIEW_IMAGE_PATH,
+        alt: 'Twenty',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Twenty | #1 open source CRM',
+    description:
+      'The #1 open source CRM for modern teams. Modular, scalable, and built to fit your business.',
+    images: [SOCIAL_PREVIEW_IMAGE_PATH],
+  },
 };
 
 export default function RootLayout({
