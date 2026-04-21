@@ -81,8 +81,13 @@ export const syncTopics = async (
     }
 
     if (!pageOutcome.ok) {
+      const detail =
+        pageOutcome.result.errors.length > 0
+          ? ` failures: ${pageOutcome.result.errors.join(' | ')}`
+          : '';
+
       throw new Error(
-        'Resend topics page reported per-item failures; aborting',
+        `Resend topics page reported per-item failures; aborting.${detail}`,
       );
     }
   });

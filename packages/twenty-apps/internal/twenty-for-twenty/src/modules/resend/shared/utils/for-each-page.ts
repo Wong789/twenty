@@ -16,7 +16,11 @@ export type ForEachPageOptions = {
   onCursorAdvance?: (cursor: string) => Promise<void>;
 };
 
-export type OnPageResult = { ok: boolean; stop?: boolean };
+export type OnPageResult = {
+  ok: boolean;
+  stop?: boolean;
+  errors?: ReadonlyArray<string>;
+};
 
 export type OnPageHandler<T> = (
   items: T[],
@@ -64,8 +68,14 @@ export const forEachPage = async <T extends { id: string }>(
     const shouldStop = handlerResult?.stop === true;
 
     if (!pageOk) {
+      const perItemErrors = handlerResult?.errors ?? [];
+      const detail =
+        perItemErrors.length > 0
+          ? ` failures: ${perItemErrors.join(' | ')}`
+          : '';
+
       throw new Error(
-        `Resend ${label} page ${pageNumber} reported per-item failures; aborting at cursor=${cursor ?? 'start'}`,
+        `Resend ${label} page ${pageNumber} reported per-item failures; aborting at cursor=${cursor ?? 'start'}.${detail}`,
       );
     }
 

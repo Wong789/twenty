@@ -126,7 +126,7 @@ export const syncTemplates = async (
           aggregate.updated += pageOutcome.result.updated;
           aggregate.errors.push(...pageOutcome.result.errors);
 
-          return { ok: pageOutcome.ok };
+          return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
         },
         'templates',
         { startCursor: resumeCursor, onCursorAdvance },

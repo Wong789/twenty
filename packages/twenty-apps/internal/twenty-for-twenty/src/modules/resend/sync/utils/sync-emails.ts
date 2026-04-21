@@ -133,6 +133,7 @@ export const syncEmails = async (
           return {
             ok: pageOutcome.ok,
             stop: reachedCutoff,
+            errors: pageOutcome.result.errors,
           };
         },
         'emails',

@@ -60,7 +60,7 @@ export const syncSegments = async (
           segmentIdMap.set(resendId, twentyId);
         }
 
-        return { ok: pageOutcome.ok };
+        return { ok: pageOutcome.ok, errors: pageOutcome.result.errors };
       },
       'segments',
       { startCursor: resumeCursor, onCursorAdvance },
